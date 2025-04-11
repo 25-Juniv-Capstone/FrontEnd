@@ -1,4 +1,4 @@
-// src/components/Header.jsx
+// src/layout/Header.jsx
 import React from 'react';
 
 function Header() {

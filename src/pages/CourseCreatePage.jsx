@@ -1,5 +1,5 @@
 import React from 'react';
-import Header from '../components/Header'; // 헤더 import
+import Header from '../layout/Header'; // 헤더 import
 
 const mockData = [ /* 일정 데이터 */ ];
 
