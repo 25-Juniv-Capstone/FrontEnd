@@ -1,7 +1,7 @@
 // src/layout/Header.jsx
 import React from 'react';
 
-function Header() {
+function Header() { 
   return (
     <header style={{
       width: '100%',
