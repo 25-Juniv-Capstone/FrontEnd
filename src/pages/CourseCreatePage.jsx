@@ -263,6 +263,44 @@ function CourseCreatePage() {
     });
   };
 
+  // 시간 문자열을 HH:MM 형식으로 변환
+  const formatTimeString = (timeStr) => {
+    try {
+      console.log("입력된 시간 문자열:", timeStr);
+      const [period, time] = timeStr.split(" ");
+      console.log("파싱된 시간:", time);
+      return time || "09:00";
+    } catch (error) {
+      console.error("시간 형식 변환 오류:", error);
+      return "09:00";
+    }
+  };
+
+  // 시간 변경 처리
+  const handleTimeChange = (placeId, newTime) => {
+    try {
+      console.log("새로 입력된 시간:", newTime);
+      const hours = parseInt(newTime.split(":")[0]);
+      const period = hours >= 12 ? "오후" : "오전";
+      const formattedTime = `${period} ${newTime}`;
+      console.log("저장될 시간:", formattedTime);
+
+      const updatedPlaces = placesByDay[selectedDay].map(place => {
+        if (place.id === placeId) {
+          return { ...place, time: formattedTime };
+        }
+        return place;
+      });
+      
+      setPlacesByDay({
+        ...placesByDay,
+        [selectedDay]: updatedPlaces,
+      });
+    } catch (error) {
+      console.error("시간 변경 오류:", error);
+    }
+  };
+
   // 새 장소 추가 처리
   const handleAddPlace = (newPlace) => {
     const currentPlaces = placesByDay[selectedDay] || [];
@@ -358,7 +396,12 @@ function CourseCreatePage() {
                         >
                           <div className="left">
                             <div className="circle-number">{index + 1}</div>
-                            <div className="time">{place.time}</div>
+                            <input
+                              type="time"
+                              defaultValue={formatTimeString(place.time)}
+                              onChange={(e) => handleTimeChange(place.id, e.target.value)}
+                              className="time-input"
+                            />
                             <div className="title">{place.place_name}</div>
                             <div className="place-type">
                               {placeTypeToEmoji[place.place_type] || "📍 기타"}
@@ -375,8 +418,7 @@ function CourseCreatePage() {
 
                           <div className="right">
                             <div className="action-buttons">
-                              <button onClick={() => handleDelete(place.id)}>🗑</button>
-                              <button>↕️</button>
+                              <button onClick={() => handleDelete(place.id)}>🗑️</button>
                             </div>
                           </div>
                         </div>

@@ -338,3 +338,30 @@
   padding-top: 8px;
   border-top: 1px solid #eee;
 }
+
+.time-input {
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: #666;
+  padding: 2px 5px;
+  width: 110px;
+  margin: 0 0 4px 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.time-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+.time-input:hover {
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.time-input:focus {
+  outline: none;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
