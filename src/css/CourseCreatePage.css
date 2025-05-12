@@ -60,13 +60,19 @@
   align-items: flex-start;
   background: #fff;
   border: 1px solid #eee;
-  padding: 10px;
+  padding: 15px;
   border-radius: 8px;
   margin-bottom: 16px;
   box-shadow: 0px 2px 4px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+
+.course-card:hover {
+  box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
 }
 
 .course-card .left {
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
@@ -87,7 +93,8 @@
 
 .course-card .time {
   font-size: 13px;
-  color: #888;
+  color: #666;
+  margin-bottom: 4px;
 }
 
 .course-card .type {
@@ -98,8 +105,9 @@
 
 .course-card .title {
   font-size: 16px;
-  font-weight: bold;
+  font-weight: 500;
   margin: 4px 0;
+  color: #333;
 }
 
 .course-card .duration {
@@ -133,6 +141,17 @@
   background-color: white;
   border: 1px solid #ccc;
   border-radius: 6px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.footer-buttons button:hover {
+  background-color: #f5f5f5;
+}
+
+.footer-buttons button:active {
+  transform: scale(0.98);
+  background-color: #e5e5e5;
 }
 
 .button-row {
@@ -160,4 +179,162 @@
   font-size: 14px;
   font-weight: bold;
   margin-right: 8px;
+}
+
+/* 모달 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.search-modal {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h3 {
+  margin: 0;
+}
+
+.modal-header button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.search-box {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-box input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.search-box button {
+  padding: 8px 16px;
+  background-color: #4285F4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.search-box button:hover {
+  background-color: #2b6edb;
+}
+
+.search-box button:active {
+  transform: scale(0.98);
+  background-color: #1a5dc7;
+}
+
+.search-results {
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+.search-result-item {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.search-result-item:hover {
+  background-color: #f5f5f5;
+}
+
+.search-result-item .place-name {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.search-result-item .place-address {
+  font-size: 12px;
+  color: #666;
+}
+
+.search-result-item .place-type {
+  color: #666;
+  font-size: 20px;
+  margin-left: 12px;
+}
+
+.no-results {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+}
+
+.search-box button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.accessibility-info {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
+}
+
+.accessibility-item {
+  margin: 2px 0;
+  line-height: 1.4;
+}
+
+.course-card .place-type {
+  font-size: 14px;
+  color: #4285F4;
+  margin-top: 2px;
+}
+
+.info-window {
+  padding: 8px;
+  max-width: 300px;
+}
+
+.info-window h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.info-window p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.info-window .accessibility {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #eee;
 }
