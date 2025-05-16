@@ -121,6 +121,7 @@ function CourseCreatePage() {
   const [selectedDay, setSelectedDay] = useState(1);
   const [placesByDay, setPlacesByDay] = useState({});
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isDateModalOpen, setIsDateModalOpen] = useState(false);
 
   // 초기 데이터 처리 - 받아온 데이터를 화면에 표시하기 좋은 형태로 변환
   useEffect(() => {
@@ -352,6 +353,19 @@ function CourseCreatePage() {
     }
   }, [mapInstance.current]);
 
+  // 날짜 수정 처리
+  const handleDateChange = (startDate, endDate) => {
+    setCourseData({
+      ...courseData,
+      metadata: {
+        ...courseData.metadata,
+        start_date: startDate,
+        end_date: endDate
+      }
+    });
+    setIsDateModalOpen(false);
+  };
+
   return (
     <div className="course-page">
       <Header />
@@ -360,7 +374,10 @@ function CourseCreatePage() {
         {/* 왼쪽 패널 - 일정 목록 */}
         <div className="course-sidebar">
           <h2>{courseData?.metadata?.region || "지역 정보 없음"}</h2>
-          <p className="date">{getDateDisplay()}</p>
+          <div className="date-section" onClick={() => setIsDateModalOpen(true)}>
+            <p className="date">{getDateDisplay()}</p>
+            <span className="edit-icon">✏️</span>
+          </div>
 
           {/* 일차 선택 버튼 */}
           <div className="day-buttons">
@@ -454,6 +471,15 @@ function CourseCreatePage() {
         onPlaceSelect={handleAddPlace}
         region={courseData?.metadata?.region || ""}
         mapInstance={mapInstance.current}
+      />
+
+      {/* 날짜 수정 모달 */}
+      <DateModal
+        isOpen={isDateModalOpen}
+        onClose={() => setIsDateModalOpen(false)}
+        onDateChange={handleDateChange}
+        startDate={courseData?.metadata?.start_date}
+        endDate={courseData?.metadata?.end_date}
       />
     </div>
   );
@@ -589,6 +615,59 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
             <div className="no-results">검색 결과가 없습니다</div>
           )}
         </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * 날짜 수정 모달 컴포넌트
+ */
+const DateModal = ({ isOpen, onClose, onDateChange, startDate, endDate }) => {
+  const [newStartDate, setNewStartDate] = useState(startDate);
+  const [newEndDate, setNewEndDate] = useState(endDate);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onDateChange(newStartDate, newEndDate);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="date-modal">
+        <div className="modal-header">
+          <h3>여행 날짜 수정</h3>
+          <button onClick={onClose}>✕</button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="date-form">
+          <div className="date-input-group">
+            <label>시작일</label>
+            <input
+              type="date"
+              value={newStartDate}
+              onChange={(e) => setNewStartDate(e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
+            />
+          </div>
+          
+          <div className="date-input-group">
+            <label>종료일</label>
+            <input
+              type="date"
+              value={newEndDate}
+              onChange={(e) => setNewEndDate(e.target.value)}
+              min={newStartDate}
+            />
+          </div>
+
+          <div className="modal-buttons">
+            <button type="button" onClick={onClose}>취소</button>
+            <button type="submit">저장</button>
+          </div>
+        </form>
       </div>
     </div>
   );
