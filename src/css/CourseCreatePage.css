@@ -203,6 +203,7 @@
   max-height: 80vh;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .modal-header {
@@ -210,10 +211,14 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
 }
 
 .modal-header h3 {
   margin: 0;
+  font-size: 18px;
+  color: #333;
 }
 
 .modal-header button {
@@ -221,6 +226,13 @@
   border: none;
   font-size: 20px;
   cursor: pointer;
+  color: #666;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.modal-header button:hover {
+  background-color: #f5f5f5;
 }
 
 .search-box {
@@ -231,59 +243,76 @@
 
 .search-box input {
   flex: 1;
-  padding: 8px;
+  padding: 12px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: #4285F4;
 }
 
 .search-box button {
-  padding: 8px 16px;
+  padding: 12px 24px;
   background-color: #4285F4;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
 }
 
 .search-box button:hover {
   background-color: #2b6edb;
 }
 
-.search-box button:active {
-  transform: scale(0.98);
-  background-color: #1a5dc7;
+.search-box button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
 .search-results {
   overflow-y: auto;
   max-height: 400px;
+  border: 1px solid #eee;
+  border-radius: 6px;
 }
 
 .search-result-item {
-  padding: 12px;
+  padding: 16px;
   border-bottom: 1px solid #eee;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  transition: background-color 0.2s;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
 }
 
 .search-result-item:hover {
-  background-color: #f5f5f5;
+  background-color: #f8f9fa;
 }
 
 .search-result-item .place-name {
   font-weight: 500;
   margin-bottom: 4px;
+  color: #333;
 }
 
 .search-result-item .place-address {
-  font-size: 12px;
+  font-size: 13px;
   color: #666;
 }
 
 .search-result-item .place-type {
-  color: #666;
+  color: #4285F4;
   font-size: 20px;
   margin-left: 12px;
 }
@@ -292,11 +321,7 @@
   padding: 20px;
   text-align: center;
   color: #666;
-}
-
-.search-box button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+  font-size: 14px;
 }
 
 .accessibility-info {
@@ -317,7 +342,7 @@
 }
 
 .info-window {
-  padding: 8px;
+  padding: 12px;
   max-width: 300px;
 }
 

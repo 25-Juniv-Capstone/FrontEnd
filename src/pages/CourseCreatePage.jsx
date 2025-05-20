@@ -22,7 +22,9 @@ const placeTypeToEmoji = {
   "박물관": "🏛️ 박물관",
   "호텔": "🏨 숙소",
   "백화점": "🏬 쇼핑",
-  "공연예술 극장": "�� 공연장",
+  "공연예술 극장": "🎭 공연장",
+  "관광지": "🗺️ 관광지",
+  "기타": "📍 기타"
 };
 
 // 테스트용 데이터
@@ -122,6 +124,7 @@ function CourseCreatePage() {
   const [placesByDay, setPlacesByDay] = useState({});
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
+  const [region, setRegion] = useState("부산"); // 기본값으로 부산 설정
 
   // 초기 데이터 처리 - 받아온 데이터를 화면에 표시하기 좋은 형태로 변환
   useEffect(() => {
@@ -164,10 +167,9 @@ function CourseCreatePage() {
   // 구글 지도 초기화
   useEffect(() => {
     if (window.google && mapRef.current) {
-      // 첫 번째 장소의 좌표를 기본 중심점으로 설정
       const defaultCenter = { 
-        lat: courseData.recommended_courses[0]?.days[0]?.itinerary[0]?.coordinates.latitude || 35.1795543,
-        lng: courseData.recommended_courses[0]?.days[0]?.itinerary[0]?.coordinates.longitude || 129.0756416
+        lat: 35.1795543, // 부산 중심 좌표
+        lng: 129.0756416
       };
       
       mapInstance.current = new window.google.maps.Map(mapRef.current, {
@@ -373,7 +375,7 @@ function CourseCreatePage() {
       <div className="course-main">
         {/* 왼쪽 패널 - 일정 목록 */}
         <div className="course-sidebar">
-          <h2>{courseData?.metadata?.region || "지역 정보 없음"}</h2>
+          <h2>{region}</h2>
           <div className="date-section" onClick={() => setIsDateModalOpen(true)}>
             <p className="date">{getDateDisplay()}</p>
             <span className="edit-icon">✏️</span>
@@ -381,7 +383,7 @@ function CourseCreatePage() {
 
           {/* 일차 선택 버튼 */}
           <div className="day-buttons">
-            {Array.from({ length: courseData?.metadata?.duration || 0 }, (_, i) => i + 1).map((day) => (
+            {[1, 2, 3].map((day) => (
               <button
                 key={day}
                 className={selectedDay === day ? "active" : ""}
@@ -401,7 +403,6 @@ function CourseCreatePage() {
                   {...provided.droppableProps}
                   ref={provided.innerRef}
                 >
-                  {/* 각 장소 카드 */}
                   {(placesByDay[selectedDay] || []).map((place, index) => (
                     <Draggable key={place.id} draggableId={place.id} index={index}>
                       {(provided) => (
@@ -469,7 +470,7 @@ function CourseCreatePage() {
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
         onPlaceSelect={handleAddPlace}
-        region={courseData?.metadata?.region || ""}
+        region={region}
         mapInstance={mapInstance.current}
       />
 
@@ -506,9 +507,6 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
   const handleSearch = () => {
     if (!searchQuery.trim()) return;
     
-    console.log("검색 시작:", searchQuery);
-    console.log("Places 서비스 상태:", placesService.current);
-    
     setIsLoading(true);
     
     if (!placesService.current) {
@@ -522,12 +520,7 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
       fields: ['name', 'geometry', 'types', 'formatted_address']
     };
 
-    console.log("검색 요청:", request);
-
     placesService.current.textSearch(request, (results, status) => {
-      console.log("검색 결과 상태:", status);
-      console.log("검색 결과:", results);
-      
       setIsLoading(false);
       
       if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
@@ -543,7 +536,6 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
             wheelchair_accessible_restroom: "정보 없음"
           }
         }));
-        console.log("변환된 장소 데이터:", places);
         setSearchResults(places);
       } else {
         console.error("검색 실패:", status);
@@ -559,6 +551,8 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
     if (types.includes('park')) return "공원";
     if (types.includes('museum')) return "박물관";
     if (types.includes('lodging')) return "호텔";
+    if (types.includes('shopping_mall')) return "백화점";
+    if (types.includes('tourist_attraction')) return "관광지";
     return "기타";
   };
 
