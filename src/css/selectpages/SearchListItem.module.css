@@ -1,0 +1,122 @@
+/* SearchListItem styles */
+.container {
+  position: relative;
+  display: flex;
+  min-height: 4.5rem; /* min-h-[72px] */
+  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.container:hover {
+  background-color: #F3F4F6; /* hover:bg-gray-100 */
+}
+
+.backgroundLayer {
+  position: absolute;
+  z-index: 0;
+  display: flex;
+  min-height: 4.5rem; /* min-h-[72px] */
+  max-width: 10%;
+  width: 550px;
+  inset: 0;
+  /* Note: max-w-full might conflict with w-[550px] */
+}
+
+.contentContainer {
+  position: relative; /* Changed from z-0 */
+  z-index: 1; /* Ensure content is above backgroundLayer */
+  display: flex;
+  width: 100%;
+  
+  align-items: stretch;
+  gap: 1rem; /* gap-4 */
+  flex: 1 1 auto; /* flex-1 */
+  flex-wrap: wrap;
+  height: 100%;
+  padding: 0.5rem 1rem; /* py-2 px-4 */
+}
+
+.iconContainer {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  align-items: stretch;
+  font-size: 1rem; /* text-base */
+  color: black;
+  font-weight: 500; /* font-medium */
+  white-space: nowrap;
+  text-align: center;
+  letter-spacing: 0.15px;
+  line-height: 1.5rem; /* leading-6 */
+  justify-content: center;
+  width: 2.5rem; /* w-10 */
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.iconBackground {
+  background-color: rgba(171, 210, 255, 1);
+  width: 2.5rem; /* w-10 */
+  overflow: hidden;
+  height: 2.5rem; /* h-10 */
+  padding: 0.25rem; /* px-1 ? Needs check */
+  border-radius: 9999px; /* rounded-[100px] */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.textContainer {
+  display: flex;
+  min-width: 15rem; /* min-w-60 */
+  flex-direction: column;
+  overflow: hidden;
+  align-items: stretch;
+  font-weight: 400; /* font-normal */
+  justify-content: center;
+  flex: 1 1 0%; /* flex-1 shrink basis-[0%] */
+}
+
+.name {
+  color: #1d1b20;
+  font-size: 1rem; /* text-base */
+  line-height: 1.5rem; /* leading-6 */
+  letter-spacing: 0.5px;
+}
+
+.address {
+  color: #49454f;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem; /* text-sm */
+  line-height: 1.25rem; /* leading-5 */
+  letter-spacing: 0.25px;
+  overflow: hidden; /* Added for ellipsis */
+}
+
+/* Responsive styles */
+@media (max-width: 768px) { /* max-md */
+  .container {
+    max-width: 100%;
+  }
+  .contentContainer {
+     max-width: 100%;
+     white-space: normal; /* Allow wrapping */
+  }
+  .textContainer {
+     max-width: 100%;
+     min-width: auto; /* Adjust min-width */
+  }
+  .name {
+     max-width: 100%;
+  }
+  .address {
+     max-width: 100%;
+     white-space: normal; /* Allow wrapping */
+     overflow: visible; /* Remove ellipsis if needed */
+     text-overflow: initial; /* Remove ellipsis if needed */
+  }
+} 

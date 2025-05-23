@@ -1,0 +1,55 @@
+/* ThemeCard styles */
+.button {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0px 4px 10px 5px rgba(0, 0, 0, 0.25);
+  align-self: stretch;
+  aspect-ratio: 0.533 / 1;
+  min-height: 300px;
+  width: 10rem; /* w-40 */
+  overflow: hidden;
+  margin-top: auto;
+  margin-bottom: auto;
+  padding-top: 3.6875rem; /* pt-[59px] */
+  padding-bottom: 12.5625rem; /* pb-[201px] */
+  padding-left: 5px; /* px-5 */
+  padding-right: 1.25rem;
+  border-radius: 50px;
+  border: none; /* 기본 상태에서는 테두리 없음 */
+  cursor: pointer;
+  /* 크기와 테두리 색상 변경에 대한 전환 효과 */
+  transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out; 
+}
+
+.buttonSelected {
+  border-width: 3px; /* 선택 시 테두리 두께 */
+  border-style: solid; /* 선택 시 테두리 스타일 */
+  border-color: rgba(18, 123, 243, 1); /* 파란색 테두리 */
+  transform: scale(1.05); /* 크기 약간 확대 */
+}
+
+.image {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  inset: 0;
+}
+
+.title {
+  position: relative;
+  z-index: 10;
+  color: white;
+  font-size: 1.5625rem; /* text-[25px] */
+  font-weight: 700; /* font-bold */
+  letter-spacing: -1px;
+  line-height: 1.6;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) { /* max-md */
+  .button {
+    padding-bottom: 6.25rem; /* pb-[100px] */
+  }
+} 

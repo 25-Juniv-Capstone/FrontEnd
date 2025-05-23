@@ -1,0 +1,168 @@
+/* AddedPlacesList styles */
+.container {
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  background-color: white;
+  min-width: 360px; /* 변경: 50px -> 360px (DestinationSearch와 동일하게) */
+  min-height: 500px; /* 변경: 697px -> 500px */
+  max-width: 500px;
+  overflow: hidden;
+  padding: 1rem; /* p-4 */
+  flex-grow: 1;
+  flex-shrink: 1;
+  width: 440px; /* 변경: 300px -> 440px (DestinationSearch와 동일하게) */
+  /* max-width도 필요하다면 DestinationSearch와 동일하게 500px로 설정 가능 */
+  border-radius: 50px;
+}
+
+.title {
+  width: 100%;
+  overflow: hidden;
+  font-size: 1.875rem; /* text-3xl */
+  color: black;
+  font-weight: 700; /* font-bold */
+  line-height: 1.4;
+  padding-top: 0.5rem; /* pt-2 */
+  padding-right: 1rem; /* pr-4 */
+  padding-bottom: 0.25rem; /* pb-1 */
+  padding-left: 1rem; /* pl-4 */
+}
+
+.dividerContainer {
+  justify-content: center;
+  align-items: stretch;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  padding: 0.5rem 1rem; /* pt-2 pr-4 pb-2 pl-4 */
+}
+
+.divider {
+  background-color: #E5E7EB; /* bg-gray-200 */
+  display: flex;
+  min-height: 1px;
+  width: 100%;
+}
+
+.listContainer {
+  width: 100%;
+  overflow: hidden;
+  font-weight: 400; /* font-normal */
+  border-radius: 0.5rem; /* rounded-lg */
+}
+
+.emptyMessage {
+  padding: 1rem; /* p-4 */
+  text-align: center;
+  color: #6B7280; /* text-gray-500 */
+}
+
+.listItem {
+  border-radius: 0.375rem; /* rounded-md */
+  display: flex;
+  width: 100%;
+  gap: 0.75rem; /* gap-3 */
+  overflow: hidden;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem; /* pt-3 pr-4 pb-3 pl-4 */
+}
+
+.listItem:hover {
+  background-color: #F3F4F6; /* hover:bg-gray-100 */
+}
+
+.icon {
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  width: 1.25rem; /* w-5 */
+  flex-shrink: 0;
+}
+
+.contentWrapper {
+  min-width: 15rem; /* min-w-60 */
+  gap: 0.25rem; /* gap-1 */
+  flex: 1 1 0%; /* flex-1 shrink basis-[0%] */
+}
+
+.nameWrapper {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  font-size: 1rem; /* text-base */
+  color: black;
+  gap: 180px; /* 추가: 이름과 버튼 사이 간격 설정 */
+}
+
+.name {
+  line-height: 1.4;
+  align-self: stretch;
+  flex: 1 1 0%; /* Allow shrinking but prevent excessive growing if needed */
+  margin-top: auto;
+  margin-bottom: auto;
+  max-width: 50%; /* 추가: 최대 너비 제한 */
+  text-overflow: ellipsis; /* 추가: 말줄임표 표시 */
+}
+
+.removeButton {
+  align-self: stretch;
+  white-space: nowrap;
+  line-height: 1; /* leading-none */
+  margin-top: auto;
+  margin-bottom: auto;
+  border-radius: 0.5rem; /* rounded-lg */
+  border: 1px solid white; /* 변경: 테두리 색상을 white로 */
+  background: white; /* 변경: 연한 빨간색 배경 */
+  color: black; /* 변경: 진한 빨간색 글씨 */
+  cursor: pointer; /* Added */
+  padding: 0.25rem 0.5rem; /* 변경: 패딩 추가 */
+  font-size: 40px; /* 변경: 글자 크기 조정 */
+  font-weight: 500; /* 변경: 약간 굵게 */
+  transition: background-color 0.2s ease, border-color 0.2s ease; /* 호버 효과 추가 */
+}
+
+/* 추가: 호버 스타일 */
+.removeButton:hover {
+  background-color: #F3F4F6; /* 호버 시 배경색 변경 */
+  border-color: #F3F4F6; /* 추가: 호버 시 테두리 색상 배경과 동일하게 변경 */
+}
+
+.memo {
+  color: #6B7280; /* text-gray-500 */
+  font-size: 0.875rem; /* text-sm */
+  line-height: 1.4;
+  margin-top: 0.25rem; /* mt-1 */
+}
+
+/* Responsive styles */
+@media (max-width: 768px) { /* max-md */
+  .container {
+    max-width: 100%;
+    padding-bottom: 6.25rem; /* pb-[100px] */
+  }
+  .title {
+    max-width: 100%;
+  }
+  .dividerContainer {
+    max-width: 100%;
+  }
+  .divider {
+    max-width: 100%;
+  }
+  .listContainer {
+    max-width: 100%;
+  }
+  .listItem {
+    max-width: 100%;
+  }
+  .contentWrapper {
+     max-width: 100%;
+  }
+  .nameWrapper {
+     max-width: 100%;
+  }
+  .name {
+     max-width: 100%;
+  }
+  .memo {
+     max-width: 100%;
+  }
+} 

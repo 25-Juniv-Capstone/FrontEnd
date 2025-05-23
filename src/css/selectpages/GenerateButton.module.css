@@ -1,0 +1,69 @@
+/* GenerateButton styles */
+.container {
+  background-color: rgba(255, 255, 255, 0); /* transparent */
+  display: flex;
+  width: 90%;
+  align-items: stretch;
+  gap: -421px; /* This seems very unusual, might need adjustment */
+  overflow: hidden;
+  font-size: 1.875rem; /* text-3xl */
+  color: white;
+  font-weight: 700; /* font-bold */
+  white-space: nowrap;
+  text-align: center;
+  letter-spacing: -1px;
+  line-height: 90px; /* Unusual fixed line height */
+  flex-wrap: wrap;
+  margin-top: 119px;
+  padding: 0.625rem 20.0625rem 0.625rem 3.125rem; /* py-2.5 pr-[321px] pl-[50px] */
+}
+
+.spacer {
+  background-color: rgba(255, 255, 255, 0); /* transparent */
+  display: flex;
+  min-width: 0px; /* min-w-60 */
+  flex-shrink: 1;
+  height: 67px;
+  flex: 1 1 20px; /* 변경: flex-basis를 50px -> 20px */
+}
+
+.button {
+  background-color: rgba(18, 123, 243, 0.7);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.25);
+  height: 67px;
+  overflow: hidden;
+  width: 154px;
+  padding-left: 3.1875rem; /* px-[51px] */
+  padding-right: 3.1875rem;
+  border-radius: 20px;
+  border: none; /* Added */
+  cursor: pointer; /* Added */
+  color: white; /* Added */
+  font-size: 1.875rem; /* text-3xl */
+  font-weight: 700; /* font-bold */
+  display: flex; /* Added to center text */
+  align-items: center; /* Added to center text */
+  justify-content: center; /* Added to center text */
+}
+
+/* Responsive styles */
+@media (max-width: 768px) { /* max-md */
+  .container {
+    margin-top: 2.5rem; /* mt-10 */
+    padding-left: 1.25rem; /* px-5 */
+    padding-right: 1.25rem;
+    max-width: 100%;
+    gap: 1rem; /* Adjusted gap */
+    white-space: normal; /* Adjusted */
+  }
+  .spacer {
+    max-width: 100%;
+    min-width: auto; /* Adjusted */
+    flex-basis: auto; /* Adjusted */
+  }
+  .button {
+     padding-left: 1.25rem; /* px-5 */
+     padding-right: 1.25rem;
+     width: auto; /* Adjusted */
+  }
+} 

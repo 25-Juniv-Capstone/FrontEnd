@@ -1,0 +1,71 @@
+ .section {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 32px 68px; /* Tailwind gap-[68px_32px] might be row-gap column-gap or just gap */
+    font-size: 15px;
+    color: black;
+    font-weight: 500; /* font-medium */
+    line-height: 1; /* leading-[0] seems unusual, using 1 as default */
+    flex-wrap: wrap;
+    margin-top: 119px;
+    padding-left: 300px;
+    padding-right: 115px;
+  }
+  
+  .heading {
+    color: rgba(54, 136, 230, 1);
+    font-size: 1.875rem; /* text-3xl */
+    line-height: 2.25rem;
+    font-weight: 700; /* font-bold */
+    /* leading-none corresponds to line-height: 1, but might be overridden by font-size default */
+    align-self: stretch;
+    flex-grow: 1;
+    flex-shrink: 1; /* Default, but explicitly stated */
+    width: 1820px; /* Note: This fixed width might not be ideal */
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+  
+  .button {
+    background-color: white;
+    border-width: 1px;
+    align-self: stretch;
+    min-height: 2.75rem; /* min-h-11 (assuming 1 unit = 0.25rem) */
+    overflow: hidden;
+    text-align: center;
+    letter-spacing: -1px; /* tracking-[-1px] unusual value */
+    /*flex-grow: 1;*/
+    flex-shrink: 1; /* Default */
+    width: 150px;
+    margin-top: auto;
+    margin-bottom: auto;
+    padding-left: 0.625rem; /* px-2.5 */
+    padding-right: 0.625rem;
+    border-radius: 20px;
+    border-style: solid;
+    cursor: pointer; /* Added for button semantics */
+  }
+  
+  .buttonSelected {
+    color: rgba(18, 123, 243, 1);
+    border-color: rgba(18, 123, 243, 1);
+  }
+  
+  .buttonDefault {
+    border-color: black;
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 768px) { /* max-md */
+    .section {
+      margin-top: 2.5rem; /* mt-10 */
+      padding-left: 1.25rem; /* px-5 */
+      padding-right: 1.25rem;
+      max-width: 100%;
+    }
+    .heading {
+      max-width: 100%;
+      width: auto; /* Override fixed width */
+    }
+  }
