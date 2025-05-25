@@ -1,10 +1,138 @@
-.home-container {
-    text-align: center;
-    padding: 20px;
-  }
-  
-  .home-title {
-    font-size: 2rem;
-    color: blue;
-  }
-  
+body {
+  margin: 0;
+}
+
+.hero {
+  background-image: url('src/images/beach.png');
+  background-position: center;
+  height: 60vh;
+  display: flex; /*안에 요소 정렬*/
+  justify-content: center;
+  align-items: center;
+  position: relative; 
+  font-family: 'Pretendard', sans-serif;
+}
+
+.hero-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px; /* 제목과 검색창 사이 여백 */
+  text-align: center;
+  color: white;
+  margin-top: -18rem;;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.3);
+  padding: 0.50rem 0.75rem;   
+}
+
+.searchBox input {
+  border: none;
+  background: transparent;
+  outline: none;
+  color: white;
+}
+
+.searchBox input::placeholder {
+  color: black;
+  font-size: 0.800rem;        
+}
+
+.travelBtn {
+  position: absolute; 
+  bottom: 80px;       
+  right: 80px;       
+  background-color: rgba(18, 123, 243, 0.85);
+  color: white;           
+  padding: 0.9rem 1.2rem;      
+  border-radius: 12px;       
+  font-size: 1rem;        
+  border: none;              
+  cursor: pointer;           
+}
+
+.travelBtn:hover {
+  background-color: #357ab7; 
+}
+
+
+/* 베스트 여행지 */
+.best-destinations {
+  padding: 30px 20px;
+  background-color: #fff;
+}
+
+.best-destinations h2 {
+  font-size: 24px;
+  margin-bottom: 50px;
+  color: rgba(18, 123, 243, 0.85);
+  margin-left: 430px;
+}
+
+.card-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.destination-card {
+  width: 200px;
+  height: 300px;
+  border-radius: 20px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.destination-card:hover {
+  transform: translateY(-5px);
+}
+
+.destination-card .overlay {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 15px 15px 15px 23px;
+}
+
+.destination-card h3 {
+  color: white;
+  font-size: 16px;
+  text-align: left;
+}
+
+.destination-card span {
+  font-size: 14px;
+  color: white;
+}
+
+/* 개별 카드 이미지 배경 */
+.destination-card.jeju {
+  background-image: url('../images/1.png');
+}
+
+.destination-card.seoul {
+  background-image: url('../images/2.png');
+}
+
+.destination-card.busan {
+  background-image: url('../images/3.png');
+}
+
+.destination-card.suwon {
+  background-image: url('../images/4.png');
+}
+
