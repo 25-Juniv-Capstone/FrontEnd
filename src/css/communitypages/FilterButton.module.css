@@ -1,0 +1,51 @@
+.filterButtonContainer {
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  justify-content: center;
+  align-self: stretch;
+  padding-left: 5px; /* 0.875rem */
+  padding-right: 5px; /* 0.875rem */
+  padding-top: 6px; /* 0.375rem */
+  padding-bottom: 6px; /* 0.375rem */
+  margin-top: auto;
+  margin-bottom: auto;
+  white-space: nowrap;
+  background-color: white;
+  width: 100px;
+}
+
+.buttonBase {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 14px; /* 0.875rem */
+  padding-right: 14px; /* 0.875rem */
+  padding-top: 0;
+  padding-bottom: 0;
+  border: 1px solid;
+  border-radius: 50px;
+  font-size: 16px; /* var(--sds-typography-body-size-medium); 예시: 16px */
+  font-weight: 300; /* var(--sds-typography-body-font-weight-regular); 예시: 400 */
+  cursor: pointer; /* Added for better UX */
+  height: 50px;
+  text-align: center;
+}
+
+/* For max-md:px-5 */
+@media (max-width: 767px) { /* Assuming md breakpoint is 768px, Tailwind's default */
+  .buttonBase {
+    padding-left: 20px; /* 1.25rem */
+    padding-right: 20px; /* 1.25rem */
+  }
+}
+
+.active {
+  color: #2563eb; /* Tailwind blue-600 */
+  border-color: #2563eb; /* Tailwind blue-600 */
+}
+
+.inactive {
+  color: black;
+  border-color: black;
+} 

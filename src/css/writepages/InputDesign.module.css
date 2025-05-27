@@ -1,0 +1,373 @@
+.modalContainer {
+    background-color: #fff;
+    border-radius: 50px;
+    flex-wrap: wrap;
+    justify-content: start;
+    align-items: start;
+    gap: 9px 21px;
+    max-width: 609px;
+    padding: 29px 30px 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden
+}
+
+@media (width<=991px) {
+    .modalContainer {
+        padding-left: 20px;
+        padding-right: 20px
+    }
+}
+
+.modalTitle {
+    color: #000;
+    text-align: center;
+    letter-spacing: -1px;
+    background-color: #fff;
+    flex-grow: 1;
+    flex-shrink: 1;
+    width: auto;
+    padding: 31px 50px;
+    font-family: Pretendard, -apple-system, Roboto, Helvetica, sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 2;
+    overflow: hidden
+}
+
+@media (width<=991px) {
+    .modalTitle {
+        max-width: 100%;
+        padding-left: 20px;
+        padding-right: 20px
+    }
+}
+
+.modalContent {
+    background-color: #fff;
+    flex-direction: column;
+    flex-grow: 1;
+    flex-shrink: 1;
+    justify-content: start;
+    align-items: center;
+    min-height: 580px;
+    padding: 40px 30px;
+    display: flex;
+    overflow: hidden
+}
+
+@media (width<=991px) {
+    .modalContent {
+        max-width: 100%;
+        padding-left: 20px;
+        padding-right: 20px
+    }
+}
+
+.imageUploadBox {
+    background-color: #d9d9d9;
+    border-radius: 18px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    display: flex
+}
+
+@media (width<=991px) {
+    .imageUploadBox {
+        padding-left: 20px;
+        padding-right: 20px
+    }
+}
+
+.uploadIcon {
+    aspect-ratio: 1;
+    object-fit: contain;
+    object-position: center;
+    align-self: stretch;
+    width: 20px;
+    margin: auto;
+}
+
+.initialImageUploadContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 287px;
+    margin-top: 0px;
+    padding: 10px 0px;
+    box-sizing: border-box;
+}
+
+.imageUploadGroupContainer {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 287px;
+    margin-top: 5px;
+    padding: 10px 0px;
+    box-sizing: border-box;
+}
+
+.titleInputContainer {
+    background-color: #fff;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    width: 100%;
+    max-width: 287px;
+    margin-top: 5px;
+    padding: 22px 0px;
+    font-family: Pretendard, -apple-system, Roboto, Helvetica, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    display: flex;
+    overflow: hidden
+}
+
+@media (width<=991px) {
+    .titleInputContainer {
+        padding-left: 20px;
+        padding-right: 20px
+    }
+}
+
+.inputFieldGroup {
+    gap: var(--sds-size-space-200);
+    width: 100%
+}
+
+.inputLabel {
+    color: var(--sds-color-text-default-default);
+    font-size: var(--sds-typography-body-size-medium);
+    font-weight: var(--sds-typography-body-font-weight-regular);
+    line-height: 1.4
+}
+
+.textInput {
+    font-size: var(--sds-typography-body-size-medium);
+    font-weight: var(--sds-typography-body-font-weight-regular);
+    border-radius: var(--sds-size-radius-200);
+    border: var(--sds-size-stroke-border)solid var(--sds-color-border-default-default);
+    color: gray;
+    width: 100%;
+    min-width: 240px;
+    padding: var(--sds-size-space-300)var(--sds-size-space-400);
+    background-color: var(--sds-color-background-default-default);
+    flex: 1;
+    align-self: stretch;
+    margin-top: 8px;
+    line-height: 1;
+    overflow: hidden
+}
+
+.contentInputContainer {
+    background-color: #fff;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    width: 100%;
+    max-width: 287px;
+    margin-top: 15px;
+    padding: 22px 0px;
+    font-family: Pretendard, -apple-system, Roboto, Helvetica, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.4;
+    display: flex;
+    overflow: hidden
+}
+
+@media (width<=991px) {
+    .contentInputContainer {
+        padding-left: 20px
+    }
+}
+
+.textareaFieldGroup {
+    gap: var(--sds-size-space-200);
+    width: 100%;
+    height: 109px
+}
+
+.textareaLabel {
+    color: var(--sds-color-text-default-default);
+    font-size: var(--sds-typography-body-size-medium);
+    font-weight: var(--sds-typography-body-font-weight-regular)
+}
+
+.contentTextarea {
+    border-radius: var(--sds-size-radius-200);
+    border: var(--sds-size-stroke-border)solid var(--sds-color-border-default-default);
+    color: gray;
+    width: 100%;
+    min-width: 240px;
+    min-height: 80px;
+    padding: var(--sds-size-space-300)var(--sds-size-space-400);
+    background-color: var(--sds-color-background-default-default);
+    justify-content: start;
+    align-items: start;
+    gap: 4px;
+    margin-top: 8px;
+    display: flex;
+    position: relative;
+    overflow: hidden
+}
+
+.textareaValueDisplay {
+    font-size: var(--sds-typography-body-size-medium);
+    font-weight: var(--sds-typography-body-font-weight-regular);
+    z-index: 0;
+    flex: 1
+}
+
+.textareaResizeIcon {
+    aspect-ratio: 1;
+    object-fit: contain;
+    object-position: center;
+    stroke-width: 1px;
+    width: 7px;
+    /* stroke: var(--sds-color-icon-default-tertiary); */
+    z-index: 0;
+    flex-shrink: 0;
+    height: 7px;
+    position: absolute;
+    bottom: 6px;
+    right: 5px
+}
+
+.categorySelectContainer {
+    background-color: #fff;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    width: 100%;
+    max-width: 287px;
+    margin-top: 15px;
+    padding: 0px 0px;
+    font-family: Pretendard, -apple-system, Roboto, Helvetica, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.4;
+    display: flex;
+    overflow: visible;
+}
+
+@media (width<=991px) {
+    .categorySelectContainer {
+        padding-left: 20px
+    }
+}
+
+.selectFieldGroup {
+    gap: var(--sds-size-space-200);
+    width: 100%;
+}
+
+.selectLabel {
+    color: #1e1e1e;
+    font-size: var(--sds-typography-body-size-medium);
+    font-weight: var(--sds-typography-body-font-weight-regular);
+    line-height: 1.4
+}
+
+.categorySelect {
+    border-radius: var(--sds-size-radius-200);
+    border: var(--sds-size-stroke-border)solid var(--sds-color-border-default-default);
+    align-items: center;
+    gap: var(--sds-size-space-200);
+    color: gray;
+    white-space: nowrap;
+    width: 100%;
+    min-width: 240px;
+    min-height: 40px;
+    padding: var(--sds-size-space-300)var(--sds-size-space-300)var(--sds-size-space-300)var(--sds-size-space-400);
+    background-color: var(--sds-color-background-default-default);
+    justify-content: start;
+    margin-top: 8px;
+    line-height: 1;
+    display: flex;
+    position: relative
+}
+
+@media (width<=991px) {
+    .categorySelect {
+        white-space: initial
+    }
+}
+
+.selectValueDisplay {
+    font-size: 15px;
+    font-weight: var(--sds-typography-body-font-weight-regular);
+    flex: 1;
+    align-self: stretch;
+    margin-top: auto;
+    margin-bottom: auto
+}
+
+.selectDropdownIcon {
+    aspect-ratio: 1;
+    object-fit: contain;
+    object-position: center;
+    flex-shrink: 0;
+    align-self: stretch;
+    width: 16px;
+    margin-top: auto;
+    margin-bottom: auto
+}
+
+.actionButtonsContainer {
+    color: #000;
+    text-align: center;
+    letter-spacing: -1px;
+    background-color: #fff;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 250px;
+    padding: 22px 0px;
+    font-family: Figma Hand, -apple-system, Roboto, Helvetica, sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 58px;
+    text-decoration: underline;
+    display: flex;
+    overflow: visible;
+}
+
+@media (width<=991px) {
+    .actionButtonsContainer {
+        max-width: 100%;
+        padding-left: 20px;
+        padding-right: 20px;
+        justify-content: space-around;
+    }
+}
+
+.actionButtonPrimary {
+    width: 112px;
+    margin-bottom: auto;
+    background-color: transparent;
+    border: none;
+    padding: 5px 0;
+    color: #000;
+    text-align: center;
+    cursor: pointer;
+}
+
+.actionButtonSecondary {
+    width: 120px;
+    margin-bottom: auto;
+    background-color: transparent;
+    border: none;
+    padding: 5px 0;
+    color: #000;
+    text-align: center;
+    cursor: pointer;
+}
