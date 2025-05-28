@@ -1,0 +1,72 @@
+/* TravelThemeSelection styles */
+.section {
+  background-color: white;
+  width: 100%;
+  overflow: hidden;
+  font-weight: 700; /* font-bold */
+  margin-top: 119px;
+  padding-left: 0.625rem; /* px-2.5 */
+  padding-right: 0.625rem;
+}
+
+.heading {
+  align-self: stretch;
+  background-color: white;
+  width: 100%;
+  /* gap: 0.625rem; gap-2.5 - applied to parent? */
+  overflow: hidden;
+  font-size: 1.875rem; /* text-3xl */
+  color: rgba(54, 136, 230, 1);
+  line-height: 1; /* leading-none */
+  padding: 0.625rem 17.5625rem; /* py-2.5 px-[281px] */
+}
+
+.themeListContainer {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  font-size: 1.5625rem; /* text-[25px] */
+  color: white;
+  white-space: nowrap;
+  letter-spacing: -1px;
+  line-height: 1.6;
+  justify-content: center;
+  margin-top: 0.625rem; /* mt-2.5 */
+}
+
+.themeList {
+  display: flex;
+  min-height: 400px;
+  width: 100%;
+  align-items: center;
+  gap: 72px 40px; /* gap-[40px_72px] - column-gap row-gap? */
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  padding-left: 17.5625rem; /* 변경: heading과 맞춤 */
+  padding-right: 17.5625rem; /* 변경: heading과 맞춤 */
+  padding-bottom: 0.5625rem; /* pb-[9px] */
+}
+
+/* Responsive styles */
+@media (max-width: 768px) { /* max-md */
+  .section {
+    margin-top: 2.5rem; /* mt-10 */
+    max-width: 100%;
+  }
+  .heading {
+    padding-left: 1.25rem; /* px-5 */
+    padding-right: 1.25rem;
+    max-width: 100%;
+  }
+  .themeListContainer {
+    max-width: 100%;
+    white-space: initial; /* Adjust if needed */
+  }
+  .themeList {
+    padding-left: 1.25rem; /* 기존 반응형 스타일 유지 (heading과 동일) */
+    padding-right: 1.25rem; /* 기존 반응형 스타일 유지 (heading과 동일) */
+    max-width: 100%;
+    gap: 1rem; /* Adjust gap for smaller screens */
+  }
+} 

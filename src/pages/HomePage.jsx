@@ -1,7 +1,14 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../css/HomePage.css';
 
 function HomePage() {
+  const navigate = useNavigate();
+
+  const handleTravelClick = () => {
+    navigate('/select');
+  };
+
   return (
     <div>
       <div className="hero">
@@ -10,7 +17,7 @@ function HomePage() {
           <div className="searchBox">
             <input type="text" placeholder="여행 지역을 입력해주세요" />
           </div>
-          <button className="travelBtn">여행하기</button>
+          <button className="travelBtn" onClick={handleTravelClick}>여행하기</button>
         </div>
       </div>
 

@@ -1,0 +1,46 @@
+.modalOverlay {
+  position: fixed; /* 화면 전체에 고정 */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* 반투명 검은색 배경 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* 다른 요소들 위에 표시 */
+}
+
+.modalContent {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  position: center; /* 닫기 버튼의 기준점 */
+  max-width: 700px; /* 700px에서 550px로 수정 (예시) */
+  width: 100%; /* 화면 너비의 90% 사용 */
+  max-height: 80vh; /* 90vh에서 80vh로 수정 (예시) */
+   overflow-y: auto;
+   overflow-x: hidden;
+}
+
+
+/* 기존 InputDesign.module.css의 .div 스타일을 가져오거나, 
+   새로운 formContainer 스타일을 여기에 정의합니다. 
+   WritePageModal.jsx에서 className={modalStyles.formContainer}로 사용했으므로,
+   .formContainer 클래스를 정의합니다. 
+   기존 .div의 핵심 스타일을 여기에 적용할 수 있습니다. */
+.formContainer {
+  /* background-color: #fff; (modalContent에서 이미 처리) */
+  /* border-radius: 50px; (modalContent에서 이미 처리 또는 여기서 다르게 설정 가능) */
+  flex-wrap: wrap;
+  justify-content: start; 
+  align-items: start; 
+  gap: 9px 21px;
+  /* max-width: 609px; (modalContent에서 이미 처리 또는 여기서 다르게 설정 가능) */
+  padding: 0px 180px; /* 내부 패딩 조정 */
+  display: flex;
+  flex-direction: column;
+  /* overflow: auto; (modalContent에서 이미 처리) */
+  width: 100%; /* modalContent 너비에 맞춤 */
+} 

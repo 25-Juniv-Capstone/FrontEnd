@@ -10,7 +10,6 @@
 
 // 필수 라이브러리 import
 import React, { useEffect, useState, useRef } from "react";
-import Header from "../layout/Header"; // 상단 공통 Header
 import "../css/CourseCreatePage.css"; // 스타일 import
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"; // 드래그앤드롭 라이브러리
 
@@ -370,8 +369,6 @@ function CourseCreatePage() {
 
   return (
     <div className="course-page">
-      <Header />
-
       <div className="course-main">
         {/* 왼쪽 패널 - 일정 목록 */}
         <div className="course-sidebar">

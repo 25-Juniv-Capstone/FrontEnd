@@ -1,0 +1,96 @@
+.mainContainer {
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  background-color: white;
+}
+
+.filterSection {
+  display: flex;
+  overflow: hidden;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  align-self: center;
+  padding-left: center;
+  padding-right: center;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  font-size: 16px;
+  line-height: 1;
+  color: black;
+  background-color: white;
+}
+
+/* For max-md:px-5 and max-md:max-w-full */
+@media (max-width: 767px) {
+  .filterSection {
+    padding-left: 20px;
+    padding-right: 20px;
+    max-width: 100%;
+  }
+}
+
+.cardSection {
+  padding-top: 16px;
+  padding-bottom: 384px;
+  margin-top: 16px;
+  width: 100%;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 40px;
+  color: white;
+}
+
+/* For max-md:pb-24 and max-md:max-w-full */
+@media (max-width: 767px) {
+  .cardSection {
+    padding-bottom: 96px;
+    max-width: 100%;
+  }
+}
+
+.cardGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  justify-content: flex-start;
+  padding-left: 18rem;
+  padding-right: 18rem;
+  padding-bottom: 10px;
+  width: 100%;
+  min-height: 400px;
+}
+
+.cardGridSecondRow {
+  composes: cardGrid;
+  margin-top: 32px;
+}
+
+
+/* For max-md:px-5 and max-md:max-w-full on cardGrid */
+@media (max-width: 767px) {
+  .cardGrid, .cardGridSecondRow {
+    padding-left: 20px;
+    padding-right: 20px;
+    max-width: 100%;
+    justify-content: center;
+  }
+}
+
+/* 글쓰기 버튼 스타일 추가 */
+.createPostButton {
+  padding: 8px 16px;
+  font-size: 16px;
+  background-color: #007bff; /* 예시 색상 */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 10px; /* SearchBar와의 간격 */
+}
+
+.createPostButton:hover {
+  background-color: #0056b3;
+} 
