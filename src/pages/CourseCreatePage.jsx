@@ -12,6 +12,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import "../css/CourseCreatePage.css"; // 스타일 import
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"; // 드래그앤드롭 라이브러리
+import { useLocation } from "react-router-dom";
 
 // 장소 타입별 이모지 매핑 - UI에 표시될 아이콘 정의
 const placeTypeToEmoji = {
@@ -116,14 +117,60 @@ const mockCourseData = {
   }
 };
 
+// 번호가 크게 보이는 SVG 마커 아이콘 생성 함수
+function getNumberedMarkerIcon(number, color = "#1976d2") {
+  return {
+    url: `data:image/svg+xml;utf-8,${encodeURIComponent(`
+      <svg width="38" height="38" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="19" cy="19" r="17" fill="${color}" stroke="white" stroke-width="3"/>
+        <text x="19" y="25" text-anchor="middle" font-size="18" font-family="Arial" font-weight="bold" fill="white">${number}</text>
+      </svg>
+    `)}`,
+    scaledSize: new window.google.maps.Size(38, 38),
+    labelOrigin: new window.google.maps.Point(19, 19)
+  };
+}
+
 function CourseCreatePage() {
+  const location = useLocation();
+  const mustVisitPlaces = location.state?.mustVisitPlaces || [];
+  const regionFromState = location.state?.region || "사용자 선택";
+  const startDate = location.state?.startDate || null;
+  const endDate = location.state?.endDate || null;
   // 상태 관리
-  const [courseData, setCourseData] = useState(mockCourseData);
+  const [courseData, setCourseData] = useState(null);
   const [selectedDay, setSelectedDay] = useState(1);
   const [placesByDay, setPlacesByDay] = useState({});
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
-  const [region, setRegion] = useState("부산"); // 기본값으로 부산 설정
+  const [region, setRegion] = useState(regionFromState);
+  const [dates, setDates] = useState({ startDate, endDate });
+
+  // 여행 일수 계산
+  function getDateDiff(start, end) {
+    if (!start || !end) return 1;
+    const s = new Date(start);
+    const e = new Date(end);
+    return Math.max(1, Math.round((e - s) / (1000*60*60*24)) + 1);
+  }
+  const daysCount = getDateDiff(startDate, endDate);
+
+  // mustVisitPlaces를 1일차에만 우선 배정
+  useEffect(() => {
+    // daysCount만큼 days 배열을 항상 생성
+    setCourseData({
+      recommended_courses: [
+        {
+          course_name: "나의 맞춤 코스",
+          days: Array.from({ length: daysCount }, (_, i) => ({
+            day: i + 1,
+            itinerary: i === 0 ? mustVisitPlaces : [],
+          })),
+        },
+      ],
+      metadata: { region, startDate, endDate },
+    });
+  }, [mustVisitPlaces, region, startDate, endDate, daysCount]);
 
   // 초기 데이터 처리 - 받아온 데이터를 화면에 표시하기 좋은 형태로 변환
   useEffect(() => {
@@ -141,16 +188,20 @@ function CourseCreatePage() {
     course.days.forEach(dayData => {
       console.log("Processing day:", dayData);
       
-      processedPlaces[dayData.day] = dayData.itinerary.map((item, index) => ({
-        id: `${dayData.day}-${index}`,
-        time: item.time,
-        place_name: item.place_name,
-        place_type: item.place_type,
-        description: item.description,
-        lat: item.coordinates.latitude,
-        lng: item.coordinates.longitude,
-        accessibility_features: item.accessibility_features
-      }));
+      processedPlaces[dayData.day] = dayData.itinerary.map((item, index) => {
+        // coordinates가 없으면 lat/lng로부터 생성
+        const coords = item.coordinates || (item.lat && item.lng ? { latitude: item.lat, longitude: item.lng } : undefined);
+        return {
+          id: `${dayData.day}-${index}`,
+          time: item.time,
+          place_name: item.place_name || item.name || '',
+          place_type: item.place_type || '기타',
+          description: item.description || item.address || '',
+          lat: coords?.latitude,
+          lng: coords?.longitude,
+          accessibility_features: item.accessibility_features || {},
+        };
+      });
     });
 
     console.log("Processed places:", processedPlaces);
@@ -163,26 +214,37 @@ function CourseCreatePage() {
   const markers = useRef([]); // 지도에 표시될 마커들
   const pathLine = useRef(null); // 경로를 표시할 선
 
-  // 구글 지도 초기화
+  // 지도 최초 1회만 생성 (MustVisitPlaces 방식)
   useEffect(() => {
-    if (window.google && mapRef.current) {
-      const defaultCenter = { 
-        lat: 35.1795543, // 부산 중심 좌표
-        lng: 129.0756416
-      };
-      
+    if (window.google && mapRef.current && courseData) {
       mapInstance.current = new window.google.maps.Map(mapRef.current, {
-        center: defaultCenter,
-        zoom: 13,
+        center: { lat: 36.5, lng: 127.8 },
+        zoom: 12,
       });
     }
-  }, []);
+  }, [mapRef.current, courseData]);
 
-  // 선택된 일차의 장소들을 지도에 표시
+  // mapCenter가 바뀔 때 setCenter만 (지도 생성 후에만)
+  const [mapCenter, setMapCenter] = useState({ lat: 36.5, lng: 127.8 });
+  useEffect(() => {
+    if (mapInstance.current) {
+      mapInstance.current.setCenter(mapCenter);
+    }
+  }, [mapCenter]);
+
+  // placesByDay가 바뀔 때 첫 장소로 center 이동
+  useEffect(() => {
+    const currentPlaces = placesByDay[selectedDay] || [];
+    if (currentPlaces.length > 0 && currentPlaces[0].lat && currentPlaces[0].lng) {
+      setMapCenter({ lat: currentPlaces[0].lat, lng: currentPlaces[0].lng });
+    }
+  }, [placesByDay, selectedDay]);
+
+  // 지도에 마커(핀) + 선(Polyline) + infoWindow 표시
   useEffect(() => {
     if (!mapInstance.current) return;
 
-    // 기존 마커와 경로 삭제
+    // 기존 마커/선 제거
     markers.current.forEach(marker => marker.setMap(null));
     markers.current = [];
     if (pathLine.current) {
@@ -193,30 +255,24 @@ function CourseCreatePage() {
     const currentPlaces = placesByDay[selectedDay] || [];
     const pathCoordinates = [];
 
-    // 새 마커 생성 및 정보창 설정
     currentPlaces.forEach((place, idx) => {
+      if (!place.lat || !place.lng) return;
       const marker = new window.google.maps.Marker({
         position: { lat: place.lat, lng: place.lng },
         map: mapInstance.current,
-        label: `${idx + 1}`,
+        icon: getNumberedMarkerIcon(idx + 1),
         title: place.place_name,
       });
 
-      // 마커 클릭시 표시될 정보창 설정
+      // infoWindow
       const infoWindow = new window.google.maps.InfoWindow({
         content: `
-          <div class="info-window">
-            <h3>${place.place_name}</h3>
-            <p>${place.description || ""}</p>
-            <div class="accessibility">
-              ${Object.entries(place.accessibility_features || {})
-                .map(([key, value]) => `<p>• ${value}</p>`)
-                .join("")}
-            </div>
+          <div style="min-width:180px">
+            <h3 style="margin:0 0 4px 0;font-size:1.1rem;color:#1976d2;">${place.place_name}</h3>
+            <div style="font-size:0.95rem;color:#555;">${place.description || place.address || ""}</div>
           </div>
         `
       });
-
       marker.addListener("click", () => {
         infoWindow.open(mapInstance.current, marker);
       });
@@ -225,7 +281,7 @@ function CourseCreatePage() {
       pathCoordinates.push({ lat: place.lat, lng: place.lng });
     });
 
-    // 장소들을 연결하는 경로선 그리기
+    // 선(Polyline)으로 연결
     if (pathCoordinates.length >= 2) {
       pathLine.current = new window.google.maps.Polyline({
         path: pathCoordinates,
@@ -235,11 +291,6 @@ function CourseCreatePage() {
         strokeWeight: 3,
       });
       pathLine.current.setMap(mapInstance.current);
-    }
-
-    // 지도 중심 이동
-    if (currentPlaces.length > 0) {
-      mapInstance.current.setCenter({ lat: currentPlaces[0].lat, lng: currentPlaces[0].lng });
     }
   }, [selectedDay, placesByDay]);
 
@@ -346,14 +397,6 @@ function CourseCreatePage() {
     currentDayPlaces: placesByDay[selectedDay]
   });
 
-  // Places 서비스 초기화
-  const placesService = useRef(null);
-  useEffect(() => {
-    if (window.google && window.google.maps && window.google.maps.places && mapInstance.current) {
-      placesService.current = new window.google.maps.places.PlacesService(mapInstance.current);
-    }
-  }, [mapInstance.current]);
-
   // 날짜 수정 처리
   const handleDateChange = (startDate, endDate) => {
     setCourseData({
@@ -366,6 +409,9 @@ function CourseCreatePage() {
     });
     setIsDateModalOpen(false);
   };
+
+  // courseData가 없으면 안내 메시지
+  if (!courseData) return <div style={{textAlign:'center',marginTop:'3rem'}}>여행지가 없습니다. Select 페이지에서 여행지를 선택해 주세요.</div>;
 
   return (
     <div className="course-page">
@@ -380,13 +426,13 @@ function CourseCreatePage() {
 
           {/* 일차 선택 버튼 */}
           <div className="day-buttons">
-            {[1, 2, 3].map((day) => (
+            {Array.from({ length: daysCount }, (_, i) => (
               <button
-                key={day}
-                className={selectedDay === day ? "active" : ""}
-                onClick={() => setSelectedDay(day)}
+                key={i + 1}
+                className={selectedDay === i + 1 ? "active" : ""}
+                onClick={() => setSelectedDay(i + 1)}
               >
-                {day}일차
+                {i + 1}일차
               </button>
             ))}
           </div>
@@ -459,6 +505,9 @@ function CourseCreatePage() {
         {/* 오른쪽 패널 - 구글 지도 */}
         <div className="map-area">
           <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
+          {!courseData && (
+            <div style={{textAlign:'center',marginTop:'3rem'}}>여행지가 없습니다. Select 페이지에서 여행지를 선택해 주세요.</div>
+          )}
         </div>
       </div>
 

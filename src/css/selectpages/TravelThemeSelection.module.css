@@ -1,72 +1,164 @@
 /* TravelThemeSelection styles */
 .section {
-  background-color: white;
-  width: 100%;
-  overflow: hidden;
-  font-weight: 700; /* font-bold */
-  margin-top: 119px;
-  padding-left: 0.625rem; /* px-2.5 */
-  padding-right: 0.625rem;
+  background: white;
+  border-radius: 24px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  margin-top: 2rem;
 }
 
 .heading {
-  align-self: stretch;
-  background-color: white;
-  width: 100%;
-  /* gap: 0.625rem; gap-2.5 - applied to parent? */
-  overflow: hidden;
-  font-size: 1.875rem; /* text-3xl */
-  color: rgba(54, 136, 230, 1);
-  line-height: 1; /* leading-none */
-  padding: 0.625rem 17.5625rem; /* py-2.5 px-[281px] */
+  color: rgba(18, 123, 243, 0.85);
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  text-align: center;
+  position: relative;
+  padding-bottom: 1rem;
 }
 
-.themeListContainer {
+.heading::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: rgba(18, 123, 243, 0.3);
+  border-radius: 2px;
+}
+
+.themeGrid {
   display: flex;
-  width: 100%;
+  flex-direction: row;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  overflow-x: auto;
+  padding: 1rem;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  justify-content: center;
+}
+
+.themeGrid::-webkit-scrollbar {
+  display: none;
+}
+
+.themeCard {
+  min-width: 220px;
+  width: 220px;
+  height: 300px;
+  display: flex;
   flex-direction: column;
   align-items: stretch;
-  font-size: 1.5625rem; /* text-[25px] */
-  color: white;
-  white-space: nowrap;
-  letter-spacing: -1px;
-  line-height: 1.6;
-  justify-content: center;
-  margin-top: 0.625rem; /* mt-2.5 */
+  border-radius: 24px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  flex-shrink: 0;
+  background: #fff;
+  position: relative;
 }
 
-.themeList {
-  display: flex;
-  min-height: 400px;
+.themeCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.themeImage {
   width: 100%;
-  align-items: center;
-  gap: 72px 40px; /* gap-[40px_72px] - column-gap row-gap? */
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  padding-left: 17.5625rem; /* 변경: heading과 맞춤 */
-  padding-right: 17.5625rem; /* 변경: heading과 맞춤 */
-  padding-bottom: 0.5625rem; /* pb-[9px] */
+  height: 70%;
+  object-fit: cover;
+  display: block;
 }
 
-/* Responsive styles */
-@media (max-width: 768px) { /* max-md */
+.themeCard:hover .themeImage {
+  transform: scale(1.05);
+}
+
+.themeOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.5), rgba(0,0,0,0.1));
+  display: flex;
+  align-items: flex-end;
+  padding: 1.5rem;
+  pointer-events: none;
+}
+
+.themeTitle {
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  position: absolute;
+  left: 1.5rem;
+  bottom: 1.5rem;
+}
+
+.themeCard.selected {
+  border: 3px solid rgba(18, 123, 243, 0.8);
+  box-shadow: 0 0 0 4px rgba(18, 123, 243, 0.2);
+}
+
+.themeCard.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(18, 123, 243, 0.9);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  z-index: 1;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
   .section {
-    margin-top: 2.5rem; /* mt-10 */
-    max-width: 100%;
+    padding: 1.5rem;
+    border-radius: 16px;
   }
+
   .heading {
-    padding-left: 1.25rem; /* px-5 */
-    padding-right: 1.25rem;
-    max-width: 100%;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
   }
-  .themeListContainer {
-    max-width: 100%;
-    white-space: initial; /* Adjust if needed */
+
+  .themeCard {
+    min-width: 160px;
+    width: 160px;
+    height: 200px;
   }
-  .themeList {
-    padding-left: 1.25rem; /* 기존 반응형 스타일 유지 (heading과 동일) */
-    padding-right: 1.25rem; /* 기존 반응형 스타일 유지 (heading과 동일) */
-    max-width: 100%;
-    gap: 1rem; /* Adjust gap for smaller screens */
+
+  .themeTitle {
+    font-size: 1rem;
+    left: 1rem;
+    bottom: 1rem;
   }
+}
+
+/* 애니메이션 효과 */
+@keyframes cardPop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.themeCard.selected {
+  animation: cardPop 0.3s ease-out;
 } 

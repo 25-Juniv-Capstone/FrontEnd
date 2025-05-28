@@ -49,18 +49,16 @@ const TravelThemeSelection = ({ onSelect }) => {
       <h2 className={styles.heading}>
         💫 희망하는 여행 테마를 선택 해주세요.{" "}
       </h2>
-      <div className={styles.themeListContainer}>
-        <div className={styles.themeList}>
-          {themes.map((theme) => (
-            <ThemeCard
-              key={theme.id}
-              title={theme.title}
-              imageUrl={theme.imageUrl}
-              onClick={() => toggleTheme(theme.id)}
-              isSelected={selectedThemes.includes(theme.id)}
-            />
-          ))}
-        </div>
+      <div className={styles.themeGrid}>
+        {themes.map((theme) => (
+          <ThemeCard
+            key={theme.id}
+            title={theme.title}
+            imageUrl={theme.imageUrl}
+            onClick={() => toggleTheme(theme.id)}
+            isSelected={selectedThemes.includes(theme.id)}
+          />
+        ))}
       </div>
     </section>
   );

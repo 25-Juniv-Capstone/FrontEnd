@@ -27,7 +27,10 @@ body {
   display: flex;
   align-items: center;
   background-color: rgba(255, 255, 255, 0.3);
-  padding: 0.50rem 0.75rem;   
+  padding: 0.50rem 0.75rem;
+  position: relative; /* 검색 결과를 위한 상대 위치 설정 */
+  border-radius: 8px;
+  min-width: 300px;
 }
 
 .searchBox input {
@@ -35,11 +38,50 @@ body {
   background: transparent;
   outline: none;
   color: white;
+  width: 100%;
+  font-size: 1rem;
+  padding: 0.5rem;
 }
 
 .searchBox input::placeholder {
-  color: black;
-  font-size: 0.800rem;        
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 0.800rem;
+}
+
+.searchResults {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border-radius: 8px;
+  margin-top: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.searchResultItem {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  color: #333;
+  transition: background-color 0.2s;
+  font-size: 0.9rem;
+}
+
+.searchResultItem:hover {
+  background-color: #f5f5f5;
+}
+
+.searchResultItem:first-child {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.searchResultItem:last-child {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
 .travelBtn {
@@ -134,5 +176,232 @@ body {
 
 .destination-card.suwon {
   background-image: url('../images/4.png');
+}
+
+@media (max-width: 600px) {
+  .destination-card {
+    width: 95vw;
+    max-width: 340px;
+    height: 180px;
+  }
+}
+
+/* 모달 공통 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.region-modal,
+.date-input-modal,
+.confirm-modal {
+  background: white;
+  border-radius: 16px;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.modal-header button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.modal-header button:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.modal-content {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 24px;
+  text-align: center;
+}
+
+.modal-content p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #444;
+  line-height: 1.6;
+}
+
+/* 날짜 입력 모달 스타일 */
+.date-input-modal form {
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.date-input-group {
+  margin-bottom: 20px;
+}
+
+.date-input-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #555;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.date-input-group input {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #333;
+  transition: all 0.2s;
+}
+
+.date-input-group input:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+/* 모달 버튼 스타일 */
+.modal-buttons {
+  padding: 20px 24px;
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid #eee;
+}
+
+.modal-buttons button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-buttons button:first-child {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.modal-buttons button:first-child:hover {
+  background-color: #eee;
+}
+
+.modal-buttons button:last-child {
+  background-color: #1976d2;
+  color: white;
+}
+
+.modal-buttons button:last-child:hover {
+  background-color: #1565c0;
+}
+
+/* 확인 모달 특별 스타일 */
+.confirm-modal .modal-content {
+  padding: 32px 24px;
+}
+
+.confirm-modal .modal-content p {
+  font-size: 1.2rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.confirm-modal .modal-content p span {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+/* 지역 모달 특별 스타일 */
+.region-modal .modal-content {
+  padding: 32px 24px;
+}
+
+.region-modal .modal-content p {
+  font-size: 1.2rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.region-modal .modal-content p span {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+/* 모바일 대응 */
+@media (max-width: 480px) {
+  .region-modal,
+  .date-input-modal,
+  .confirm-modal {
+    width: 90vw;
+    margin: 0 20px;
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+  }
+
+  .modal-content {
+    padding: 20px;
+  }
+
+  .modal-buttons {
+    padding: 16px 20px;
+  }
+
+  .modal-buttons button {
+    padding: 10px;
+  }
 }
 

@@ -4,15 +4,21 @@ import TravelThemeSelection from "./selectPage/TravelThemeSelection";
 import DestinationSearch from "./selectPage/DestinationSearch";
 import AddedPlacesList from "./selectPage/AddedPlacesList";
 import GenerateButton from "./selectPage/GenerateButton";
+import MustVisitPlaces from "./selectPage/MustVisitPlaces";
 import styles from '../css/selectpages/SelectPages.module.css';
+import { useNavigate, useLocation } from "react-router-dom";
+import SuccessModal from "./selectPage/SuccessModal";
 
 const SelectPages = () => {
   const [userType, setUserType] = useState("general");
   const [selectedThemes, setSelectedThemes] = useState([]);
-  const [addedPlaces, setAddedPlaces] = useState([
-    { id: "default1", name: "좋아 숙소", memo: "메모" },
-    { id: "default2", name: "싫어 아울렛", memo: "메모" },
-  ]);
+  const [addedPlaces, setAddedPlaces] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [region, setRegion] = useState(location.state?.region || "사용자 선택");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const handleUserTypeSelect = (type) => {
     setUserType(type);
@@ -33,12 +39,11 @@ const SelectPages = () => {
   };
 
   const handleGenerate = () => {
-    console.log({
-      userType,
-      selectedThemes,
-      addedPlaces,
-    });
-    alert("여행 계획이 생성되었습니다!");
+    setShowModal(true);
+    setTimeout(() => {
+      setShowModal(false);
+      navigate("/course", { state: { mustVisitPlaces: addedPlaces, region, startDate, endDate } });
+    }, 1500);
   };
 
   return (
@@ -50,20 +55,16 @@ const SelectPages = () => {
         <TravelThemeSelection onSelect={handleThemeSelect} />
 
         <section className={styles.destinationSection}>
-          <h2 className={styles.destinationHeading}>
+          {/* <h2 className={styles.destinationHeading}>
             🏙️ 꼭 포함하고 싶은 여행지를 선택 해주세요.
-          </h2>
+          </h2> */}
 
-          <DestinationSearch onAddPlace={handleAddPlace} />
-
-          <AddedPlacesList
-            places={addedPlaces}
-            onRemovePlace={handleRemovePlace}
-          />
+          <MustVisitPlaces onChange={setAddedPlaces} />
         </section>
 
         <GenerateButton onClick={handleGenerate} />
       </main>
+      {showModal && <SuccessModal message="일정이 생성되었습니다!" />}
     </div>
   );
 };
