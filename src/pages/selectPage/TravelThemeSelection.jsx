@@ -34,14 +34,12 @@ const TravelThemeSelection = ({ onSelect }) => {
   const [selectedThemes, setSelectedThemes] = useState([]);
 
   const toggleTheme = (id) => {
-    setSelectedThemes((prev) => {
-      const newSelection = prev.includes(id)
-        ? prev.filter((themeId) => themeId !== id)
-        : [...prev, id];
-
-      onSelect(newSelection);
-      return newSelection;
-    });
+    const newSelection = selectedThemes.includes(id)
+      ? selectedThemes.filter((themeId) => themeId !== id)
+      : [...selectedThemes, id];
+    
+    setSelectedThemes(newSelection);
+    onSelect(newSelection);
   };
 
   return (

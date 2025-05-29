@@ -119,4 +119,15 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(18, 123, 243, 0.5);
+}
+
+.errorMessage {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 16px 0;
+  font-size: 14px;
+  border: 1px solid #ffcdd2;
+  text-align: center;
 } 

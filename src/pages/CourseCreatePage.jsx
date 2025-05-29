@@ -137,6 +137,16 @@ function CourseCreatePage() {
   const regionFromState = location.state?.region || "사용자 선택";
   const startDate = location.state?.startDate || null;
   const endDate = location.state?.endDate || null;
+  const backendCourseData = location.state?.courseData || null;
+  
+  console.log('CoursePage received data:', JSON.stringify({
+    mustVisitPlaces,
+    regionFromState,
+    startDate,
+    endDate,
+    backendCourseData
+  }, null, 2));
+
   // 상태 관리
   const [courseData, setCourseData] = useState(null);
   const [selectedDay, setSelectedDay] = useState(1);
@@ -147,82 +157,72 @@ function CourseCreatePage() {
   const [dates, setDates] = useState({ startDate, endDate });
 
   // 여행 일수 계산
-  function getDateDiff(start, end) {
+  const getDateDiff = (start, end) => {
     if (!start || !end) return 1;
     const s = new Date(start);
     const e = new Date(end);
     return Math.max(1, Math.round((e - s) / (1000*60*60*24)) + 1);
-  }
-  const daysCount = getDateDiff(startDate, endDate);
+  };
 
-  // mustVisitPlaces를 1일차에만 우선 배정
+  // 초기 데이터 설정
   useEffect(() => {
-    // daysCount만큼 days 배열을 항상 생성
-    setCourseData({
-      recommended_courses: [
-        {
-          course_name: "나의 맞춤 코스",
-          days: Array.from({ length: daysCount }, (_, i) => ({
-            day: i + 1,
-            itinerary: i === 0 ? mustVisitPlaces : [],
-          })),
-        },
-      ],
-      metadata: { region, startDate, endDate },
-    });
-  }, [mustVisitPlaces, region, startDate, endDate, daysCount]);
-
-  // 초기 데이터 처리 - 받아온 데이터를 화면에 표시하기 좋은 형태로 변환
-  useEffect(() => {
-    console.log("courseData:", courseData);
-
-    if (!courseData?.recommended_courses?.[0]?.days) {
-      console.log("No course data available");
-      return;
-    }
-
-    const course = courseData.recommended_courses[0];
-    const processedPlaces = {};
-
-    // 각 일차별 장소 데이터 처리
-    course.days.forEach(dayData => {
-      console.log("Processing day:", dayData);
+    if (backendCourseData?.recommended_courses?.[0]?.days) {
+      const course = backendCourseData.recommended_courses[0];
+      const processedPlaces = {};
       
-      processedPlaces[dayData.day] = dayData.itinerary.map((item, index) => {
-        // coordinates가 없으면 lat/lng로부터 생성
-        const coords = item.coordinates || (item.lat && item.lng ? { latitude: item.lat, longitude: item.lng } : undefined);
-        return {
+      course.days.forEach(dayData => {
+        if (!dayData.itinerary) return;
+        
+        processedPlaces[dayData.day] = dayData.itinerary.map((item, index) => ({
           id: `${dayData.day}-${index}`,
-          time: item.time,
-          place_name: item.place_name || item.name || '',
-          place_type: item.place_type || '기타',
-          description: item.description || item.address || '',
-          lat: coords?.latitude,
-          lng: coords?.longitude,
-          accessibility_features: item.accessibility_features || {},
-        };
+          time: item.time || '오전 09:00',
+          place_name: item.name || item.place_name || '장소명 없음',
+          place_type: item.type || item.place_type || '기타',
+          description: item.address || item.description || '',
+          lat: item.coordinates?.latitude || item.lat || 0,
+          lng: item.coordinates?.longitude || item.lng || 0,
+          accessibility_features: item.accessibility_info ? 
+            Object.fromEntries(
+              item.accessibility_info.split(', ')
+                .map(info => info.split(': '))
+            ) : (item.accessibility_features || {}),
+          rating: item.rating || 0,
+          reviews: item.reviews || 0,
+          operating_hours: item.operating_hours || {}
+        }));
       });
-    });
+      
+      setCourseData(backendCourseData);
+      setPlacesByDay(processedPlaces);
+      setSelectedDay(1);
+    }
+  }, [backendCourseData]);
 
-    console.log("Processed places:", processedPlaces);
-    setPlacesByDay(processedPlaces);
-  }, [courseData]);
+  // 디버깅을 위한 상태 로깅
+  useEffect(() => {
+    console.log('Current course state:', JSON.stringify({
+      courseData,
+      selectedDay,
+      placesByDay,
+      currentDayPlaces: placesByDay[selectedDay]
+    }, null, 2));
+  }, [courseData, selectedDay, placesByDay]);
 
   // 지도 관련 설정
-  const mapRef = useRef(null); // 지도를 표시할 DOM 요소
-  const mapInstance = useRef(null); // 구글 지도 인스턴스
-  const markers = useRef([]); // 지도에 표시될 마커들
-  const pathLine = useRef(null); // 경로를 표시할 선
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
+  const markers = useRef([]);
+  const pathLine = useRef(null);
 
-  // 지도 최초 1회만 생성 (MustVisitPlaces 방식)
+  // 지도 초기화 - 컴포넌트 마운트 시 한 번만 실행
   useEffect(() => {
-    if (window.google && mapRef.current && courseData) {
+    if (window.google && mapRef.current && !mapInstance.current) {
       mapInstance.current = new window.google.maps.Map(mapRef.current, {
         center: { lat: 36.5, lng: 127.8 },
         zoom: 12,
       });
     }
-  }, [mapRef.current, courseData]);
+  }, []); // 빈 의존성 배열로 마운트 시 한 번만 실행
 
   // mapCenter가 바뀔 때 setCenter만 (지도 생성 후에만)
   const [mapCenter, setMapCenter] = useState({ lat: 36.5, lng: 127.8 });
@@ -270,6 +270,7 @@ function CourseCreatePage() {
           <div style="min-width:180px">
             <h3 style="margin:0 0 4px 0;font-size:1.1rem;color:#1976d2;">${place.place_name}</h3>
             <div style="font-size:0.95rem;color:#555;">${place.description || place.address || ""}</div>
+            <div style="font-size:0.9rem;color:#888;margin-top:4px;">${place.time ? `⏰ ${place.time}` : ""}</div>
           </div>
         `
       });
@@ -390,13 +391,6 @@ function CourseCreatePage() {
     return `${formatDate(startDate)} ~ ${formatDate(endDate)}`;
   };
 
-  // 디버깅을 위한 상태 로깅
-  console.log("Current state:", {
-    selectedDay,
-    placesByDay,
-    currentDayPlaces: placesByDay[selectedDay]
-  });
-
   // 날짜 수정 처리
   const handleDateChange = (startDate, endDate) => {
     setCourseData({
@@ -410,23 +404,22 @@ function CourseCreatePage() {
     setIsDateModalOpen(false);
   };
 
-  // courseData가 없으면 안내 메시지
-  if (!courseData) return <div style={{textAlign:'center',marginTop:'3rem'}}>여행지가 없습니다. Select 페이지에서 여행지를 선택해 주세요.</div>;
+  // courseData가 없더라도 지도는 항상 렌더링
+  const currentDayPlaces = placesByDay[selectedDay] || [];
+  const totalDays = courseData?.recommended_courses?.[0]?.days?.length || 1;
 
   return (
     <div className="course-page">
       <div className="course-main">
-        {/* 왼쪽 패널 - 일정 목록 */}
         <div className="course-sidebar">
           <h2>{region}</h2>
           <div className="date-section" onClick={() => setIsDateModalOpen(true)}>
-            <p className="date">{getDateDisplay()}</p>
+            <p className="date">{getDateDisplay && getDateDisplay()}</p>
             <span className="edit-icon">✏️</span>
           </div>
 
-          {/* 일차 선택 버튼 */}
           <div className="day-buttons">
-            {Array.from({ length: daysCount }, (_, i) => (
+            {Array.from({ length: totalDays }, (_, i) => (
               <button
                 key={i + 1}
                 className={selectedDay === i + 1 ? "active" : ""}
@@ -437,7 +430,6 @@ function CourseCreatePage() {
             ))}
           </div>
 
-          {/* 드래그 앤 드롭으로 순서 변경 가능한 장소 목록 */}
           <DragDropContext onDragEnd={handleOnDragEnd}>
             <Droppable droppableId="places">
               {(provided) => (
@@ -446,7 +438,7 @@ function CourseCreatePage() {
                   {...provided.droppableProps}
                   ref={provided.innerRef}
                 >
-                  {(placesByDay[selectedDay] || []).map((place, index) => (
+                  {currentDayPlaces.map((place, index) => (
                     <Draggable key={place.id} draggableId={place.id} index={index}>
                       {(provided) => (
                         <div
@@ -457,26 +449,21 @@ function CourseCreatePage() {
                         >
                           <div className="left">
                             <div className="circle-number">{index + 1}</div>
-                            <input
-                              type="time"
-                              defaultValue={formatTimeString(place.time)}
-                              onChange={(e) => handleTimeChange(place.id, e.target.value)}
-                              className="time-input"
-                            />
+                            <div className="time">{place.time || '--:--'}</div>
                             <div className="title">{place.place_name}</div>
                             <div className="place-type">
                               {placeTypeToEmoji[place.place_type] || "📍 기타"}
                             </div>
-                            {/* 무장애 시설 정보 */}
-                            <div className="accessibility-info">
-                              {Object.entries(place.accessibility_features || {}).map(([key, value]) => (
-                                <div key={key} className="accessibility-item">
-                                  • {value}
-                                </div>
-                              ))}
-                            </div>
+                            {Object.keys(place.accessibility_features || {}).length > 0 && (
+                              <div className="accessibility-info">
+                                {Object.entries(place.accessibility_features).map(([key, value]) => (
+                                  <div key={key} className="accessibility-item">
+                                    • {value}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
-
                           <div className="right">
                             <div className="action-buttons">
                               <button onClick={() => handleDelete(place.id)}>🗑️</button>
@@ -492,7 +479,7 @@ function CourseCreatePage() {
             </Droppable>
           </DragDropContext>
 
-          {/* 하단 버튼 영역 */}
+          {/* 하단 버튼 영역 복구 */}
           <div className="footer-buttons">
             <button onClick={() => setIsSearchModalOpen(true)}>+ 장소 추가</button>
             <div className="button-row">
@@ -501,7 +488,6 @@ function CourseCreatePage() {
             </div>
           </div>
         </div>
-
         {/* 오른쪽 패널 - 구글 지도 */}
         <div className="map-area">
           <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
@@ -510,8 +496,7 @@ function CourseCreatePage() {
           )}
         </div>
       </div>
-
-      {/* 장소 검색 모달 */}
+      {/* 장소 검색 모달, 날짜 수정 모달 등 기존 코드 복구 */}
       <SearchModal
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
@@ -519,8 +504,6 @@ function CourseCreatePage() {
         region={region}
         mapInstance={mapInstance.current}
       />
-
-      {/* 날짜 수정 모달 */}
       <DateModal
         isOpen={isDateModalOpen}
         onClose={() => setIsDateModalOpen(false)}
