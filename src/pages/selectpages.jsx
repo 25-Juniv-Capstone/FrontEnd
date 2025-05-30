@@ -11,7 +11,7 @@ import SuccessModal from "./selectPage/SuccessModal";
 import axios from 'axios';
 
 const SelectPages = () => {
-  const [userType, setUserType] = useState("general");
+  const [userType, setUserType] = useState([]);
   const [selectedThemes, setSelectedThemes] = useState([]);
   const [addedPlaces, setAddedPlaces] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -41,8 +41,8 @@ const SelectPages = () => {
     }
   }, [location.state]);
 
-  const handleUserTypeSelect = (type) => {
-    setUserType(type);
+  const handleUserTypeSelect = (types) => {
+    setUserType(types);
   };
 
   const handleThemeSelect = (themes) => {
@@ -85,10 +85,50 @@ const SelectPages = () => {
         throw new Error('여행 날짜를 선택해주세요. HomePage에서 날짜를 선택한 후 다시 시도해주세요.');
       }
 
+      // 테마 ID를 한글로 변환하는 매핑
+      const themeMapping = {
+        "history": "역사탐방",
+        "nature": "자연주의", 
+        "city": "도시위주",
+        "activity": "엑티비티",
+        "cafe": "예쁜카페"
+      };
+
+      // 장애 유형을 한글로 변환하는 매핑
+      const userTypeMapping = {
+        "wheelchair": "휠체어",
+        "visuallyImpaired": "시각장애",
+        "elderly": "노약자"
+      };
+
+      // 키워드 배열 구성
+      let keywords = [];
+      
+      // 선택된 테마를 한글로 변환하여 추가
+      if (selectedThemes.length > 0) {
+        keywords = selectedThemes.map(theme => themeMapping[theme] || theme);
+      }
+      
+      // 선택된 장애 유형을 한글로 변환하여 추가
+      if (Array.isArray(userType) && userType.length > 0) {
+        const userTypeKeywords = userType.map(type => userTypeMapping[type] || type);
+        keywords = [...keywords, ...userTypeKeywords];
+      }
+      
+      // "무장애" 키워드가 없으면 추가
+      if (!keywords.includes("무장애")) {
+        keywords.push("무장애");
+      }
+      
+      // 기본 키워드가 없으면 "관광" 추가
+      if (keywords.length === 1 && keywords[0] === "무장애") {
+        keywords.push("관광");
+      }
+
       // backend-ai API 요청 데이터 구성
       const requestData = {
         region: region,
-        keywords: selectedThemes.length > 0 ? selectedThemes : ["무장애", "관광"],
+        keywords: keywords,
         duration: getDateDiff(startDate, endDate),
         must_visit_places: addedPlaces.map(place => place.place_name || place.name),
         num_courses: 1,

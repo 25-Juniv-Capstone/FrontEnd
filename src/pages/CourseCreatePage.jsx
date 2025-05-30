@@ -173,23 +173,79 @@ function CourseCreatePage() {
       course.days.forEach(dayData => {
         if (!dayData.itinerary) return;
         
-        processedPlaces[dayData.day] = dayData.itinerary.map((item, index) => ({
-          id: `${dayData.day}-${index}`,
-          time: item.time || '오전 09:00',
-          place_name: item.name || item.place_name || '장소명 없음',
-          place_type: item.type || item.place_type || '기타',
-          description: item.address || item.description || '',
-          lat: item.coordinates?.latitude || item.lat || 0,
-          lng: item.coordinates?.longitude || item.lng || 0,
-          accessibility_features: item.accessibility_info ? 
-            Object.fromEntries(
-              item.accessibility_info.split(', ')
-                .map(info => info.split(': '))
-            ) : (item.accessibility_features || {}),
-          rating: item.rating || 0,
-          reviews: item.reviews || 0,
-          operating_hours: item.operating_hours || {}
-        }));
+        processedPlaces[dayData.day] = dayData.itinerary.map((item, index) => {
+          // accessibility_features 안전하게 처리
+          let accessibilityFeatures = {};
+          
+          if (item.accessibility_info) {
+            // 문자열인 경우 파싱
+            if (typeof item.accessibility_info === 'string') {
+              try {
+                item.accessibility_info.split(', ').forEach(info => {
+                  const [key, value] = info.split(': ');
+                  if (key && value) {
+                    accessibilityFeatures[key.trim()] = value.trim();
+                  }
+                });
+              } catch (e) {
+                console.warn('accessibility_info 파싱 실패:', item.accessibility_info);
+              }
+            }
+          } else if (item.accessibility_features) {
+            // 객체인 경우 안전하게 복사하고 중첩 객체 평면화
+            if (typeof item.accessibility_features === 'object' && item.accessibility_features !== null) {
+              // 중첩된 객체들을 평면화하는 함수
+              const flattenObject = (obj, prefix = '') => {
+                const flattened = {};
+                
+                Object.entries(obj).forEach(([key, value]) => {
+                  // null, undefined, 빈 값들을 미리 필터링
+                  if (value === null || 
+                      value === undefined || 
+                      value === '' || 
+                      value === 'null' ||
+                      value === 'undefined' ||
+                      (typeof value === 'string' && value.trim() === '')) {
+                    return; // 이 항목은 건너뛰기
+                  }
+                  
+                  const newKey = prefix ? `${prefix}_${key}` : key;
+                  
+                  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                    // 중첩된 객체인 경우 재귀적으로 평면화
+                    Object.assign(flattened, flattenObject(value, newKey));
+                  } else if (Array.isArray(value)) {
+                    // 배열인 경우 빈 배열이 아닐 때만 추가
+                    if (value.length > 0) {
+                      flattened[newKey] = value.join(', ');
+                    }
+                  } else {
+                    // 일반 값인 경우 그대로 저장
+                    flattened[newKey] = value;
+                  }
+                });
+                
+                return flattened;
+              };
+              
+              accessibilityFeatures = flattenObject(item.accessibility_features);
+            }
+          }
+          
+          return {
+            id: `${dayData.day}-${index}`,
+            time: item.time || '오전 09:00',
+            place_name: item.name || item.place_name || '장소명 없음',
+            place_type: item.type || item.place_type || '기타',
+            description: item.address || item.description || '',
+            lat: item.coordinates?.latitude || item.lat || 0,
+            lng: item.coordinates?.longitude || item.lng || 0,
+            accessibility_features: accessibilityFeatures,
+            rating: item.rating || 0,
+            reviews: item.reviews || 0,
+            operating_hours: item.operating_hours || {}
+          };
+        });
       });
       
       setCourseData(backendCourseData);
@@ -456,11 +512,63 @@ function CourseCreatePage() {
                             </div>
                             {Object.keys(place.accessibility_features || {}).length > 0 && (
                               <div className="accessibility-info">
-                                {Object.entries(place.accessibility_features).map(([key, value]) => (
-                                  <div key={key} className="accessibility-item">
-                                    • {value}
-                                  </div>
-                                ))}
+                                {Object.entries(place.accessibility_features)
+                                  .filter(([key, value]) => {
+                                    // null, undefined, 빈 문자열, "null" 문자열 필터링
+                                    return value !== null && 
+                                           value !== undefined && 
+                                           value !== '' && 
+                                           value !== 'null' &&
+                                           value !== 'undefined' &&
+                                           !(typeof value === 'string' && value.trim() === '');
+                                  })
+                                  .map(([key, value]) => {
+                                    // 키 이름을 한글로 변환하는 매핑
+                                    const keyMapping = {
+                                      'parking': '주차장',
+                                      'public_transport': '대중교통 접근',
+                                      'restroom': '화장실',
+                                      'wheelchair_rental': '휠체어 대여',
+                                      'elevator': '엘리베이터',
+                                      'exit': '출입구',
+                                      'braile_block': '점자블록',
+                                      'braille_promotion': '점자 안내',
+                                      'human_guide': '안내요원',
+                                      'audio_guide': '음성안내',
+                                      'ticket_office': '매표소',
+                                      'guide_dog': '안내견',
+                                      'infants_info_baby_spare_chair': '유아용 의자',
+                                      'infants_info_stroller': '유모차 대여',
+                                      'infants_info_lactation_room': '수유실',
+                                      'infants_info_etc': '유아 편의시설',
+                                      'visual_impairment_info_guide_dog': '시각장애인 안내견',
+                                      'visual_impairment_info_human_guide': '시각장애인 안내',
+                                      'visual_impairment_info_braille_promotion': '시각장애인 점자안내',
+                                      'facilities_room': '장애인 객실',
+                                      'facilities_etc': '기타 편의시설'
+                                    };
+                                    
+                                    // value가 객체인 경우 문자열로 변환
+                                    let displayValue = value;
+                                    if (typeof value === 'object' && value !== null) {
+                                      if (Array.isArray(value)) {
+                                        displayValue = value.join(', ');
+                                      } else {
+                                        displayValue = Object.keys(value).join(', ') || JSON.stringify(value);
+                                      }
+                                    } else if (typeof value !== 'string' && typeof value !== 'number') {
+                                      displayValue = String(value);
+                                    }
+                                    
+                                    // 키 이름을 한글로 변환 (매핑에 없으면 원래 키 사용)
+                                    const displayKey = keyMapping[key] || key.replace(/_/g, ' ');
+                                    
+                                    return (
+                                      <div key={key} className="accessibility-item">
+                                        • {displayKey}: {displayValue}
+                                      </div>
+                                    );
+                                  })}
                               </div>
                             )}
                           </div>
