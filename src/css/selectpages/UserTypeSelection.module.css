@@ -1,71 +1,107 @@
- .section {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    gap: 32px 68px; /* Tailwind gap-[68px_32px] might be row-gap column-gap or just gap */
-    font-size: 15px;
-    color: black;
-    font-weight: 500; /* font-medium */
-    line-height: 1; /* leading-[0] seems unusual, using 1 as default */
-    flex-wrap: wrap;
-    margin-top: 119px;
-    padding-left: 300px;
-    padding-right: 115px;
+.section {
+  background: white;
+  border-radius: 24px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  margin-top: 2rem;
+}
+
+.heading {
+  color: rgba(18, 123, 243, 0.85);
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  text-align: center;
+  position: relative;
+  padding-bottom: 1rem;
+}
+
+.heading::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: rgba(18, 123, 243, 0.3);
+  border-radius: 2px;
+}
+
+.button {
+  width: 100%;
+  max-width: 300px;
+  margin: 0.75rem auto;
+  padding: 1rem 2rem;
+  border: 2px solid rgba(18, 123, 243, 0.2);
+  border-radius: 12px;
+  background: white;
+  color: #333;
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.buttonDefault {
+  background: white;
+  color: #333;
+}
+
+.buttonDefault:hover {
+  background: rgba(18, 123, 243, 0.05);
+  border-color: rgba(18, 123, 243, 0.4);
+  transform: translateY(-2px);
+}
+
+.buttonSelected {
+  background: rgba(18, 123, 243, 0.1);
+  border-color: rgba(18, 123, 243, 0.8);
+  color: rgba(18, 123, 243, 0.9);
+  box-shadow: 0 4px 12px rgba(18, 123, 243, 0.15);
+}
+
+.buttonSelected:hover {
+  background: rgba(18, 123, 243, 0.15);
+  transform: translateY(-2px);
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
+  .section {
+    padding: 1.5rem;
+    border-radius: 16px;
   }
-  
+
   .heading {
-    color: rgba(54, 136, 230, 1);
-    font-size: 1.875rem; /* text-3xl */
-    line-height: 2.25rem;
-    font-weight: 700; /* font-bold */
-    /* leading-none corresponds to line-height: 1, but might be overridden by font-size default */
-    align-self: stretch;
-    flex-grow: 1;
-    flex-shrink: 1; /* Default, but explicitly stated */
-    width: 1820px; /* Note: This fixed width might not be ideal */
-    margin-top: auto;
-    margin-bottom: auto;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
   }
-  
+
   .button {
-    background-color: white;
-    border-width: 1px;
-    align-self: stretch;
-    min-height: 2.75rem; /* min-h-11 (assuming 1 unit = 0.25rem) */
-    overflow: hidden;
-    text-align: center;
-    letter-spacing: -1px; /* tracking-[-1px] unusual value */
-    /*flex-grow: 1;*/
-    flex-shrink: 1; /* Default */
-    width: 150px;
-    margin-top: auto;
-    margin-bottom: auto;
-    padding-left: 0.625rem; /* px-2.5 */
-    padding-right: 0.625rem;
-    border-radius: 20px;
-    border-style: solid;
-    cursor: pointer; /* Added for button semantics */
+    max-width: 100%;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
   }
-  
-  .buttonSelected {
-    color: rgba(18, 123, 243, 1);
-    border-color: rgba(18, 123, 243, 1);
+}
+
+/* 애니메이션 효과 */
+@keyframes buttonPop {
+  0% {
+    transform: scale(1);
   }
-  
-  .buttonDefault {
-    border-color: black;
+  50% {
+    transform: scale(1.02);
   }
-  
-  /* Responsive styles */
-  @media (max-width: 768px) { /* max-md */
-    .section {
-      margin-top: 2.5rem; /* mt-10 */
-      padding-left: 1.25rem; /* px-5 */
-      padding-right: 1.25rem;
-      max-width: 100%;
-    }
-    .heading {
-      max-width: 100%;
-      width: auto; /* Override fixed width */
-    }
+  100% {
+    transform: scale(1);
   }
+}
+
+.buttonSelected {
+  animation: buttonPop 0.3s ease-out;
+}

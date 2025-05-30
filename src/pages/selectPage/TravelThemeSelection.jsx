@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import ThemeCard from "./ThemeCard";
-import styles from '@/css/selectpages/TravelThemeSelection.module.css';
+import styles from '../../css/selectpages/TravelThemeSelection.module.css';
 
 const TravelThemeSelection = ({ onSelect }) => {
   const themes = [
@@ -34,14 +34,12 @@ const TravelThemeSelection = ({ onSelect }) => {
   const [selectedThemes, setSelectedThemes] = useState([]);
 
   const toggleTheme = (id) => {
-    setSelectedThemes((prev) => {
-      const newSelection = prev.includes(id)
-        ? prev.filter((themeId) => themeId !== id)
-        : [...prev, id];
-
-      onSelect(newSelection);
-      return newSelection;
-    });
+    const newSelection = selectedThemes.includes(id)
+      ? selectedThemes.filter((themeId) => themeId !== id)
+      : [...selectedThemes, id];
+    
+    setSelectedThemes(newSelection);
+    onSelect(newSelection);
   };
 
   return (
@@ -49,18 +47,16 @@ const TravelThemeSelection = ({ onSelect }) => {
       <h2 className={styles.heading}>
         💫 희망하는 여행 테마를 선택 해주세요.{" "}
       </h2>
-      <div className={styles.themeListContainer}>
-        <div className={styles.themeList}>
-          {themes.map((theme) => (
-            <ThemeCard
-              key={theme.id}
-              title={theme.title}
-              imageUrl={theme.imageUrl}
-              onClick={() => toggleTheme(theme.id)}
-              isSelected={selectedThemes.includes(theme.id)}
-            />
-          ))}
-        </div>
+      <div className={styles.themeGrid}>
+        {themes.map((theme) => (
+          <ThemeCard
+            key={theme.id}
+            title={theme.title}
+            imageUrl={theme.imageUrl}
+            onClick={() => toggleTheme(theme.id)}
+            isSelected={selectedThemes.includes(theme.id)}
+          />
+        ))}
       </div>
     </section>
   );

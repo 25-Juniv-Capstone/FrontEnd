@@ -1,5 +1,5 @@
 import React from "react";
-import styles from '@/css/selectpages/ThemeCard.module.css';
+import styles from '../../css/selectpages/ThemeCard.module.css';
 
 const ThemeCard = ({ title, imageUrl, onClick, isSelected }) => {
   return (

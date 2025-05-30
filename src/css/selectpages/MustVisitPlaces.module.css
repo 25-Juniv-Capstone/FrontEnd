@@ -1,0 +1,225 @@
+.inputRow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  position: relative;
+}
+.input {
+  flex: 1;
+  min-width: 200px;
+  max-width: 400px;
+  padding: 1rem 1.5rem;
+  font-size: 1.125rem;
+  border: 2px solid rgba(18, 123, 243, 0.2);
+  border-radius: 12px;
+  background: white;
+  color: #333;
+  transition: all 0.3s ease;
+}
+.input:focus {
+  outline: none;
+  border-color: rgba(18, 123, 243, 0.8);
+  box-shadow: 0 0 0 4px rgba(18, 123, 243, 0.1);
+}
+.input::placeholder {
+  color: #999;
+  font-size: 1rem;
+}
+.addButton {
+  background: rgba(18, 123, 243, 0.9);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.addButton:hover {
+  background: rgba(18, 123, 243, 1);
+}
+
+.cardList {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+  justify-content: center;
+}
+.cardList::-webkit-scrollbar {
+  height: 8px;
+}
+.cardList::-webkit-scrollbar-thumb {
+  background: rgba(18, 123, 243, 0.15);
+  border-radius: 4px;
+}
+.card {
+  min-width: 220px;
+  max-width: 320px;
+  background: #f8f9fa;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(18, 123, 243, 0.08);
+  padding: 1.25rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s, transform 0.2s;
+  position: relative;
+  animation: fadeIn 0.3s;
+}
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  gap: 0.5rem;
+}
+.placeName {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1976d2;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  word-break: break-all;
+  margin-bottom: 0.2rem;
+}
+.removeButton {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.1rem;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 0.3rem 0.5rem;
+  transition: background 0.2s, color 0.2s;
+}
+.removeButton:hover {
+  background: rgba(18, 123, 243, 0.08);
+  color: #d32f2f;
+}
+
+@media (max-width: 768px) {
+  .inputRow {
+    margin-bottom: 1.2rem;
+  }
+  .input {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+  .card {
+    min-width: 160px;
+    max-width: 95vw;
+    padding: 0.75rem 0.5rem;
+  }
+  .placeName {
+    font-size: 1rem;
+  }
+  .placeAddress {
+    font-size: 0.92rem;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.title {
+  color: rgba(18, 123, 243, 0.85);
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  text-align: center;
+  position: relative;
+  padding-bottom: 1rem;
+}
+.title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: rgba(18, 123, 243, 0.3);
+  border-radius: 2px;
+}
+
+.searchResults {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  margin-top: 0.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 10;
+}
+.searchResultItem {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #1976d2;
+  font-weight: 500;
+  font-size: 1.05rem;
+}
+.searchResultItem:hover {
+  background: rgba(18, 123, 243, 0.05);
+}
+.searchResultItem:first-child {
+  border-radius: 12px 12px 0 0;
+}
+.searchResultItem:last-child {
+  border-radius: 0 0 12px 12px;
+}
+
+.resultName {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1976d2;
+}
+.resultAddress {
+  font-size: 0.95rem;
+  color: #555;
+  margin-top: 2px;
+}
+.resultType {
+  font-size: 0.85rem;
+  color: #888;
+  margin-top: 2px;
+}
+.placeAddress {
+  display: block;
+  font-size: 0.98rem;
+  color: #555;
+  margin-left: 0;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  word-break: break-all;
+}
+
+.mapBox {
+  width: 100%;
+  height: 320px;
+  margin: 1.5rem 0 2rem 0;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(18, 123, 243, 0.08);
+  background: #eaf3fb;
+}
+.map {
+  width: 100%;
+  height: 100%;
+} 

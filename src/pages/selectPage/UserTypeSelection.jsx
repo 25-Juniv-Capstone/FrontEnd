@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import styles from '@/css/selectpages/UserTypeSelection.module.css';
+import styles from '../../css/selectpages/UserTypeSelection.module.css';
 
 const UserTypeSelection = ({ onSelect }) => {
   const userTypes = [

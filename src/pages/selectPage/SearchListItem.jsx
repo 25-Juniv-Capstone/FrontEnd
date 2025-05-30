@@ -1,5 +1,5 @@
 import React from "react";
-import styles from '@/css/selectpages/SearchListItem.module.css';
+import styles from '../../css/selectpages/SearchListItem.module.css';
 
 const SearchListItem = ({ name, address, onSelect }) => {
   return (

@@ -142,7 +142,6 @@
   border: 1px solid #ccc;
   border-radius: 6px;
   transition: all 0.2s ease;
-  cursor: pointer;
 }
 
 .footer-buttons button:hover {
@@ -162,6 +161,7 @@
 .button-row button {
   flex: 1;
 }
+
 .map-area {
   flex: 1;
   background-color: #f4f4f4;

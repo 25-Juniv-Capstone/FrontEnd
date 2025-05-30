@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import SearchListItem from "./SearchListItem";
-import styles from '@/css/selectpages/DestinationSearch.module.css';
+import styles from '../../css/selectpages/DestinationSearch.module.css';
 
 const DestinationSearch = ({ onAddPlace }) => {
   const [searchQuery, setSearchQuery] = useState("");
