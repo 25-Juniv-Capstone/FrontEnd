@@ -99,6 +99,65 @@ const FinalConfirmModal = ({ isOpen, onClose, onConfirm }) => {
   );
 };
 
+// 지역별 좌표 정보
+const regionCoordinates = {
+  "서울": { lat: 37.5665, lng: 126.9780 },
+  "부산": { lat: 35.1796, lng: 129.0756 },
+  "인천": { lat: 37.4563, lng: 126.7052 },
+  "대구": { lat: 35.8714, lng: 128.6014 },
+  "광주": { lat: 35.1595, lng: 126.8526 },
+  "대전": { lat: 36.3504, lng: 127.3845 },
+  "울산": { lat: 35.5384, lng: 129.3114 },
+  "세종": { lat: 36.4801, lng: 127.2892 },
+  "경기": { lat: 37.4138, lng: 127.5183 },
+  "강원": { lat: 37.8228, lng: 128.1555 },
+  "충북": { lat: 36.6357, lng: 127.4915 },
+  "충남": { lat: 36.6588, lng: 126.6728 },
+  "전북": { lat: 35.8242, lng: 127.1480 },
+  "전남": { lat: 34.8161, lng: 126.4629 },
+  "경북": { lat: 36.5760, lng: 128.5059 },
+  "경남": { lat: 35.2382, lng: 128.6924 },
+  "제주": { lat: 33.4996, lng: 126.5312 },
+  // 주요 도시 좌표 추가
+  "전주": { lat: 35.8242, lng: 127.1480 },
+  "여수": { lat: 34.7604, lng: 127.6622 },
+  "강릉": { lat: 37.7519, lng: 128.8960 },
+  "속초": { lat: 38.2070, lng: 128.5918 },
+  "춘천": { lat: 37.8813, lng: 127.7300 },
+  "포항": { lat: 36.0190, lng: 129.3434 },
+  "창원": { lat: 35.2277, lng: 128.6819 },
+  "수원": { lat: 37.2636, lng: 127.0286 },
+  "성남": { lat: 37.4449, lng: 127.1389 },
+  "용인": { lat: 37.2411, lng: 127.1775 },
+  "고양": { lat: 37.6584, lng: 126.8320 },
+  "남양주": { lat: 37.6365, lng: 127.2162 },
+  "하남": { lat: 37.5392, lng: 127.2148 },
+  "파주": { lat: 37.8154, lng: 126.7937 },
+  "김포": { lat: 37.6156, lng: 126.7155 },
+  "평택": { lat: 36.9920, lng: 127.1127 },
+  "오산": { lat: 37.1498, lng: 127.0772 },
+  "안산": { lat: 37.3219, lng: 126.8309 },
+  "시흥": { lat: 37.3799, lng: 126.8035 },
+  "군포": { lat: 37.3616, lng: 126.9357 },
+  "의왕": { lat: 37.3446, lng: 126.9683 },
+  "안양": { lat: 37.3942, lng: 126.9568 },
+  "과천": { lat: 37.4291, lng: 126.9878 },
+  "광명": { lat: 37.4792, lng: 126.8646 },
+  "부천": { lat: 37.5035, lng: 126.7660 },
+  "김해": { lat: 35.2284, lng: 128.8894 },
+  "양산": { lat: 35.3380, lng: 129.0334 },
+  "밀양": { lat: 35.5035, lng: 128.7464 },
+  "진주": { lat: 35.1802, lng: 128.1077 },
+  "통영": { lat: 34.8544, lng: 128.4331 },
+  "거제": { lat: 34.8806, lng: 128.6210 },
+  "목포": { lat: 34.8118, lng: 126.3928 },
+  "순천": { lat: 34.9506, lng: 127.4872 },
+  "나주": { lat: 35.0162, lng: 126.7108 },
+  "광양": { lat: 34.9407, lng: 127.6959 },
+  "제주시": { lat: 33.4996, lng: 126.5312 },
+  "서귀포시": { lat: 33.2541, lng: 126.5600 }
+};
+
 function HomePage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -179,9 +238,13 @@ function HomePage() {
 
   const handleConfirm = () => {
     setShowConfirmModal(false);
+    // 선택된 지역의 좌표 정보 가져오기
+    const coordinates = regionCoordinates[selectedRegion] || { lat: 36.5, lng: 127.8 };
+    
     navigate('/select', { 
       state: { 
         region: selectedRegion,
+        coordinates: coordinates,
         startDate: selectedDates.startDate,
         endDate: selectedDates.endDate
       } 
