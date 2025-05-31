@@ -14,6 +14,19 @@ import "../css/CourseCreatePage.css"; // 스타일 import
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"; // 드래그앤드롭 라이브러리
 import { useLocation } from "react-router-dom";
 
+// 장소 타입별 색상 매핑
+const placeTypeToColor = {
+  "한식당": "#FFC107", // 노란색
+  "카페": "#FFC107",   // 노란색
+  "공원": "#2196F3",   // 파란색
+  "박물관": "#2196F3", // 파란색
+  "호텔": "#4CAF50",   // 초록색
+  "백화점": "#2196F3", // 파란색
+  "공연예술 극장": "#2196F3", // 파란색
+  "관광지": "#2196F3", // 파란색
+  "기타": "#2196F3"    // 파란색
+};
+
 // 장소 타입별 이모지 매핑 - UI에 표시될 아이콘 정의
 const placeTypeToEmoji = {
   "한식당": "🍴 식당",
@@ -118,7 +131,8 @@ const mockCourseData = {
 };
 
 // 번호가 크게 보이는 SVG 마커 아이콘 생성 함수
-function getNumberedMarkerIcon(number, color = "#1976d2") {
+function getNumberedMarkerIcon(number, placeType) {
+  const color = placeTypeToColor[placeType] || "#2196F3"; // 기본값을 파란색으로 변경
   return {
     url: `data:image/svg+xml;utf-8,${encodeURIComponent(`
       <svg width="38" height="38" xmlns="http://www.w3.org/2000/svg">
@@ -316,7 +330,7 @@ function CourseCreatePage() {
       const marker = new window.google.maps.Marker({
         position: { lat: place.lat, lng: place.lng },
         map: mapInstance.current,
-        icon: getNumberedMarkerIcon(idx + 1),
+        icon: getNumberedMarkerIcon(idx + 1, place.place_type),
         title: place.place_name,
       });
 
@@ -504,7 +518,12 @@ function CourseCreatePage() {
                           {...provided.dragHandleProps}
                         >
                           <div className="left">
-                            <div className="circle-number">{index + 1}</div>
+                            <div 
+                              className="circle-number" 
+                              style={{ backgroundColor: placeTypeToColor[place.place_type] || "#2196F3" }}
+                            >
+                              {index + 1}
+                            </div>
                             <div className="time">{place.time || '--:--'}</div>
                             <div className="title">{place.place_name}</div>
                             <div className="place-type">
