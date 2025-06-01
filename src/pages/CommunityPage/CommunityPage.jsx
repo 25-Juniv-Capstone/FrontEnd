@@ -7,27 +7,23 @@ import WritePageModal from "../WritePage/WritePage";
 import styles from "../../css/communitypages/CommunityPage.module.css"; // CSS 모듈 import 경로 수정
 
 function CommunityPage() {
-  const [activeFilters, setActiveFilters] = useState([]); // 초기 상태를 빈 배열로 변경 (복수 선택을 위해)
+  const [activeFilter, setActiveFilter] = useState(null); // 단일 선택을 위한 상태
   const [isWriteModalOpen, setWriteModalOpen] = useState(false); // 모달 상태 추가
 
   const filterOptions = [
-    "휠체어",
-    "일반인",
-    "시각장애",
-    "청각장애",
-    "노인",
-    "유아",
+    "휠체어 이용자",
+    "시각 장애인",
+    "청각 장애인"
   ];
 
   const handleFilterClick = (option) => {
-    setActiveFilters(prevFilters => {
-      if (prevFilters.includes(option)) {
-        // 이미 활성화된 필터를 다시 클릭하면 선택 해제
-        return prevFilters.filter(filter => filter !== option);
-      } else {
-        // 다른 필터를 클릭하면 해당 필터 활성화 (배열에 추가)
-        return [...prevFilters, option];
+    setActiveFilter(prevFilter => {
+      // 같은 필터를 다시 클릭하면 선택 해제
+      if (prevFilter === option) {
+        return null;
       }
+      // 다른 필터를 클릭하면 해당 필터 선택
+      return option;
     });
   };
 
@@ -50,7 +46,7 @@ function CommunityPage() {
           <FilterButton
             key={option}
             label={option}
-            isActive={activeFilters.includes(option)} // 배열에 포함 여부로 활성 상태 결정
+            isActive={activeFilter === option} // 단일 선택 비교
             onClick={() => handleFilterClick(option)}
           />
         ))}

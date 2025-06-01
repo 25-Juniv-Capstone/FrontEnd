@@ -96,9 +96,9 @@ const SelectPages = () => {
 
       // 장애 유형을 한글로 변환하는 매핑
       const userTypeMapping = {
-        "wheelchair": "휠체어",
-        "visuallyImpaired": "시각장애",
-        "elderly": "노약자"
+        "wheelchair": "휠체어 이용자",
+        "visuallyImpaired": "시각 장애인",
+        "hearingImpaired": "청각 장애인"
       };
 
       // 키워드 배열 구성

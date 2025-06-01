@@ -5,22 +5,14 @@ const UserTypeSelection = ({ onSelect }) => {
   const userTypes = [
     { id: "wheelchair", label: "휠체어 이용자" },
     { id: "visuallyImpaired", label: "시각 장애인" },
-    { id: "elderly", label: "노약자" },
+    { id: "hearingImpaired", label: "청각 장애인" },
   ];
 
-  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [selectedType, setSelectedType] = useState(null);
 
   const handleSelect = (id) => {
-    setSelectedTypes((prevSelectedTypes) => {
-      let newSelection;
-      if (prevSelectedTypes.includes(id)) {
-        newSelection = prevSelectedTypes.filter((typeId) => typeId !== id);
-      } else {
-        newSelection = [...prevSelectedTypes, id];
-      }
-      onSelect(newSelection);
-      return newSelection;
-    });
+    setSelectedType(id);
+    onSelect([id]); // 배열 형태 유지하되 단일 값만 전달
   };
 
   return (
@@ -28,20 +20,22 @@ const UserTypeSelection = ({ onSelect }) => {
       <h2 className={styles.heading}>
         🌿 맞춤 여행을 위해, 동반자 유형을 선택 해주세요.
       </h2>
-      {userTypes.map((type) => (
-        <button
-          key={type.id}
-          onClick={() => handleSelect(type.id)}
-          className={` ${styles.button} ${
-            selectedTypes.includes(type.id)
-              ? styles.buttonSelected
-              : styles.buttonDefault
-          }`}
-          aria-pressed={selectedTypes.includes(type.id)}
-        >
-          {type.label}
-        </button>
-      ))}
+      <div className={styles.buttonGroup}>
+        {userTypes.map((type) => (
+          <button
+            key={type.id}
+            onClick={() => handleSelect(type.id)}
+            className={`${styles.button} ${
+              selectedType === type.id
+                ? styles.buttonSelected
+                : styles.buttonDefault
+            }`}
+            aria-pressed={selectedType === type.id}
+          >
+            {type.label}
+          </button>
+        ))}
+      </div>
     </section>
   );
 };

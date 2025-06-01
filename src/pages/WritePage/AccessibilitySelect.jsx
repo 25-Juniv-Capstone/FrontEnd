@@ -7,11 +7,9 @@ function AccessibilitySelect() {
   const [isOpen, setIsOpen] = useState(false);
 
   const options = [
-    "시각장애",
-    "청각장애",
-    "지체장애",
-    "발달장애",
-    "기타"
+    "휠체어 이용자",
+    "시각 장애인",
+    "청각 장애인"
   ];
 
   const handleSelect = (option) => {

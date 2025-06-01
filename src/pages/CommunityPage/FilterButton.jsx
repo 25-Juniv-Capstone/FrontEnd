@@ -13,6 +13,8 @@ function FilterButton({ label, isActive, onClick }) {
       <button
         onClick={onClick}
         className={buttonClassName}
+        role="radio"
+        aria-checked={isActive}
       >
         {label}
       </button>
