@@ -9,6 +9,7 @@ import styles from '../css/selectpages/SelectPages.module.css';
 import { useNavigate, useLocation } from "react-router-dom";
 import SuccessModal from "./selectPage/SuccessModal";
 import axios from 'axios';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const SelectPages = () => {
   const [userType, setUserType] = useState([]);
@@ -217,6 +218,7 @@ const SelectPages = () => {
 
   return (
     <div className={styles.container}>
+      {isLoading && <LoadingSpinner region={region} />}
       <main className={styles.main}>
         <UserTypeSelection onSelect={handleUserTypeSelect} />
         <TravelThemeSelection onSelect={handleThemeSelect} />
