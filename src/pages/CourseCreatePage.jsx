@@ -12,7 +12,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import "../css/CourseCreatePage.css"; // 스타일 import
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"; // 드래그앤드롭 라이브러리
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import axiosInstance from '../utils/axiosConfig';
 
 // 장소 타입별 색상 매핑
 const placeTypeToColor = {
@@ -152,6 +153,7 @@ function CourseCreatePage() {
   const startDate = location.state?.startDate || null;
   const endDate = location.state?.endDate || null;
   const backendCourseData = location.state?.courseData || null;
+  const navigate = useNavigate();
   
   console.log('CoursePage received data:', JSON.stringify({
     mustVisitPlaces,
@@ -169,6 +171,7 @@ function CourseCreatePage() {
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
   const [region, setRegion] = useState(regionFromState);
   const [dates, setDates] = useState({ startDate, endDate });
+  const [isSaving, setIsSaving] = useState(false);  // 저장 상태 추가
 
   // 여행 일수 계산
   const getDateDiff = (start, end) => {
@@ -478,6 +481,139 @@ function CourseCreatePage() {
   const currentDayPlaces = placesByDay[selectedDay] || [];
   const totalDays = courseData?.recommended_courses?.[0]?.days?.length || 1;
 
+  // 코스 저장 함수 수정
+  const handleSaveCourse = async () => {
+    try {
+      // 저장 전 데이터 유효성 검사
+      if (!region || !courseData?.metadata?.start_date || !courseData?.metadata?.end_date) {
+        alert('필수 정보(지역, 날짜)가 누락되었습니다.');
+        return;
+      }
+
+      if (Object.keys(placesByDay).length === 0) {
+        alert('최소 1개 이상의 장소를 추가해주세요.');
+        return;
+      }
+
+      setIsSaving(true);
+      
+      // 백엔드 API 요청을 위한 데이터 구성
+      const courseToSave = {
+        title: courseData?.recommended_courses?.[0]?.course_name || `${region} 여행 코스`,
+        courseImageUrl: courseData?.recommended_courses?.[0]?.course_image_url || null,
+        metadata: {
+          startDate: courseData.metadata.start_date,
+          endDate: courseData.metadata.end_date,
+          region: region,
+          durationDays: Object.keys(placesByDay).length
+        },
+        days: Object.entries(placesByDay).map(([day, places]) => ({
+          day: parseInt(day),
+          places: places.map((place, index) => {
+            // 시간 형식 변환 (모든 시간 표현 -> HH:mm)
+            let scheduledTime = place.time || '09:00';
+            
+            // 시간이 이미 HH:mm 형식이 아닌 경우에만 변환
+            if (!/^\d{2}:\d{2}$/.test(scheduledTime)) {
+              try {
+                // 시간 문자열에서 숫자와 단위(오전/오후/저녁/밤) 분리
+                const match = scheduledTime.match(/([가-힣]+)\s*(\d{1,2}):(\d{2})/);
+                if (match) {
+                  const [_, period, hours, minutes] = match;
+                  let hour = parseInt(hours);
+                  
+                  // 시간 변환 로직
+                  if (period === '오전') {
+                    if (hour === 12) hour = 0;
+                  } else if (['오후', '저녁', '밤'].includes(period)) {
+                    if (hour !== 12) hour += 12;
+                  }
+                  
+                  scheduledTime = `${hour.toString().padStart(2, '0')}:${minutes}`;
+                }
+              } catch (error) {
+                console.error('시간 형식 변환 오류:', error);
+                scheduledTime = '09:00'; // 기본값
+              }
+            }
+
+            return {
+              placeId: place.id,
+              title: place.place_name,
+              address: place.address || '',
+              coordinates: {
+                lat: place.lat,
+                lng: place.lng
+              },
+              scheduledTime: scheduledTime,
+              priority: index + 1,
+              travelInfo: index > 0 ? {
+                distance: calculateDistance(
+                  places[index - 1].lat,
+                  places[index - 1].lng,
+                  place.lat,
+                  place.lng
+                ),
+                duration: calculateTravelTime(
+                  places[index - 1].lat,
+                  places[index - 1].lng,
+                  place.lat,
+                  place.lng
+                ),
+                transportation: "도보"
+              } : null
+            };
+          })
+        }))
+      };
+
+      console.log('코스 저장 요청 데이터:', JSON.stringify(courseToSave, null, 2));
+      const response = await axiosInstance.post('/courses', courseToSave);
+      
+      if (response.status === 200) {
+        alert('코스가 성공적으로 저장되었습니다.');
+        navigate('/mypage');
+      }
+    } catch (error) {
+      console.error('코스 저장 중 오류 발생:', error);
+      if (error.response?.status === 401) {
+        alert('로그인이 필요합니다.');
+        navigate('/kakao/login');
+      } else {
+        alert('코스 저장 중 오류가 발생했습니다.');
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // 두 지점 간의 거리를 계산하는 함수 (Haversine 공식)
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // 지구의 반경 (km)
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c;
+    return distance < 1 ? `${Math.round(distance * 1000)}m` : `${distance.toFixed(1)}km`;
+  };
+
+  // 이동 시간을 계산하는 함수 (도보 기준)
+  const calculateTravelTime = (lat1, lon1, lat2, lon2) => {
+    const distance = calculateDistance(lat1, lon1, lat2, lon2);
+    if (distance === "시작 지점") return "0분";
+    
+    // 도보 평균 속도 4km/h 기준
+    const distanceInKm = parseFloat(distance);
+    const timeInHours = distanceInKm / 4;
+    const timeInMinutes = Math.round(timeInHours * 60);
+    
+    return `약 ${timeInMinutes}분 (도보)`;
+  };
+
   return (
     <div className="course-page">
       <div className="course-main">
@@ -606,13 +742,41 @@ function CourseCreatePage() {
             </Droppable>
           </DragDropContext>
 
-          {/* 하단 버튼 영역 복구 */}
+          {/* 하단 버튼 영역 */}
           <div className="footer-buttons">
-            <button onClick={() => setIsSearchModalOpen(true)}>+ 장소 추가</button>
-            <div className="button-row">
-              <button>저장</button>
-              <button>공유</button>
-            </div>
+            <button 
+              onClick={handleSaveCourse}
+              disabled={isSaving}
+              style={{
+                backgroundColor: '#4285F4',
+                color: 'white',
+                border: 'none',
+                cursor: isSaving ? 'not-allowed' : 'pointer',
+                opacity: isSaving ? 0.7 : 1,
+                width: '100%',
+                marginBottom: '10px',
+                padding: '10px',
+                borderRadius: '5px',
+                fontSize: '16px'
+              }}
+            >
+              {isSaving ? '저장 중...' : '코스 저장하기'}
+            </button>
+            <button 
+              onClick={() => setIsSearchModalOpen(true)}
+              style={{
+                backgroundColor: '#34A853',
+                color: 'white',
+                border: 'none',
+                width: '100%',
+                padding: '10px',
+                borderRadius: '5px',
+                fontSize: '16px',
+                cursor: 'pointer'
+              }}
+            >
+              + 장소 추가
+            </button>
           </div>
         </div>
         {/* 오른쪽 패널 - 구글 지도 */}
