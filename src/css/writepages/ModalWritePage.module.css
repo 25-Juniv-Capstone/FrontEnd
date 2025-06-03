@@ -131,6 +131,10 @@
   background: #f5f5f5;
   color: #666;
   border: 1px solid #ddd;
+  height: 48px;
+  font-size: 1.1rem;
+  border-radius: 24px;
+  padding: 0 2rem;
 }
 
 .cancelButton:hover {
@@ -141,6 +145,10 @@
   background: #4a90e2;
   color: white;
   border: none;
+  height: 48px;
+  font-size: 1.1rem;
+  border-radius: 24px;
+  padding: 0 2rem;
 }
 
 .submitButton:hover {

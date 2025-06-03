@@ -20,7 +20,7 @@ body {
   gap: 2px; /* 제목과 검색창 사이 여백 */
   text-align: center;
   color: white;
-  margin-top: -12rem;
+  margin-top: -22rem;
 }
 
 .searchBox {
@@ -86,7 +86,7 @@ body {
 
 .travelBtn {
   position: absolute; 
-  bottom: 120px;
+  bottom: 160px;
   right: 120px;
   background-color: rgba(18, 123, 243, 0.85);
   color: white;           
