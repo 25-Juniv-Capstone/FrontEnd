@@ -58,7 +58,7 @@ function Header() {
       zIndex: 10,
     }}>
       <Link to="/" style={{ textDecoration: 'none' }}>
-        <div style={{ fontWeight: 'bold', fontSize: '20px', color: '#0068DF' }}>Barrier Crash</div>
+        <div style={{ fontWeight: 'bold', fontSize: '20px', color: '#0068DF' }}>여행의 배프</div>
       </Link>
       <nav style={{ display: 'flex', gap: '16px', fontSize: '14px', color: '#555' }}>
         <Link to="/community" style={{ textDecoration: 'none', color: '#555' }}>

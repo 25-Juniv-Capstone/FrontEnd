@@ -161,6 +161,62 @@ const regionCoordinates = {
   "서귀포시": { lat: 33.2541, lng: 126.5600 }
 };
 
+// 기능 소개 슬라이드 데이터
+const featureSlides = [
+  {
+    title: '모든 사람을 위한 여행',
+    subtitle: '장벽 없는 여행의 시작',
+    imageClass: 'wheelchair',
+    reverse: false,
+    h3: '편안한 이동, 자유로운 여행',
+    desc: '휠체어 이용자도 걱정 없이 즐길 수 있는 여행지를 소개합니다. 무장애 시설이 완비된 관광지부터 휠체어 택시 예약, 장애인 전용 주차장까지. 여행의 모든 순간을 편안하게.',
+    list: [
+      '✓ 무장애 시설 상세 정보 제공',
+      '✓ 휠체어 대여/택시 예약 서비스',
+      '✓ 장애인 전용 주차장 위치 안내',
+    ],
+  },
+  {
+    title: '시각장애인을 위한 여행',
+    subtitle: '소리로 만나는 새로운 경험',
+    imageClass: 'visual',
+    reverse: true,
+    h3: '더 풍부한 여행 경험',
+    desc: '음성 안내로 여행지의 모든 것을 느껴보세요. 점자 안내판과 음성 설명이 있는 전시관, 촉각 체험 프로그램까지. 시각을 넘어선 특별한 여행 경험을 선사합니다.',
+    list: [
+      '✓ 실시간 음성 안내 서비스',
+      '✓ 점자 정보와 촉각 체험 프로그램',
+      '✓ 시각장애인 전용 관광 코스',
+    ],
+  },
+  {
+    title: '청각장애인을 위한 여행',
+    subtitle: '소통의 즐거움, 여행의 행복',
+    imageClass: 'hearing',
+    reverse: false,
+    h3: '소통의 장벽을 넘어',
+    desc: '수어 통역사와 함께하는 특별한 여행. 모든 안내와 설명이 수어로 제공되며, 자막이 있는 공연과 전시까지. 여행지에서 만나는 모든 순간을 편안하게 소통하세요.',
+    list: [
+      '✓ 실시간 수어 통역 서비스',
+      '✓ 자막이 있는 공연/전시 정보',
+      '✓ 청각장애인 맞춤 관광 가이드',
+    ],
+  },
+  {
+    title: '맞춤형 여행 계획',
+    subtitle: 'AI가 제안하는 특별한 여행',
+    imageClass: 'ai',
+    reverse: true,
+    h3: '나만을 위한 완벽한 여행',
+    desc: '장애 유형과 선호도를 고려한 맞춤형 여행 코스를 추천해드립니다. 편의시설, 교통, 숙박까지 모든 것을 고려한 완벽한 여행 계획. AI가 당신의 여행을 더 특별하게 만들어드립니다.',
+    list: [
+      '✓ AI 기반 맞춤형 여행 코스',
+      '✓ 실시간 교통/편의시설 정보',
+      '✓ 장애인 친화 숙소 추천',
+    ],
+  },
+];
+
 function HomePage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -224,7 +280,6 @@ function HomePage() {
     setSearchQuery(destination);
     setSelectedRegion(destination);
     setShowResults(false);
-    setShowRegionModal(true);
   };
 
   const handleRegionSelect = (region) => {
@@ -262,9 +317,9 @@ function HomePage() {
     slidesToShow: 1,
     slidesToScroll: 1,
     autoplay: true,
-    autoplaySpeed: 5000,
+    autoplaySpeed: 3000,
     arrows: true,
-    fade: true,
+    fade: false,
     cssEase: 'linear',
     responsive: [
       {
@@ -274,6 +329,15 @@ function HomePage() {
         }
       }
     ]
+  };
+
+  // 여행하기 버튼 클릭 시
+  const handleTravelClick = () => {
+    if (!selectedRegion) {
+      alert('여행 지역을 먼저 선택해주세요.');
+      return;
+    }
+    setShowRegionModal(true);
   };
 
   return (
@@ -303,88 +367,46 @@ function HomePage() {
               </div>
             )}
           </div>
-          <button className="travelBtn" onClick={() => setShowRegionModal(true)}>여행하기</button>
+          <button className="travelBtn" onClick={handleTravelClick}>여행하기</button>
         </div>
       </div>
 
       {/* 기능 소개 섹션 */}
       <section className="features-section">
         <Slider {...sliderSettings} className="feature-slider">
-          <div className="feature-slide">
-            <div className="feature-block">
-              <h2 className="feature-title">모든 사람을 위한 여행</h2>
-              <p className="feature-subtitle">장벽 없는 여행의 시작</p>
-              <div className="feature-content">
-                <div className="feature-image wheelchair"></div>
-                <div className="feature-description">
-                  <h3>편안한 이동, 자유로운 여행</h3>
-                  <p>휠체어 이용자도 걱정 없이 즐길 수 있는 여행지를 소개합니다. 무장애 시설이 완비된 관광지부터 휠체어 택시 예약, 장애인 전용 주차장까지. 여행의 모든 순간을 편안하게.</p>
-                  <ul className="feature-list">
-                    <li>✓ 무장애 시설 상세 정보 제공</li>
-                    <li>✓ 휠체어 대여/택시 예약 서비스</li>
-                    <li>✓ 장애인 전용 주차장 위치 안내</li>
-                  </ul>
+          {featureSlides.map((slide, idx) => (
+            <div className="feature-slide" key={idx}>
+              <div className={`feature-block${slide.reverse ? ' reverse' : ''}`}>
+                <h2 className="feature-title">{slide.title}</h2>
+                <p className="feature-subtitle">{slide.subtitle}</p>
+                <div className="feature-content">
+                  {slide.reverse ? (
+                    <>
+                      <div className="feature-description">
+                        <h3>{slide.h3}</h3>
+                        <p>{slide.desc}</p>
+                        <ul className="feature-list">
+                          {slide.list.map((item, i) => <li key={i}>{item}</li>)}
+                        </ul>
+                      </div>
+                      <div className={`feature-image ${slide.imageClass}`}></div>
+                    </>
+                  ) : (
+                    <>
+                      <div className={`feature-image ${slide.imageClass}`}></div>
+                      <div className="feature-description">
+                        <h3>{slide.h3}</h3>
+                        <p>{slide.desc}</p>
+                        <ul className="feature-list">
+                          {slide.list.map((item, i) => <li key={i}>{item}</li>)}
+                        </ul>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
-          </div>
-
-          <div className="feature-slide">
-            <div className="feature-block reverse">
-              <h2 className="feature-title">시각장애인을 위한 여행</h2>
-              <p className="feature-subtitle">소리로 만나는 새로운 경험</p>
-              <div className="feature-content">
-                <div className="feature-description">
-                  <h3>더 풍부한 여행 경험</h3>
-                  <p>음성 안내로 여행지의 모든 것을 느껴보세요. 점자 안내판과 음성 설명이 있는 전시관, 촉각 체험 프로그램까지. 시각을 넘어선 특별한 여행 경험을 선사합니다.</p>
-                  <ul className="feature-list">
-                    <li>✓ 실시간 음성 안내 서비스</li>
-                    <li>✓ 점자 정보와 촉각 체험 프로그램</li>
-                    <li>✓ 시각장애인 전용 관광 코스</li>
-                  </ul>
-                </div>
-                <div className="feature-image visual"></div>
-              </div>
-            </div>
-          </div>
-
-          <div className="feature-slide">
-            <div className="feature-block">
-              <h2 className="feature-title">청각장애인을 위한 여행</h2>
-              <p className="feature-subtitle">소통의 즐거움, 여행의 행복</p>
-              <div className="feature-content">
-                <div className="feature-image hearing"></div>
-                <div className="feature-description">
-                  <h3>소통의 장벽을 넘어</h3>
-                  <p>수어 통역사와 함께하는 특별한 여행. 모든 안내와 설명이 수어로 제공되며, 자막이 있는 공연과 전시까지. 여행지에서 만나는 모든 순간을 편안하게 소통하세요.</p>
-                  <ul className="feature-list">
-                    <li>✓ 실시간 수어 통역 서비스</li>
-                    <li>✓ 자막이 있는 공연/전시 정보</li>
-                    <li>✓ 청각장애인 맞춤 관광 가이드</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="feature-slide">
-            <div className="feature-block reverse">
-              <h2 className="feature-title">맞춤형 여행 계획</h2>
-              <p className="feature-subtitle">AI가 제안하는 특별한 여행</p>
-              <div className="feature-content">
-                <div className="feature-description">
-                  <h3>나만을 위한 완벽한 여행</h3>
-                  <p>장애 유형과 선호도를 고려한 맞춤형 여행 코스를 추천해드립니다. 편의시설, 교통, 숙박까지 모든 것을 고려한 완벽한 여행 계획. AI가 당신의 여행을 더 특별하게 만들어드립니다.</p>
-                  <ul className="feature-list">
-                    <li>✓ AI 기반 맞춤형 여행 코스</li>
-                    <li>✓ 실시간 교통/편의시설 정보</li>
-                    <li>✓ 장애인 친화 숙소 추천</li>
-                  </ul>
-                </div>
-                <div className="feature-image ai"></div>
-              </div>
-            </div>
-          </div>
+          ))}
         </Slider>
       </section>
 
