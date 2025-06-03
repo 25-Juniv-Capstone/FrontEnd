@@ -17,27 +17,37 @@ import axiosInstance from '../utils/axiosConfig';
 
 // 장소 타입별 색상 매핑
 const placeTypeToColor = {
-  "한식당": "#FFC107", // 노란색
-  "카페": "#FFC107",   // 노란색
-  "공원": "#2196F3",   // 파란색
-  "박물관": "#2196F3", // 파란색
-  "호텔": "#4CAF50",   // 초록색
-  "백화점": "#2196F3", // 파란색
-  "공연예술 극장": "#2196F3", // 파란색
-  "관광지": "#2196F3", // 파란색
-  "기타": "#2196F3"    // 파란색
+  "한식당": "#FFC107", // 노란색 - 식당/카페
+  "식당": "#FFC107",   // 노란색 - 식당/카페
+  "카페": "#FFC107",   // 노란색 - 식당/카페
+  "공원": "#2196F3",   // 파란색 - 기타
+  "박물관": "#2196F3", // 파란색 - 기타
+  "호텔": "#4CAF50",   // 초록색 - 숙소
+  "숙박": "#4CAF50",   // 초록색 - 숙소
+  "백화점": "#2196F3", // 파란색 - 기타
+  "공연예술 극장": "#2196F3", // 파란색 - 기타
+  "관광지": "#2196F3", // 파란색 - 기타
+  "문화재/박물관": "#2196F3", // 파란색 - 기타
+  "공연장/행사장": "#2196F3", // 파란색 - 기타
+  "관광지/상점": "#2196F3", // 파란색 - 기타
+  "기타": "#2196F3"    // 파란색 - 기타
 };
 
 // 장소 타입별 이모지 매핑 - UI에 표시될 아이콘 정의
 const placeTypeToEmoji = {
   "한식당": "🍴 식당",
+  "식당": "🍴 식당",
   "카페": "☕ 카페",
   "공원": "🏞️ 공원",
   "박물관": "🏛️ 박물관",
   "호텔": "🏨 숙소",
+  "숙박": "🏨 숙소",
   "백화점": "🏬 쇼핑",
   "공연예술 극장": "🎭 공연장",
   "관광지": "🗺️ 관광지",
+  "문화재/박물관": "🏛️ 박물관",
+  "공연장/행사장": "🎭 공연장",
+  "관광지/상점": "🗺️ 관광지",
   "기타": "📍 기타"
 };
 
@@ -172,6 +182,8 @@ function CourseCreatePage() {
   const [region, setRegion] = useState(regionFromState);
   const [dates, setDates] = useState({ startDate, endDate });
   const [isSaving, setIsSaving] = useState(false);  // 저장 상태 추가
+  const [openInfoType, setOpenInfoType] = useState({}); // { [place.id]: 'info' | 'accessibility' }
+  const [modalInfo, setModalInfo] = useState({ open: false, type: '', place: null });
 
   // 여행 일수 계산
   const getDateDiff = (start, end) => {
@@ -665,67 +677,17 @@ function CourseCreatePage() {
                             <div className="place-type">
                               {placeTypeToEmoji[place.place_type] || "📍 기타"}
                             </div>
-                            {Object.keys(place.accessibility_features || {}).length > 0 && (
-                              <div className="accessibility-info">
-                                {Object.entries(place.accessibility_features)
-                                  .filter(([key, value]) => {
-                                    // null, undefined, 빈 문자열, "null" 문자열 필터링
-                                    return value !== null && 
-                                           value !== undefined && 
-                                           value !== '' && 
-                                           value !== 'null' &&
-                                           value !== 'undefined' &&
-                                           !(typeof value === 'string' && value.trim() === '');
-                                  })
-                                  .map(([key, value]) => {
-                                    // 키 이름을 한글로 변환하는 매핑
-                                    const keyMapping = {
-                                      'parking': '주차장',
-                                      'public_transport': '대중교통 접근',
-                                      'restroom': '화장실',
-                                      'wheelchair_rental': '휠체어 대여',
-                                      'elevator': '엘리베이터',
-                                      'exit': '출입구',
-                                      'braile_block': '점자블록',
-                                      'braille_promotion': '점자 안내',
-                                      'human_guide': '안내요원',
-                                      'audio_guide': '음성안내',
-                                      'ticket_office': '매표소',
-                                      'guide_dog': '안내견',
-                                      'infants_info_baby_spare_chair': '유아용 의자',
-                                      'infants_info_stroller': '유모차 대여',
-                                      'infants_info_lactation_room': '수유실',
-                                      'infants_info_etc': '유아 편의시설',
-                                      'visual_impairment_info_guide_dog': '시각장애인 안내견',
-                                      'visual_impairment_info_human_guide': '시각장애인 안내',
-                                      'visual_impairment_info_braille_promotion': '시각장애인 점자안내',
-                                      'facilities_room': '장애인 객실',
-                                      'facilities_etc': '기타 편의시설'
-                                    };
-                                    
-                                    // value가 객체인 경우 문자열로 변환
-                                    let displayValue = value;
-                                    if (typeof value === 'object' && value !== null) {
-                                      if (Array.isArray(value)) {
-                                        displayValue = value.join(', ');
-                                      } else {
-                                        displayValue = Object.keys(value).join(', ') || JSON.stringify(value);
-                                      }
-                                    } else if (typeof value !== 'string' && typeof value !== 'number') {
-                                      displayValue = String(value);
-                                    }
-                                    
-                                    // 키 이름을 한글로 변환 (매핑에 없으면 원래 키 사용)
-                                    const displayKey = keyMapping[key] || key.replace(/_/g, ' ');
-                                    
-                                    return (
-                                      <div key={key} className="accessibility-item">
-                                        • {displayKey}: {displayValue}
-                                      </div>
-                                    );
-                                  })}
-                              </div>
-                            )}
+                            {/* 버튼만 남김 */}
+                            <div style={{ display: 'flex', gap: '8px', margin: '12px 0' }}>
+                              <button
+                                className="info-btn"
+                                onClick={() => setModalInfo({ open: true, type: 'info', place })}
+                              >장소 정보</button>
+                              <button
+                                className="access-btn"
+                                onClick={() => setModalInfo({ open: true, type: 'accessibility', place })}
+                              >무장애 정보</button>
+                            </div>
                           </div>
                           <div className="right">
                             <div className="action-buttons">
@@ -802,6 +764,74 @@ function CourseCreatePage() {
         startDate={courseData?.metadata?.start_date}
         endDate={courseData?.metadata?.end_date}
       />
+      {modalInfo.open && (
+        <div className="modal-overlay">
+          <div className="info-modal">
+            <div className="modal-header">
+              <h3>{modalInfo.type === 'info' ? '장소 정보' : '무장애 정보'}</h3>
+              <button onClick={() => setModalInfo({ open: false, type: '', place: null })}>✕</button>
+            </div>
+            <div className="modal-content">
+              {modalInfo.type === 'info' && (
+                <>
+                  <div style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: 8 }}>{modalInfo.place.place_name}</div>
+                  <div style={{ color: '#444', fontSize: '0.98rem', marginBottom: '4px' }}>{modalInfo.place.description}</div>
+                </>
+              )}
+              {modalInfo.type === 'accessibility' && (
+                <div className="accessibility-info">
+                  {Object.keys(modalInfo.place.accessibility_features || {}).length === 0 && (
+                    <div style={{ color: '#888', fontSize: '0.95rem' }}>무장애 정보가 없습니다.</div>
+                  )}
+                  {Object.entries(modalInfo.place.accessibility_features || {})
+                    .filter(([key, value]) => value && value !== 'null' && value !== 'undefined' && String(value).trim() !== '')
+                    .map(([key, value]) => {
+                      const keyMapping = {
+                        'parking': '주차장',
+                        'public_transport': '대중교통 접근',
+                        'restroom': '화장실',
+                        'wheelchair_rental': '휠체어 대여',
+                        'elevator': '엘리베이터',
+                        'exit': '출입구',
+                        'braile_block': '점자블록',
+                        'braille_promotion': '점자 안내',
+                        'human_guide': '안내요원',
+                        'audio_guide': '음성안내',
+                        'ticket_office': '매표소',
+                        'guide_dog': '안내견',
+                        'infants_info_baby_spare_chair': '유아용 의자',
+                        'infants_info_stroller': '유모차 대여',
+                        'infants_info_lactation_room': '수유실',
+                        'infants_info_etc': '유아 편의시설',
+                        'visual_impairment_info_guide_dog': '시각장애인 안내견',
+                        'visual_impairment_info_human_guide': '시각장애인 안내',
+                        'visual_impairment_info_braille_promotion': '시각장애인 점자안내',
+                        'facilities_room': '장애인 객실',
+                        'facilities_etc': '기타 편의시설'
+                      };
+                      let displayValue = value;
+                      if (typeof value === 'object' && value !== null) {
+                        if (Array.isArray(value)) {
+                          displayValue = value.join(', ');
+                        } else {
+                          displayValue = Object.keys(value).join(', ') || JSON.stringify(value);
+                        }
+                      } else if (typeof value !== 'string' && typeof value !== 'number') {
+                        displayValue = String(value);
+                      }
+                      const displayKey = keyMapping[key] || key.replace(/_/g, ' ');
+                      return (
+                        <div key={key} className="accessibility-item">
+                          • {displayKey}: {displayValue}
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
