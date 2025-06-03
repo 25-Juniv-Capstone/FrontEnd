@@ -1,33 +1,26 @@
-import React, { useState } from "react";
+import React from "react";
 import styles from "../../css/communitypages/SearchBar.module.css"; // CSS 모듈 import 경로 수정
 
-function SearchBar({ placeholder }) {
-  const [inputValue, setInputValue] = useState("");
-
-  const handleInputChange = (event) => {
-    setInputValue(event.target.value);
-  };
-
-  const clearInput = () => {
-    setInputValue("");
-  };
-
+function SearchBar({ placeholder, value, onChange, onSubmit, onClear }) {
   return (
-    <div className={styles.searchBarContainer}>
+    <form className={styles.searchBarContainer} onSubmit={onSubmit}>
       <input
         type="text"
         placeholder={placeholder}
         className={styles.searchInput}
-        value={inputValue}
-        onChange={handleInputChange}
+        value={value}
+        onChange={onChange}
       />
-      <img
-        src="https://cdn.builder.io/api/v1/image/assets/TEMP/05afde3f510438352a2d148c5effaf0f44a7212c?placeholderIfAbsent=true&apiKey=51da45a900b44128b831ca29137094ce"
-        alt="Search icon"
-        className={styles.searchIcon}
-        onClick={clearInput}
-      />
-    </div>
+      {value && (
+        <button 
+          type="button"
+          className={`${styles.clearButton} ${styles.iconButton}`}
+          onClick={onClear}
+        >
+          &#x2715;
+        </button>
+      )}
+    </form>
   );
 }
 

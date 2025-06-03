@@ -40,6 +40,27 @@
   outline: none;
 }
 
+/* 공통 아이콘 버튼 스타일 */
+.iconButton {
+  background: none;
+  border: none;
+  padding: 5px;
+  margin-left: 5px; /* 아이콘 버튼 사이 간격 */
+  cursor: pointer;
+  outline: none; /* 중요: 아웃라인 제거 */
+  display: flex; /* 아이콘 중앙 정렬을 위해 */
+  align-items: center; /* 아이콘 중앙 정렬을 위해 */
+  justify-content: center; /* 아이콘 중앙 정렬을 위해 */
+}
+
+.iconButton:focus {
+  outline: none; /* 포커스 시에도 아웃라인 제거 */
+}
+
+.searchButton {
+  /* .iconButton으로 공통 스타일 이동 */
+}
+
 .searchIcon {
   object-fit: contain;
   flex-shrink: 0;
@@ -48,4 +69,14 @@
   margin-bottom: auto;
   width: 16px;
   aspect-ratio: 1 / 1;
+}
+
+.clearButton {
+  /* .iconButton으로 공통 스타일 이동 */
+  font-size: 1.2rem; /* X 아이콘 크기 예시 */
+  color: #888; /* X 아이콘 색상 예시 */
+}
+
+.clearButton:hover {
+  color: #333; /* X 아이콘 호버 색상 예시 */
 } 
