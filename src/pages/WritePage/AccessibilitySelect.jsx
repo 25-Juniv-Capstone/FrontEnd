@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import styles from "../../css/writepages/InputDesign.module.css";
+import WritePageModal from "../WritePage/WritePageModal";
 
 function AccessibilitySelect() {
   const [selectedOption, setSelectedOption] = useState("");
