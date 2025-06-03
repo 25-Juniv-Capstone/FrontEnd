@@ -195,93 +195,112 @@ function CourseCreatePage() {
 
   // 초기 데이터 설정
   useEffect(() => {
-    if (backendCourseData?.recommended_courses?.[0]?.days) {
-      const course = backendCourseData.recommended_courses[0];
-      const processedPlaces = {};
-      
-      course.days.forEach(dayData => {
-        if (!dayData.itinerary) return;
+    if (backendCourseData) {
+      // 날짜 정보가 없는 경우 location.state에서 가져온 날짜 사용
+      const metadata = {
+        ...backendCourseData.metadata,
+        start_date: backendCourseData.metadata?.start_date || startDate,
+        end_date: backendCourseData.metadata?.end_date || endDate,
+        region: backendCourseData.metadata?.region || regionFromState,
+        duration: backendCourseData.metadata?.duration || getDateDiff(startDate, endDate)
+      };
+
+      const processedData = {
+        ...backendCourseData,
+        metadata: metadata
+      };
+
+      if (processedData.recommended_courses?.[0]?.days) {
+        const course = processedData.recommended_courses[0];
+        const processedPlaces = {};
         
-        processedPlaces[dayData.day] = dayData.itinerary.map((item, index) => {
-          // accessibility_features 안전하게 처리
-          let accessibilityFeatures = {};
+        course.days.forEach(dayData => {
+          if (!dayData.itinerary) return;
           
-          if (item.accessibility_info) {
-            // 문자열인 경우 파싱
-            if (typeof item.accessibility_info === 'string') {
-              try {
-                item.accessibility_info.split(', ').forEach(info => {
-                  const [key, value] = info.split(': ');
-                  if (key && value) {
-                    accessibilityFeatures[key.trim()] = value.trim();
-                  }
-                });
-              } catch (e) {
-                console.warn('accessibility_info 파싱 실패:', item.accessibility_info);
+          processedPlaces[dayData.day] = dayData.itinerary.map((item, index) => {
+            // accessibility_features 안전하게 처리
+            let accessibilityFeatures = {};
+            
+            if (item.accessibility_info) {
+              // 문자열인 경우 파싱
+              if (typeof item.accessibility_info === 'string') {
+                try {
+                  item.accessibility_info.split(', ').forEach(info => {
+                    const [key, value] = info.split(': ');
+                    if (key && value) {
+                      accessibilityFeatures[key.trim()] = value.trim();
+                    }
+                  });
+                } catch (e) {
+                  console.warn('accessibility_info 파싱 실패:', item.accessibility_info);
+                }
+              }
+            } else if (item.accessibility_features) {
+              // 객체인 경우 안전하게 복사하고 중첩 객체 평면화
+              if (typeof item.accessibility_features === 'object' && item.accessibility_features !== null) {
+                // 중첩된 객체들을 평면화하는 함수
+                const flattenObject = (obj, prefix = '') => {
+                  const flattened = {};
+                  
+                  Object.entries(obj).forEach(([key, value]) => {
+                    // null, undefined, 빈 값들을 미리 필터링
+                    if (value === null || 
+                        value === undefined || 
+                        value === '' || 
+                        value === 'null' ||
+                        value === 'undefined' ||
+                        (typeof value === 'string' && value.trim() === '')) {
+                      return; // 이 항목은 건너뛰기
+                    }
+                    
+                    const newKey = prefix ? `${prefix}_${key}` : key;
+                    
+                    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                      // 중첩된 객체인 경우 재귀적으로 평면화
+                      Object.assign(flattened, flattenObject(value, newKey));
+                    } else if (Array.isArray(value)) {
+                      // 배열인 경우 빈 배열이 아닐 때만 추가
+                      if (value.length > 0) {
+                        flattened[newKey] = value.join(', ');
+                      }
+                    } else {
+                      // 일반 값인 경우 그대로 저장
+                      flattened[newKey] = value;
+                    }
+                  });
+                  
+                  return flattened;
+                };
+                
+                accessibilityFeatures = flattenObject(item.accessibility_features);
               }
             }
-          } else if (item.accessibility_features) {
-            // 객체인 경우 안전하게 복사하고 중첩 객체 평면화
-            if (typeof item.accessibility_features === 'object' && item.accessibility_features !== null) {
-              // 중첩된 객체들을 평면화하는 함수
-              const flattenObject = (obj, prefix = '') => {
-                const flattened = {};
-                
-                Object.entries(obj).forEach(([key, value]) => {
-                  // null, undefined, 빈 값들을 미리 필터링
-                  if (value === null || 
-                      value === undefined || 
-                      value === '' || 
-                      value === 'null' ||
-                      value === 'undefined' ||
-                      (typeof value === 'string' && value.trim() === '')) {
-                    return; // 이 항목은 건너뛰기
-                  }
-                  
-                  const newKey = prefix ? `${prefix}_${key}` : key;
-                  
-                  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-                    // 중첩된 객체인 경우 재귀적으로 평면화
-                    Object.assign(flattened, flattenObject(value, newKey));
-                  } else if (Array.isArray(value)) {
-                    // 배열인 경우 빈 배열이 아닐 때만 추가
-                    if (value.length > 0) {
-                      flattened[newKey] = value.join(', ');
-                    }
-                  } else {
-                    // 일반 값인 경우 그대로 저장
-                    flattened[newKey] = value;
-                  }
-                });
-                
-                return flattened;
-              };
-              
-              accessibilityFeatures = flattenObject(item.accessibility_features);
-            }
-          }
-          
-          return {
-            id: `${dayData.day}-${index}`,
-            time: item.time || '오전 09:00',
-            place_name: item.name || item.place_name || '장소명 없음',
-            place_type: item.type || item.place_type || '기타',
-            description: item.address || item.description || '',
-            lat: item.coordinates?.latitude || item.lat || 0,
-            lng: item.coordinates?.longitude || item.lng || 0,
-            accessibility_features: accessibilityFeatures,
-            rating: item.rating || 0,
-            reviews: item.reviews || 0,
-            operating_hours: item.operating_hours || {}
-          };
+            
+            return {
+              id: `${dayData.day}-${index}`,
+              time: item.time || '오전 09:00',
+              place_name: item.name || item.place_name || '장소명 없음',
+              place_type: item.type || item.place_type || '기타',
+              description: item.address || item.description || '',
+              lat: item.coordinates?.latitude || item.lat || 0,
+              lng: item.coordinates?.longitude || item.lng || 0,
+              accessibility_features: accessibilityFeatures,
+              rating: item.rating || 0,
+              reviews: item.reviews || 0,
+              operating_hours: item.operating_hours || {}
+            };
+          });
         });
-      });
-      
-      setCourseData(backendCourseData);
-      setPlacesByDay(processedPlaces);
-      setSelectedDay(1);
+        
+        setCourseData(processedData);
+        setPlacesByDay(processedPlaces);
+        setSelectedDay(1);
+      } else {
+        // 코스 데이터가 없더라도 날짜 정보는 저장
+        setCourseData(processedData);
+      }
     }
-  }, [backendCourseData]);
+  }, [backendCourseData, startDate, endDate, regionFromState]);
 
   // 디버깅을 위한 상태 로깅
   useEffect(() => {
@@ -532,100 +551,88 @@ function CourseCreatePage() {
 
   // 코스 저장 함수 수정
   const handleSaveCourse = async () => {
+    if (!region) {
+      alert('지역을 선택해주세요.');
+      return;
+    }
+
+    if (!courseData?.metadata?.start_date || !courseData?.metadata?.end_date) {
+      alert('여행 기간을 선택해주세요.');
+      return;
+    }
+
+    // 백엔드 DTO와 DB 스키마에 맞게 데이터 변환
+    const courseToSave = {
+      title: courseData?.recommended_courses?.[0]?.course_name || `${region} 여행 코스`,
+      courseImageUrl: courseData?.recommended_courses?.[0]?.course_image_url || null,  // course_image_url 추가
+      region: region,
+      startDate: courseData.metadata.start_date,  // YYYY-MM-DD 형식
+      endDate: courseData.metadata.end_date,      // YYYY-MM-DD 형식
+      durationDays: courseData.metadata.duration || Object.keys(placesByDay).length,
+      keywords: courseData?.metadata?.keywords || courseData?.recommended_courses?.[0]?.keywords || '',  // metadata의 keywords 사용
+      days: Object.entries(placesByDay).map(([day, places]) => ({
+        dayNumber: parseInt(day),
+        itinerary: places.map(place => {
+          // coordinates 객체가 없는 경우 lat, lng 직접 사용
+          const latitude = place.coordinates?.lat || place.lat;
+          const longitude = place.coordinates?.lng || place.lng;
+
+          if (!latitude || !longitude) {
+            console.error('장소 좌표가 없습니다:', place);
+            return null;
+          }
+
+          // 시간 형식 변환 (HH:mm -> HH:mm)
+          const time = place.time ? place.time.split(' ')[1] || place.time : '09:00';
+
+          // travel_from_previous 정보 가져오기
+          const travelInfo = place.travel_from_previous || place.travelInfo || {};
+
+          return {
+            time: time,  // VARCHAR(20)
+            placeName: place.place_name,  // VARCHAR(255)
+            placeType: place.place_type || '기타',  // VARCHAR(50)
+            description: place.description || '',  // TEXT
+            details: place.details || '',  // TEXT - details 필드 추가
+            coordinates: {
+              latitude: parseFloat(latitude),  // DECIMAL(10,8)
+              longitude: parseFloat(longitude)  // DECIMAL(11,8)
+            },
+            accessibilityFeatures: Object.entries(place.accessibility_features || {})
+              .reduce((acc, [key, value]) => {
+                if (value && value !== 'null' && value !== 'undefined' && String(value).trim() !== '') {
+                  acc[key] = String(value);  // TEXT로 저장될 값
+                }
+                return acc;
+              }, {}),
+            travelFromPrevious: {
+              distance: travelInfo.distance || '',  // VARCHAR(50) - travel_from_previous에서 가져옴
+              travelTime: travelInfo.travel_time || travelInfo.duration || ''  // VARCHAR(50) - travel_from_previous에서 가져옴
+            }
+          };
+        }).filter(Boolean)  // null 값 제거
+      }))
+    };
+
+    console.log('Saving course with data:', courseToSave);
+    console.log('Start date:', courseToSave.startDate);
+    console.log('End date:', courseToSave.endDate);
+    console.log('Course image URL:', courseToSave.courseImageUrl);  // 로깅 추가
+    console.log('Keywords:', courseToSave.keywords);  // 로깅 추가
+
     try {
-      // 저장 전 데이터 유효성 검사
-      if (!region || !courseData?.metadata?.start_date || !courseData?.metadata?.end_date) {
-        alert('필수 정보(지역, 날짜)가 누락되었습니다.');
-        return;
-      }
-
-      if (Object.keys(placesByDay).length === 0) {
-        alert('최소 1개 이상의 장소를 추가해주세요.');
-        return;
-      }
-
-      setIsSaving(true);
-      
-      // 백엔드 API 요청을 위한 데이터 구성
-      const courseToSave = {
-        title: courseData?.recommended_courses?.[0]?.course_name || `${region} 여행 코스`,
-        course_image_url: courseData?.recommended_courses?.[0]?.course_image_url || null,
-        metadata: {
-          start_date: courseData.metadata.start_date,
-          end_date: courseData.metadata.end_date,
-          region: region,
-          duration_days: Object.keys(placesByDay).length
-        },
-        days: Object.entries(placesByDay).map(([day, places]) => ({
-          day: parseInt(day),
-          places: places.map((place, index) => {
-            // 이전 장소와의 이동 정보 계산
-            const travelInfo = index > 0 ? {
-              distance_km: convertDistanceToNumber(calculateDistance(
-                places[index - 1].lat,
-                places[index - 1].lng,
-                place.lat,
-                place.lng
-              )),
-              duration_minutes: convertDurationToMinutes(calculateTravelTime(
-                places[index - 1].lat,
-                places[index - 1].lng,
-                place.lat,
-                place.lng
-              )),
-              transportation_type: "WALKING"  // 백엔드 enum 값에 맞춤
-            } : null;
-
-            return {
-              place_id: parseInt(place.id.split('-')[1]), // "day-index" 형식에서 index만 추출
-              title: place.place_name,
-              address: place.address || '',
-              latitude: place.lat,
-              longitude: place.lng,
-              scheduled_time: convertTimeToMinutes(place.time),
-              priority: index + 1,
-              travel_info: travelInfo,
-              accessibility_features: place.accessibility_features || {}
-            };
-          })
-        }))
-      };
-
-      console.log('코스 저장 요청 데이터:', JSON.stringify(courseToSave, null, 2));
-      const response = await axiosInstance.post('/api/courses', courseToSave);
-      
-      if (response.status === 200 || response.status === 201) {
-        alert('코스가 성공적으로 저장되었습니다.');
-        navigate('/mypage');
-      }
+      const response = await axiosInstance.post('/courses', courseToSave);
+      console.log('Course saved successfully:', response.data);
+      alert('코스가 성공적으로 저장되었습니다.');
+      navigate('/mypage');
     } catch (error) {
-      console.error('코스 저장 중 오류 발생:', error);
-      let errorMessage = '코스 저장 중 오류가 발생했습니다.';
-      
+      console.error('Error saving course:', error);
       if (error.response?.data) {
-        // 백엔드에서 반환한 에러 메시지 처리
-        if (typeof error.response.data === 'string') {
-          errorMessage = error.response.data;
-        } else if (error.response.data.detail) {
-          errorMessage = error.response.data.detail;
-        } else if (Array.isArray(error.response.data)) {
-          // FastAPI validation error 형식 처리
-          errorMessage = error.response.data
-            .map(err => err.msg || '유효하지 않은 입력입니다.')
-            .join(', ');
-        }
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      if (error.response?.status === 401) {
-        alert('로그인이 필요합니다.');
-        navigate('/kakao/login');
+        console.error('Error details:', error.response.data);
+        alert(`코스 저장 중 오류가 발생했습니다: ${error.response.data.message || error.response.data}`);
       } else {
-        alert(errorMessage);
+        alert('코스 저장 중 오류가 발생했습니다.');
       }
-    } finally {
-      setIsSaving(false);
     }
   };
 

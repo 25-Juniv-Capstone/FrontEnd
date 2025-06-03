@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import '../css/MyPage.css';
 import UserEditModal from './UserEditModal';
 import communityStyles from '../css/communitypages/CommunityPage.module.css';
+import axiosInstance from '../utils/axiosConfig';
 
 function MyPage() {
   const [userInfo, setUserInfo] = useState(null);
@@ -9,37 +10,59 @@ function MyPage() {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('my');
   const [showEditModal, setShowEditModal] = useState(false);
+  const [myCourses, setMyCourses] = useState([]);
+
+  const fetchUserData = async () => {
+    try {
+      const userId = localStorage.getItem('userId');
+      const token = localStorage.getItem('token');
+      
+      console.log('현재 userId:', userId);
+      console.log('현재 token:', token);
+      
+      if (!userId || !token) {
+        throw new Error('로그인이 필요합니다.');
+      }
+
+      const userResponse = await fetch(`http://localhost:8080/api/user/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!userResponse.ok) {
+        throw new Error('사용자 정보를 가져오는데 실패했습니다.');
+      }
+
+      const userData = await userResponse.json();
+      setUserInfo(userData);
+
+      console.log('코스 목록 요청 시작...');
+      try {
+        const coursesResponse = await axiosInstance.get(`/courses/user/${userId}`);
+        console.log('코스 목록 응답:', coursesResponse);
+        if (coursesResponse.data) {
+          console.log('가져온 코스 데이터:', coursesResponse.data);
+          setMyCourses(coursesResponse.data);
+        } else {
+          console.log('코스 데이터가 없습니다.');
+          setMyCourses([]);
+        }
+      } catch (courseError) {
+        console.error('코스 목록 가져오기 실패:', courseError);
+        console.error('에러 상세:', courseError.response?.data);
+        setMyCourses([]);
+      }
+    } catch (err) {
+      console.error('전체 데이터 가져오기 실패:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        const userId = localStorage.getItem('userId');
-        const token = localStorage.getItem('token');
-        
-        if (!userId || !token) {
-          throw new Error('로그인이 필요합니다.');
-        }
-
-        const response = await fetch(`http://localhost:8080/api/user/${userId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('사용자 정보를 가져오는데 실패했습니다.');
-        }
-
-        const data = await response.json();
-        setUserInfo(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserInfo();
+    fetchUserData();
   }, []);
 
   const handleUnlink = async () => {
@@ -53,13 +76,51 @@ function MyPage() {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('회원탈퇴 실패');
-      // 탈퇴 후 로그아웃 처리
       localStorage.removeItem('token');
       localStorage.removeItem('userId');
       window.location.href = '/';
     } catch (err) {
       alert(err.message);
     }
+  };
+
+  const renderCourseCards = (courses) => {
+    if (!courses || courses.length === 0) {
+      return (
+        <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+          {activeTab === 'my' ? '저장된 여행 코스가 없습니다.' : '좋아요한 여행 코스가 없습니다.'}
+        </div>
+      );
+    }
+
+    return (
+      <div className={communityStyles.cardGrid}>
+        {courses.map((course) => (
+          <div key={course.courseId} className={communityStyles.card}>
+            <div 
+              className={communityStyles.cardImage} 
+              style={{
+                backgroundImage: course.imageUrl 
+                  ? `url(${course.imageUrl})` 
+                  : "url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80')",
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }} 
+            />
+            <div className={communityStyles.cardBody}>
+              <div className={communityStyles.cardTitle}>{course.title}</div>
+              <div className={communityStyles.cardLocal}>{course.region}</div>
+              <div className={communityStyles.cardAuthor}>
+                {activeTab === 'my' ? '나의 여행' : '좋아요한 여행'}
+              </div>
+              <div className={communityStyles.cardDate}>
+                {new Date(course.startDate).toLocaleDateString()} ~ {new Date(course.endDate).toLocaleDateString()}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   if (loading) {
@@ -106,69 +167,23 @@ function MyPage() {
         >내가 좋아요한 여행</span>
       </nav>
 
-      {/* 게시물 */}
       {activeTab === 'my' && (
         <div className={communityStyles.cardSection}>
-          <div className={communityStyles.cardGrid}>
-            <div className={communityStyles.card}>
-              <div className={communityStyles.cardImage} style={{backgroundImage: "url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80')", backgroundSize: 'cover', backgroundPosition: 'center'}} />
-              <div className={communityStyles.cardBody}>
-                <div className={communityStyles.cardTitle}>제주도 여행</div>
-                <div className={communityStyles.cardLocal}>제주</div>
-                <div className={communityStyles.cardAuthor}>나의 여행</div>
-              </div>
-            </div>
-            <div className={communityStyles.card}>
-              <div className={communityStyles.cardImage} style={{backgroundImage: "url('https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=600&q=80')", backgroundSize: 'cover', backgroundPosition: 'center'}} />
-              <div className={communityStyles.cardBody}>
-                <div className={communityStyles.cardTitle}>서울 여행</div>
-                <div className={communityStyles.cardLocal}>서울</div>
-                <div className={communityStyles.cardAuthor}>나의 여행</div>
-              </div>
-            </div>
-            <div className={communityStyles.card}>
-              <div className={communityStyles.cardImage} style={{backgroundImage: "url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=600&q=80')", backgroundSize: 'cover', backgroundPosition: 'center'}} />
-              <div className={communityStyles.cardBody}>
-                <div className={communityStyles.cardTitle}>부산 여행</div>
-                <div className={communityStyles.cardLocal}>부산</div>
-                <div className={communityStyles.cardAuthor}>나의 여행</div>
-              </div>
-            </div>
-            <div className={communityStyles.card}>
-              <div className={communityStyles.cardImage} style={{backgroundImage: "url('https://images.unsplash.com/photo-1517154421773-0529f29ea451?auto=format&fit=crop&w=600&q=80')", backgroundSize: 'cover', backgroundPosition: 'center'}} />
-              <div className={communityStyles.cardBody}>
-                <div className={communityStyles.cardTitle}>수원 여행</div>
-                <div className={communityStyles.cardLocal}>수원</div>
-                <div className={communityStyles.cardAuthor}>나의 여행</div>
-              </div>
-            </div>
-          </div>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '20px' }}>로딩 중...</div>
+          ) : error ? (
+            <div style={{ textAlign: 'center', padding: '20px', color: 'red' }}>{error}</div>
+          ) : (
+            renderCourseCards(myCourses)
+          )}
         </div>
       )}
       {activeTab === 'like' && (
         <div className={communityStyles.cardSection}>
-          <div className={communityStyles.cardGrid}>
-            <div className={communityStyles.card}>
-              <div className={communityStyles.cardImage} style={{backgroundImage: "url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80')", backgroundSize: 'cover', backgroundPosition: 'center'}} />
-              <div className={communityStyles.cardBody}>
-                <div className={communityStyles.cardTitle}>제주도 여행</div>
-                <div className={communityStyles.cardLocal}>제주</div>
-                <div className={communityStyles.cardAuthor}>좋아요한 여행</div>
-              </div>
-            </div>
-            <div className={communityStyles.card}>
-              <div className={communityStyles.cardImage} style={{backgroundImage: "url('https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=600&q=80')", backgroundSize: 'cover', backgroundPosition: 'center'}} />
-              <div className={communityStyles.cardBody}>
-                <div className={communityStyles.cardTitle}>서울 여행</div>
-                <div className={communityStyles.cardLocal}>서울</div>
-                <div className={communityStyles.cardAuthor}>좋아요한 여행</div>
-              </div>
-            </div>
-          </div>
+          {renderCourseCards([])}
         </div>
       )}
 
-      {/* 팝업 모달 */}
       <UserEditModal isOpen={showEditModal} onClose={() => setShowEditModal(false)} userInfo={userInfo} setUserInfo={setUserInfo} />
     </div>
   );
