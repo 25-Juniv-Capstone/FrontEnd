@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../../css/communitypages/CommunityPage.module.css";
 import WritePageModal from "../WritePage/WritePageModal";
+import axiosInstance from "../../utils/axiosConfig";
 
 const DISABILITY_TYPES = [
   { key: "wheelchair", label: "휠체어 이용자" },
@@ -25,40 +26,33 @@ function CommunityPage() {
   
   const navigate = useNavigate();
 
-  // API 호출 로직 (기존 브랜치의 것 유지)
+  // API 호출 로직 (axiosInstance 사용)
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
       setError(null);
-      let apiUrl = '/api/post';
-      const params = new URLSearchParams();
-
-      // 장애유형 필터링
-      if (selectedType) {
-        params.append('type', selectedType);
-      }
-
-      // 검색어 필터링
-      if (search) {
-        params.append('search', search);
-      }
-
-      if (params.toString()) {
-        apiUrl += `?${params.toString()}`;
-      }
-
+      
       try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Error response text:", errorText);
-          throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        const params = new URLSearchParams();
+
+        // 장애유형 필터링
+        if (selectedType) {
+          params.append('type', selectedType);
         }
-        const data = await response.json();
-        setPosts(data);
+
+        // 검색어 필터링
+        if (search) {
+          params.append('search', search);
+        }
+
+        const queryString = params.toString();
+        const url = queryString ? `/post?${queryString}` : '/post';
+        
+        const response = await axiosInstance.get(url);
+        setPosts(response.data);
       } catch (err) {
         console.error("Error fetching posts:", err);
-        setError(err.message);
+        setError(err.response?.data?.message || err.message);
       } finally {
         setLoading(false);
       }
