@@ -6,10 +6,13 @@ const ThemeCard = ({ title, imageUrl, onClick, isSelected }) => {
     <button
       onClick={onClick}
       className={`${styles.button} ${isSelected ? styles.buttonSelected : ''}`}
+      role="radio"
+      aria-checked={isSelected}
+      aria-label={`${title} 테마 선택`}
     >
       <img
         src={imageUrl}
-        alt={`${title} theme`}
+        alt={`${title} 테마 이미지`}
         className={styles.image}
       />
       <span className={styles.title}>

@@ -1,29 +1,30 @@
+/* WritePageModal 컴포넌트용 모달 스타일 */
 .modalOverlay {
-  position: fixed; /* 화면 전체에 고정 */
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.6); /* 반투명 검은색 배경 */
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* 다른 요소들 위에 표시 */
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-in-out;
 }
 
 .modalContent {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  position: center; /* 닫기 버튼의 기준점 */
-  max-width: 700px; /* 700px에서 550px로 수정 (예시) */
-  width: 100%; /* 화면 너비의 90% 사용 */
-  max-height: 80vh; /* 90vh에서 80vh로 수정 (예시) */
-   overflow-y: auto;
-   overflow-x: hidden;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+  position: relative;
 }
-
 
 /* 기존 InputDesign.module.css의 .div 스타일을 가져오거나, 
    새로운 formContainer 스타일을 여기에 정의합니다. 
@@ -31,16 +32,157 @@
    .formContainer 클래스를 정의합니다. 
    기존 .div의 핵심 스타일을 여기에 적용할 수 있습니다. */
 .formContainer {
-  /* background-color: #fff; (modalContent에서 이미 처리) */
-  /* border-radius: 50px; (modalContent에서 이미 처리 또는 여기서 다르게 설정 가능) */
-  flex-wrap: wrap;
-  justify-content: start; 
-  align-items: start; 
-  gap: 9px 21px;
-  /* max-width: 609px; (modalContent에서 이미 처리 또는 여기서 다르게 설정 가능) */
-  padding: 0px 180px; /* 내부 패딩 조정 */
+  padding: 2rem;
   display: flex;
   flex-direction: column;
-  /* overflow: auto; (modalContent에서 이미 처리) */
-  width: 100%; /* modalContent 너비에 맞춤 */
+  gap: 1.5rem;
+}
+
+/* 모달 헤더 스타일 */
+.modalHeader {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+/* 폼 요소 스타일 */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formLabel {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.formInput {
+  padding: 0.8rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.formInput:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
+  outline: none;
+}
+
+.formTextarea {
+  min-height: 150px;
+  resize: vertical;
+}
+
+/* 버튼 스타일 */
+.buttonGroup {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+  margin-top: 1rem;
+}
+
+.button {
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelButton {
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.cancelButton:hover {
+  background: #eee;
+}
+
+.submitButton {
+  background: #4a90e2;
+  color: white;
+  border: none;
+}
+
+.submitButton:hover {
+  background: #357abd;
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 스크롤바 스타일링 */
+.modalContent::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modalContent::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.modalContent::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.modalContent::-webkit-scrollbar-thumb:hover {
+  background: #999;
 } 

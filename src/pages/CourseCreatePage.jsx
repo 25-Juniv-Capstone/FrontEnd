@@ -12,18 +12,42 @@
 import React, { useEffect, useState, useRef } from "react";
 import "../css/CourseCreatePage.css"; // 스타일 import
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"; // 드래그앤드롭 라이브러리
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import axiosInstance from '../utils/axiosConfig';
+
+// 장소 타입별 색상 매핑
+const placeTypeToColor = {
+  "한식당": "#FFC107", // 노란색 - 식당/카페
+  "식당": "#FFC107",   // 노란색 - 식당/카페
+  "카페": "#FFC107",   // 노란색 - 식당/카페
+  "공원": "#2196F3",   // 파란색 - 기타
+  "박물관": "#2196F3", // 파란색 - 기타
+  "호텔": "#4CAF50",   // 초록색 - 숙소
+  "숙박": "#4CAF50",   // 초록색 - 숙소
+  "백화점": "#2196F3", // 파란색 - 기타
+  "공연예술 극장": "#2196F3", // 파란색 - 기타
+  "관광지": "#2196F3", // 파란색 - 기타
+  "문화재/박물관": "#2196F3", // 파란색 - 기타
+  "공연장/행사장": "#2196F3", // 파란색 - 기타
+  "관광지/상점": "#2196F3", // 파란색 - 기타
+  "기타": "#2196F3"    // 파란색 - 기타
+};
 
 // 장소 타입별 이모지 매핑 - UI에 표시될 아이콘 정의
 const placeTypeToEmoji = {
   "한식당": "🍴 식당",
+  "식당": "🍴 식당",
   "카페": "☕ 카페",
   "공원": "🏞️ 공원",
   "박물관": "🏛️ 박물관",
   "호텔": "🏨 숙소",
+  "숙박": "🏨 숙소",
   "백화점": "🏬 쇼핑",
   "공연예술 극장": "🎭 공연장",
   "관광지": "🗺️ 관광지",
+  "문화재/박물관": "🏛️ 박물관",
+  "공연장/행사장": "🎭 공연장",
+  "관광지/상점": "🗺️ 관광지",
   "기타": "📍 기타"
 };
 
@@ -118,7 +142,8 @@ const mockCourseData = {
 };
 
 // 번호가 크게 보이는 SVG 마커 아이콘 생성 함수
-function getNumberedMarkerIcon(number, color = "#1976d2") {
+function getNumberedMarkerIcon(number, placeType) {
+  const color = placeTypeToColor[placeType] || "#2196F3"; // 기본값을 파란색으로 변경
   return {
     url: `data:image/svg+xml;utf-8,${encodeURIComponent(`
       <svg width="38" height="38" xmlns="http://www.w3.org/2000/svg">
@@ -138,6 +163,7 @@ function CourseCreatePage() {
   const startDate = location.state?.startDate || null;
   const endDate = location.state?.endDate || null;
   const backendCourseData = location.state?.courseData || null;
+  const navigate = useNavigate();
   
   console.log('CoursePage received data:', JSON.stringify({
     mustVisitPlaces,
@@ -155,6 +181,9 @@ function CourseCreatePage() {
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
   const [region, setRegion] = useState(regionFromState);
   const [dates, setDates] = useState({ startDate, endDate });
+  const [isSaving, setIsSaving] = useState(false);  // 저장 상태 추가
+  const [openInfoType, setOpenInfoType] = useState({}); // { [place.id]: 'info' | 'accessibility' }
+  const [modalInfo, setModalInfo] = useState({ open: false, type: '', place: null });
 
   // 여행 일수 계산
   const getDateDiff = (start, end) => {
@@ -173,23 +202,79 @@ function CourseCreatePage() {
       course.days.forEach(dayData => {
         if (!dayData.itinerary) return;
         
-        processedPlaces[dayData.day] = dayData.itinerary.map((item, index) => ({
-          id: `${dayData.day}-${index}`,
-          time: item.time || '오전 09:00',
-          place_name: item.name || item.place_name || '장소명 없음',
-          place_type: item.type || item.place_type || '기타',
-          description: item.address || item.description || '',
-          lat: item.coordinates?.latitude || item.lat || 0,
-          lng: item.coordinates?.longitude || item.lng || 0,
-          accessibility_features: item.accessibility_info ? 
-            Object.fromEntries(
-              item.accessibility_info.split(', ')
-                .map(info => info.split(': '))
-            ) : (item.accessibility_features || {}),
-          rating: item.rating || 0,
-          reviews: item.reviews || 0,
-          operating_hours: item.operating_hours || {}
-        }));
+        processedPlaces[dayData.day] = dayData.itinerary.map((item, index) => {
+          // accessibility_features 안전하게 처리
+          let accessibilityFeatures = {};
+          
+          if (item.accessibility_info) {
+            // 문자열인 경우 파싱
+            if (typeof item.accessibility_info === 'string') {
+              try {
+                item.accessibility_info.split(', ').forEach(info => {
+                  const [key, value] = info.split(': ');
+                  if (key && value) {
+                    accessibilityFeatures[key.trim()] = value.trim();
+                  }
+                });
+              } catch (e) {
+                console.warn('accessibility_info 파싱 실패:', item.accessibility_info);
+              }
+            }
+          } else if (item.accessibility_features) {
+            // 객체인 경우 안전하게 복사하고 중첩 객체 평면화
+            if (typeof item.accessibility_features === 'object' && item.accessibility_features !== null) {
+              // 중첩된 객체들을 평면화하는 함수
+              const flattenObject = (obj, prefix = '') => {
+                const flattened = {};
+                
+                Object.entries(obj).forEach(([key, value]) => {
+                  // null, undefined, 빈 값들을 미리 필터링
+                  if (value === null || 
+                      value === undefined || 
+                      value === '' || 
+                      value === 'null' ||
+                      value === 'undefined' ||
+                      (typeof value === 'string' && value.trim() === '')) {
+                    return; // 이 항목은 건너뛰기
+                  }
+                  
+                  const newKey = prefix ? `${prefix}_${key}` : key;
+                  
+                  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                    // 중첩된 객체인 경우 재귀적으로 평면화
+                    Object.assign(flattened, flattenObject(value, newKey));
+                  } else if (Array.isArray(value)) {
+                    // 배열인 경우 빈 배열이 아닐 때만 추가
+                    if (value.length > 0) {
+                      flattened[newKey] = value.join(', ');
+                    }
+                  } else {
+                    // 일반 값인 경우 그대로 저장
+                    flattened[newKey] = value;
+                  }
+                });
+                
+                return flattened;
+              };
+              
+              accessibilityFeatures = flattenObject(item.accessibility_features);
+            }
+          }
+          
+          return {
+            id: `${dayData.day}-${index}`,
+            time: item.time || '오전 09:00',
+            place_name: item.name || item.place_name || '장소명 없음',
+            place_type: item.type || item.place_type || '기타',
+            description: item.address || item.description || '',
+            lat: item.coordinates?.latitude || item.lat || 0,
+            lng: item.coordinates?.longitude || item.lng || 0,
+            accessibility_features: accessibilityFeatures,
+            rating: item.rating || 0,
+            reviews: item.reviews || 0,
+            operating_hours: item.operating_hours || {}
+          };
+        });
       });
       
       setCourseData(backendCourseData);
@@ -260,7 +345,7 @@ function CourseCreatePage() {
       const marker = new window.google.maps.Marker({
         position: { lat: place.lat, lng: place.lng },
         map: mapInstance.current,
-        icon: getNumberedMarkerIcon(idx + 1),
+        icon: getNumberedMarkerIcon(idx + 1, place.place_type),
         title: place.place_name,
       });
 
@@ -408,6 +493,169 @@ function CourseCreatePage() {
   const currentDayPlaces = placesByDay[selectedDay] || [];
   const totalDays = courseData?.recommended_courses?.[0]?.days?.length || 1;
 
+  // 시간 문자열을 분 단위로 변환하는 함수 추가
+  const convertTimeToMinutes = (timeStr) => {
+    try {
+      const [period, time] = timeStr.split(' ');
+      const [hours, minutes] = time.split(':').map(Number);
+      const totalMinutes = (period === '오후' && hours !== 12 ? hours + 12 : hours) * 60 + minutes;
+      return totalMinutes;
+    } catch (error) {
+      console.error('시간 변환 오류:', error);
+      return 540; // 기본값: 오전 9시
+    }
+  };
+
+  // 거리 문자열을 숫자(km)로 변환하는 함수 추가
+  const convertDistanceToNumber = (distanceStr) => {
+    try {
+      if (distanceStr.endsWith('m')) {
+        return parseFloat(distanceStr) / 1000;
+      }
+      return parseFloat(distanceStr);
+    } catch (error) {
+      console.error('거리 변환 오류:', error);
+      return 0;
+    }
+  };
+
+  // 이동 시간 문자열을 분 단위로 변환하는 함수 추가
+  const convertDurationToMinutes = (durationStr) => {
+    try {
+      const match = durationStr.match(/(\d+)분/);
+      return match ? parseInt(match[1]) : 0;
+    } catch (error) {
+      console.error('이동 시간 변환 오류:', error);
+      return 0;
+    }
+  };
+
+  // 코스 저장 함수 수정
+  const handleSaveCourse = async () => {
+    try {
+      // 저장 전 데이터 유효성 검사
+      if (!region || !courseData?.metadata?.start_date || !courseData?.metadata?.end_date) {
+        alert('필수 정보(지역, 날짜)가 누락되었습니다.');
+        return;
+      }
+
+      if (Object.keys(placesByDay).length === 0) {
+        alert('최소 1개 이상의 장소를 추가해주세요.');
+        return;
+      }
+
+      setIsSaving(true);
+      
+      // 백엔드 API 요청을 위한 데이터 구성
+      const courseToSave = {
+        title: courseData?.recommended_courses?.[0]?.course_name || `${region} 여행 코스`,
+        course_image_url: courseData?.recommended_courses?.[0]?.course_image_url || null,
+        metadata: {
+          start_date: courseData.metadata.start_date,
+          end_date: courseData.metadata.end_date,
+          region: region,
+          duration_days: Object.keys(placesByDay).length
+        },
+        days: Object.entries(placesByDay).map(([day, places]) => ({
+          day: parseInt(day),
+          places: places.map((place, index) => {
+            // 이전 장소와의 이동 정보 계산
+            const travelInfo = index > 0 ? {
+              distance_km: convertDistanceToNumber(calculateDistance(
+                places[index - 1].lat,
+                places[index - 1].lng,
+                place.lat,
+                place.lng
+              )),
+              duration_minutes: convertDurationToMinutes(calculateTravelTime(
+                places[index - 1].lat,
+                places[index - 1].lng,
+                place.lat,
+                place.lng
+              )),
+              transportation_type: "WALKING"  // 백엔드 enum 값에 맞춤
+            } : null;
+
+            return {
+              place_id: parseInt(place.id.split('-')[1]), // "day-index" 형식에서 index만 추출
+              title: place.place_name,
+              address: place.address || '',
+              latitude: place.lat,
+              longitude: place.lng,
+              scheduled_time: convertTimeToMinutes(place.time),
+              priority: index + 1,
+              travel_info: travelInfo,
+              accessibility_features: place.accessibility_features || {}
+            };
+          })
+        }))
+      };
+
+      console.log('코스 저장 요청 데이터:', JSON.stringify(courseToSave, null, 2));
+      const response = await axiosInstance.post('/api/courses', courseToSave);
+      
+      if (response.status === 200 || response.status === 201) {
+        alert('코스가 성공적으로 저장되었습니다.');
+        navigate('/mypage');
+      }
+    } catch (error) {
+      console.error('코스 저장 중 오류 발생:', error);
+      let errorMessage = '코스 저장 중 오류가 발생했습니다.';
+      
+      if (error.response?.data) {
+        // 백엔드에서 반환한 에러 메시지 처리
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data.detail) {
+          errorMessage = error.response.data.detail;
+        } else if (Array.isArray(error.response.data)) {
+          // FastAPI validation error 형식 처리
+          errorMessage = error.response.data
+            .map(err => err.msg || '유효하지 않은 입력입니다.')
+            .join(', ');
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      if (error.response?.status === 401) {
+        alert('로그인이 필요합니다.');
+        navigate('/kakao/login');
+      } else {
+        alert(errorMessage);
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // 두 지점 간의 거리를 계산하는 함수 (Haversine 공식)
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // 지구의 반경 (km)
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c;
+    return distance < 1 ? `${Math.round(distance * 1000)}m` : `${distance.toFixed(1)}km`;
+  };
+
+  // 이동 시간을 계산하는 함수 (도보 기준)
+  const calculateTravelTime = (lat1, lon1, lat2, lon2) => {
+    const distance = calculateDistance(lat1, lon1, lat2, lon2);
+    if (distance === "시작 지점") return "0분";
+    
+    // 도보 평균 속도 4km/h 기준
+    const distanceInKm = parseFloat(distance);
+    const timeInHours = distanceInKm / 4;
+    const timeInMinutes = Math.round(timeInHours * 60);
+    
+    return `약 ${timeInMinutes}분 (도보)`;
+  };
+
   return (
     <div className="course-page">
       <div className="course-main">
@@ -448,21 +696,28 @@ function CourseCreatePage() {
                           {...provided.dragHandleProps}
                         >
                           <div className="left">
-                            <div className="circle-number">{index + 1}</div>
+                            <div 
+                              className="circle-number" 
+                              style={{ backgroundColor: placeTypeToColor[place.place_type] || "#2196F3" }}
+                            >
+                              {index + 1}
+                            </div>
                             <div className="time">{place.time || '--:--'}</div>
                             <div className="title">{place.place_name}</div>
                             <div className="place-type">
                               {placeTypeToEmoji[place.place_type] || "📍 기타"}
                             </div>
-                            {Object.keys(place.accessibility_features || {}).length > 0 && (
-                              <div className="accessibility-info">
-                                {Object.entries(place.accessibility_features).map(([key, value]) => (
-                                  <div key={key} className="accessibility-item">
-                                    • {value}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
+                            {/* 버튼만 남김 */}
+                            <div style={{ display: 'flex', gap: '8px', margin: '12px 0' }}>
+                              <button
+                                className="info-btn"
+                                onClick={() => setModalInfo({ open: true, type: 'info', place })}
+                              >장소 정보</button>
+                              <button
+                                className="access-btn"
+                                onClick={() => setModalInfo({ open: true, type: 'accessibility', place })}
+                              >무장애 정보</button>
+                            </div>
                           </div>
                           <div className="right">
                             <div className="action-buttons">
@@ -479,13 +734,41 @@ function CourseCreatePage() {
             </Droppable>
           </DragDropContext>
 
-          {/* 하단 버튼 영역 복구 */}
+          {/* 하단 버튼 영역 */}
           <div className="footer-buttons">
-            <button onClick={() => setIsSearchModalOpen(true)}>+ 장소 추가</button>
-            <div className="button-row">
-              <button>저장</button>
-              <button>공유</button>
-            </div>
+            <button 
+              onClick={handleSaveCourse}
+              disabled={isSaving}
+              style={{
+                backgroundColor: '#4285F4',
+                color: 'white',
+                border: 'none',
+                cursor: isSaving ? 'not-allowed' : 'pointer',
+                opacity: isSaving ? 0.7 : 1,
+                width: '100%',
+                marginBottom: '10px',
+                padding: '10px',
+                borderRadius: '5px',
+                fontSize: '16px'
+              }}
+            >
+              {isSaving ? '저장 중...' : '코스 저장하기'}
+            </button>
+            <button 
+              onClick={() => setIsSearchModalOpen(true)}
+              style={{
+                backgroundColor: '#34A853',
+                color: 'white',
+                border: 'none',
+                width: '100%',
+                padding: '10px',
+                borderRadius: '5px',
+                fontSize: '16px',
+                cursor: 'pointer'
+              }}
+            >
+              + 장소 추가
+            </button>
           </div>
         </div>
         {/* 오른쪽 패널 - 구글 지도 */}
@@ -511,6 +794,74 @@ function CourseCreatePage() {
         startDate={courseData?.metadata?.start_date}
         endDate={courseData?.metadata?.end_date}
       />
+      {modalInfo.open && (
+        <div className="modal-overlay">
+          <div className="info-modal">
+            <div className="modal-header">
+              <h3>{modalInfo.type === 'info' ? '장소 정보' : '무장애 정보'}</h3>
+              <button onClick={() => setModalInfo({ open: false, type: '', place: null })}>✕</button>
+            </div>
+            <div className="modal-content">
+              {modalInfo.type === 'info' && (
+                <>
+                  <div style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: 8 }}>{modalInfo.place.place_name}</div>
+                  <div style={{ color: '#444', fontSize: '0.98rem', marginBottom: '4px' }}>{modalInfo.place.description}</div>
+                </>
+              )}
+              {modalInfo.type === 'accessibility' && (
+                <div className="accessibility-info">
+                  {Object.keys(modalInfo.place.accessibility_features || {}).length === 0 && (
+                    <div style={{ color: '#888', fontSize: '0.95rem' }}>무장애 정보가 없습니다.</div>
+                  )}
+                  {Object.entries(modalInfo.place.accessibility_features || {})
+                    .filter(([key, value]) => value && value !== 'null' && value !== 'undefined' && String(value).trim() !== '')
+                    .map(([key, value]) => {
+                      const keyMapping = {
+                        'parking': '주차장',
+                        'public_transport': '대중교통 접근',
+                        'restroom': '화장실',
+                        'wheelchair_rental': '휠체어 대여',
+                        'elevator': '엘리베이터',
+                        'exit': '출입구',
+                        'braile_block': '점자블록',
+                        'braille_promotion': '점자 안내',
+                        'human_guide': '안내요원',
+                        'audio_guide': '음성안내',
+                        'ticket_office': '매표소',
+                        'guide_dog': '안내견',
+                        'infants_info_baby_spare_chair': '유아용 의자',
+                        'infants_info_stroller': '유모차 대여',
+                        'infants_info_lactation_room': '수유실',
+                        'infants_info_etc': '유아 편의시설',
+                        'visual_impairment_info_guide_dog': '시각장애인 안내견',
+                        'visual_impairment_info_human_guide': '시각장애인 안내',
+                        'visual_impairment_info_braille_promotion': '시각장애인 점자안내',
+                        'facilities_room': '장애인 객실',
+                        'facilities_etc': '기타 편의시설'
+                      };
+                      let displayValue = value;
+                      if (typeof value === 'object' && value !== null) {
+                        if (Array.isArray(value)) {
+                          displayValue = value.join(', ');
+                        } else {
+                          displayValue = Object.keys(value).join(', ') || JSON.stringify(value);
+                        }
+                      } else if (typeof value !== 'string' && typeof value !== 'number') {
+                        displayValue = String(value);
+                      }
+                      const displayKey = keyMapping[key] || key.replace(/_/g, ' ');
+                      return (
+                        <div key={key} className="accessibility-item">
+                          • {displayKey}: {displayValue}
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

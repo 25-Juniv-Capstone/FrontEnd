@@ -7,17 +7,8 @@ import PostCreationHeader from "./PostCreationHeader";
 import FormContent from "./FormContent";
 import ActionButtons from "./ActionButtons";
 
-function WritePageModal({ isOpen, onClose }) { // 컴포넌트 이름 및 props 변경
-  if (!isOpen) {
-    return null; 
-  }
-
-  // 모달 외부 클릭 시 닫기 (선택적 기능)
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) { // 오버레이 자체를 클릭했는지 확인
-      onClose();
-    }
-  };
+function WritePageContent({ isOpen, onClose }) {
+  if (!isOpen) return null;
 
   const handleSubmitForm = async () => {
     // TODO: 여기에 실제 폼 데이터 수집 로직을 구현해야 합니다.
@@ -67,23 +58,40 @@ function WritePageModal({ isOpen, onClose }) { // 컴포넌트 이름 및 props 
   };
 
   return (
-    <div className={modalStyles.modalOverlay} onClick={handleOverlayClick}> 
-      <div className={modalStyles.modalContent}>
-        {/* 기존 WritePage 내용 */} 
-        {/* InputDesign.module.css의 .div 스타일을 사용하던 section은 그대로 두거나, 
-            modalStyles 내부로 스타일을 옮겨올 수 있습니다. 
-            여기서는 기존 클래스명을 유지한다고 가정하고 styles를 modalStyles.div로 변경합니다. 
-            만약 InputDesign.module.css를 그대로 사용하고 싶다면, 해당 css를 임포트하고 className을 styles.div로 사용합니다.
-            충돌을 피하기 위해 여기서는 modalStyles.formContainer 등으로 이름을 변경하는 것을 추천합니다.
-        */}
-        <section className={modalStyles.formContainer}> {/* 기존 .div 대신 모달에 맞는 클래스명 사용 권장 */} 
-            <PostCreationHeader />
-            <FormContent />
-            <ActionButtons onCancel={onClose} onSubmit={handleSubmitForm} />
-        </section>
+    <div className={modalStyles.formContainer}>
+      <div className={modalStyles.formGroup}>
+        <label className={modalStyles.formLabel}>제목</label>
+        <input
+          type="text"
+          className={modalStyles.formInput}
+          placeholder="제목을 입력해주세요"
+        />
+      </div>
+
+      <div className={modalStyles.formGroup}>
+        <label className={modalStyles.formLabel}>내용</label>
+        <textarea
+          className={`${modalStyles.formInput} ${modalStyles.formTextarea}`}
+          placeholder="내용을 입력해주세요"
+        />
+      </div>
+
+      <div className={modalStyles.buttonGroup}>
+        <button
+          className={`${modalStyles.button} ${modalStyles.cancelButton}`}
+          onClick={onClose}
+        >
+          취소
+        </button>
+        <button
+          className={`${modalStyles.button} ${modalStyles.submitButton}`}
+          onClick={handleSubmitForm}
+        >
+          작성하기
+        </button>
       </div>
     </div>
   );
 }
 
-export default WritePageModal; // export 이름 변경
+export default WritePageContent;

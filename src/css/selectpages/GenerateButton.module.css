@@ -1,77 +1,59 @@
 /* GenerateButton styles */
 .container {
-  background-color: rgba(255, 255, 255, 0); /* transparent */
-  display: flex;
   width: 100%;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  overflow: hidden;
-  font-size: 1.25rem;
-  color: white;
-  font-weight: 700; /* font-bold */
-  white-space: nowrap;
-  text-align: center;
-  letter-spacing: -0.5px;
-  line-height: 1.2;
-  flex-wrap: wrap;
-  margin-top: 2.5rem;
-  padding: 0.5rem 0;
-  justify-content: center;
+  margin: 2rem 0;
 }
 
 .spacer {
-  background-color: rgba(255, 255, 255, 0); /* transparent */
-  display: flex;
-  min-width: 0px; /* min-w-60 */
-  flex-shrink: 1;
-  height: 0px;
-  flex: 1 1 0px;
+  height: 1rem;
 }
 
 .button {
-  background-color: rgba(18, 123, 243, 0.85);
-  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.13);
-  height: 44px;
-  width: 100px;
-  padding: 0 1.2rem;
+  width: 100%;
+  max-width: 400px;
+  padding: 1.25rem 2rem;
+  background: rgba(18, 123, 243, 0.9);
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 600;
+  border: none;
   border-radius: 12px;
-  border: none; /* Added */
-  cursor: pointer; /* Added */
-  color: white; /* Added */
-  font-size: 1.15rem;
-  font-weight: 700; /* font-bold */
-  display: flex; /* Added to center text */
-  align-items: center; /* Added to center text */
-  justify-content: center; /* Added to center text */
-  transition: background 0.18s, box-shadow 0.18s, transform 0.18s;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  box-shadow: 0 4px 12px rgba(18, 123, 243, 0.2);
+  white-space: nowrap;
 }
 
 .button:hover {
-  background-color: #1976d2;
-  box-shadow: 0px 4px 12px rgba(18, 123, 243, 0.18);
-  transform: translateY(-2px) scale(1.04);
+  background: rgba(18, 123, 243, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(18, 123, 243, 0.3);
 }
 
-/* Responsive styles */
-@media (max-width: 768px) { /* max-md */
-  .container {
-    margin-top: 1.2rem;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    max-width: 100%;
-    gap: 0.5rem;
-    white-space: normal; /* Adjusted */
-  }
-  .spacer {
-    max-width: 100%;
-    min-width: auto; /* Adjusted */
-    flex-basis: auto; /* Adjusted */
-  }
+.button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(18, 123, 243, 0.2);
+}
+
+.button:disabled {
+  background: rgba(18, 123, 243, 0.5);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
   .button {
-     padding-left: 0.7rem;
-     padding-right: 0.7rem;
-     width: 90px;
-     height: 38px;
-     font-size: 1rem;
+    max-width: 100%;
+    padding: 1rem 1.5rem;
+    font-size: 1.125rem;
   }
 } 

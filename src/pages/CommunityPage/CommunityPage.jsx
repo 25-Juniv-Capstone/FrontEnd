@@ -1,60 +1,31 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import FilterButton from "./FilterButton";
-import SearchBar from "./SearchBar";
-import TravelCard from "./TravelCard";
-import WritePageModal from "../WritePage/WritePage";
-import { Link, useNavigate } from 'react-router-dom';
-import styles from "../../css/communitypages/CommunityPage.module.css"; // CSS 모듈 import 경로 수정
+import { useNavigate } from "react-router-dom";
+import styles from "../../css/communitypages/CommunityPage.module.css";
+import WritePageModal from "../WritePage/WritePageModal";
+
+const DISABILITY_TYPES = [
+  { key: "wheelchair", label: "휠체어 이용자" },
+  { key: "visual", label: "시각 장애인" },
+  { key: "hearing", label: "청각 장애인" },
+];
 
 function CommunityPage() {
-  const [activeFilters, setActiveFilters] = useState([]); // 초기 상태를 빈 배열로 변경 (복수 선택을 위해)
-  const [isWriteModalOpen, setWriteModalOpen] = useState(false); // 모달 상태 추가
+  // 새로운 디자인의 상태들
+  const [selectedType, setSelectedType] = useState("wheelchair");
+  const [search, setSearch] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // 기존 API 로직 상태들
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate(); // 글쓰기 페이지 이동을 위해 사용
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  const navigate = useNavigate();
 
-  const [searchTerm, setSearchTerm] = useState(""); // 사용자가 입력하는 검색어
-  const [searchQuery, setSearchQuery] = useState(""); // 실제 API 요청에 사용될 검색어
-
-  const filterOptions = [
-    "휠체어",
-    "일반인",
-    "시각장애",
-    "청각장애",
-    "노인",
-    "유아",
-  ];
-
-  const handleFilterClick = (option) => {
-    setActiveFilters(prevFilters => {
-      if (prevFilters.includes(option)) {
-        // 이미 활성화된 필터를 다시 클릭하면 선택 해제
-        return prevFilters.filter(filter => filter !== option);
-      } else {
-        // 다른 필터를 클릭하면 해당 필터 활성화 (배열에 추가)
-        return [...prevFilters, option];
-      }
-    });
-  };
-
-  const closeWriteModal = () => setWriteModalOpen(false);
-
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
-  };
-
-  const handleSearchSubmit = (event) => {
-    event.preventDefault(); // form 기본 동작 방지
-    setSearchQuery(searchTerm);
-  };
-
-  const handleClearSearch = () => {
-    setSearchTerm("");
-    setSearchQuery(""); // 실제 검색 필터도 초기화
-  };
-
+  // API 호출 로직 (기존 브랜치의 것 유지)
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
@@ -62,12 +33,14 @@ function CommunityPage() {
       let apiUrl = '/api/post';
       const params = new URLSearchParams();
 
-      if (activeFilters.length > 0) {
-        params.append('keywords', activeFilters.join(','));
+      // 장애유형 필터링
+      if (selectedType) {
+        params.append('type', selectedType);
       }
 
-      if (searchQuery) {
-        params.append('search', searchQuery); // 'search'는 예시이며, 백엔드와 협의된 파라미터명 사용
+      // 검색어 필터링
+      if (search) {
+        params.append('search', search);
       }
 
       if (params.toString()) {
@@ -92,15 +65,26 @@ function CommunityPage() {
     };
 
     fetchPosts();
-  }, [activeFilters, searchQuery]); // searchQuery가 변경될 때도 useEffect 실행
+  }, [selectedType, search]);
 
-  const handleWriteButtonClick = () => {
-    // 로그인 여부 확인 로직이 필요하다면 여기에 추가
-    navigate('/write'); // 글쓰기 페이지 경로 (App.jsx에 정의된 경로)
+  // 글 작성 버튼 클릭 핸들러
+  const handleWriteClick = () => {
+    console.log('글 작성 버튼 클릭됨');
+    setIsModalOpen(true);
   };
 
-  // travelCards 샘플 데이터 삭제
-  // const travelCards = Array(8).fill({ ... });
+  // 검색어 변경 핸들러 (디바운싱 효과를 위해 실시간 검색 대신 약간의 지연)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setSearch(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
 
   if (loading) {
     return <div className={styles.loadingContainer}>게시글 목록을 불러오는 중입니다...</div>;
@@ -111,67 +95,84 @@ function CommunityPage() {
   }
 
   return (
-    <main className={styles.mainContainer}>
-      <header className={styles.pageHeader}>
-        {/* <button onClick={handleWriteButtonClick} className={styles.writeButton}>
-          ✏️ 글쓰기
-        </button> */}
-      </header>
+    <div className={styles.mainContainer}>
+      {/* 상단 타이틀 */}
+      <div className={styles.titleSection}>
+        <h1>커뮤니티</h1>
+        <p>장애유형별 무장애 여행코스를 공유하고 검색해보세요.</p>
+      </div>
 
-      <section className={styles.filterSection}>
-        {filterOptions.map((option) => (
-          <FilterButton
-            key={option}
-            label={option}
-            isActive={activeFilters.includes(option)} // 배열에 포함 여부로 활성 상태 결정
-            onClick={() => handleFilterClick(option)}
-          />
-        ))}
-        <SearchBar 
-          placeholder="검색어를 입력하세요" 
-          value={searchTerm}
-          onChange={handleSearchChange}
-          onSubmit={handleSearchSubmit} 
-          onClear={handleClearSearch}
-        />
-      </section>
-
-      {/* API에서 받아온 posts 데이터로 TravelCard를 렌더링 */}
-      {/* 현재는 posts 배열 전체를 한 번에 보여주지만, 추후 페이지네이션 구현 가능 */}
-      {posts.length > 0 ? (
-        <section className={styles.cardSection}>
-          <div className={styles.cardGrid}>
-            {posts.map((post, index) => (
-              <TravelCard
-                key={post.postId || index} // post.postId를 key로 사용
-                title={post.title} // 게시글 제목
-                // API 응답에 course 관련 keywords, field가 포함되어야 tags, local에 매핑 가능
-                // 현재 PostResponse에는 courseId, courseTitle만 있음.
-                // tags={post.course?.keywords ? post.course.keywords.join(', ') : (post.field || '일반')} 
-                tags={post.field ? [post.field] : (post.courseTitle ? [post.courseTitle] : [])} // 임시: 게시글 field 또는 courseTitle을 태그로 사용
-                local={post.courseTitle || '전체지역'} // 임시: courseTitle을 지역 정보로 사용, 없으면 '전체지역'
-                author={post.userName || '익명'} // 작성자 닉네임
-                imageUrl={post.thumbnail || 'https://via.placeholder.com/300x200?text=No+Image'} // 썸네일 URL, 없을 경우 placeholder
-                // postId={post.postId} // TravelCard 내부에서 상세 페이지 이동 시 필요하면 전달
-              />
+      {/* 장애유형 탭 + 검색 */}
+      <div className={styles.filterSection}>
+        <div className={styles.filterLeft}>
+          <div className={styles.tabGroup}>
+            {DISABILITY_TYPES.map((type) => (
+              <button
+                key={type.key}
+                className={
+                  selectedType === type.key
+                    ? styles.tabButtonActive
+                    : styles.tabButton
+                }
+                onClick={() => setSelectedType(type.key)}
+              >
+                {type.label}
+              </button>
             ))}
           </div>
-        </section>
-      ) : (
-        !loading && <div className={styles.noPosts}>조건에 맞는 게시글이 없습니다.</div>
-      )}
-      
-      {/* 기존 게시글 테이블 형식은 주석 처리 또는 삭제 (TravelCard 형식으로 대체) */}
-      {/* {posts.length > 0 && (
-        <table className={styles.postsTable}>
-          <thead> ... </thead>
-          <tbody> ... </tbody>
-        </table>
-      )} */}
+          <input
+            className={styles.searchInput}
+            type="text"
+            placeholder="지역, 장소, 작성자 검색"
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
+        </div>
+        <button
+          className={styles.writeButton}
+          onClick={handleWriteClick}
+        >
+          글 작성
+        </button>
+      </div>
 
-      {/* WritePageModal 관련 부분도 현재 API 연동과 직접적 관련 없으므로 주석 처리 */}
-      {/* <WritePageModal isOpen={isWriteModalOpen} onClose={closeWriteModal} /> */}
-    </main>
+      {/* 카드 리스트 (API 데이터 사용) */}
+      <div className={styles.cardSection}>
+        <div className={styles.cardGrid}>
+          {posts.length === 0 ? (
+            <div className={styles.noResult}>검색 결과가 없습니다.</div>
+          ) : (
+            posts.map((post, index) => (
+              <div key={post.postId || index} className={styles.card}>
+                <div className={`${styles.cardType} ${styles[`type${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)}`]}`}>
+                  {DISABILITY_TYPES.find(type => type.key === selectedType)?.label}
+                </div>
+                <img 
+                  src={post.thumbnail || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80'} 
+                  alt={post.title} 
+                  className={styles.cardImage} 
+                />
+                <div className={styles.cardBody}>
+                  <h3 className={styles.cardTitle}>{post.title}</h3>
+                  <div className={styles.cardTags}>
+                    {post.field && (
+                      <span className={styles.cardTag}>#{post.field}</span>
+                    )}
+                    {post.courseTitle && (
+                      <span className={styles.cardTag}>#{post.courseTitle}</span>
+                    )}
+                  </div>
+                  <div className={styles.cardLocal}>{post.courseTitle || '전체지역'}</div>
+                  <div className={styles.cardAuthor}>by {post.userName || '익명'}</div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+      
+      <WritePageModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+    </div>
   );
 }
 

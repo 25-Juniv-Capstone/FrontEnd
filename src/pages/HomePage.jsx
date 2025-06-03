@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Slider from 'react-slick';
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 import ConfirmModal from '../components/ConfirmModal';
 import '../css/HomePage.css';
 
@@ -99,6 +102,65 @@ const FinalConfirmModal = ({ isOpen, onClose, onConfirm }) => {
   );
 };
 
+// 지역별 좌표 정보
+const regionCoordinates = {
+  "서울": { lat: 37.5665, lng: 126.9780 },
+  "부산": { lat: 35.1796, lng: 129.0756 },
+  "인천": { lat: 37.4563, lng: 126.7052 },
+  "대구": { lat: 35.8714, lng: 128.6014 },
+  "광주": { lat: 35.1595, lng: 126.8526 },
+  "대전": { lat: 36.3504, lng: 127.3845 },
+  "울산": { lat: 35.5384, lng: 129.3114 },
+  "세종": { lat: 36.4801, lng: 127.2892 },
+  "경기": { lat: 37.4138, lng: 127.5183 },
+  "강원": { lat: 37.8228, lng: 128.1555 },
+  "충북": { lat: 36.6357, lng: 127.4915 },
+  "충남": { lat: 36.6588, lng: 126.6728 },
+  "전북": { lat: 35.8242, lng: 127.1480 },
+  "전남": { lat: 34.8161, lng: 126.4629 },
+  "경북": { lat: 36.5760, lng: 128.5059 },
+  "경남": { lat: 35.2382, lng: 128.6924 },
+  "제주": { lat: 33.4996, lng: 126.5312 },
+  // 주요 도시 좌표 추가
+  "전주": { lat: 35.8242, lng: 127.1480 },
+  "여수": { lat: 34.7604, lng: 127.6622 },
+  "강릉": { lat: 37.7519, lng: 128.8960 },
+  "속초": { lat: 38.2070, lng: 128.5918 },
+  "춘천": { lat: 37.8813, lng: 127.7300 },
+  "포항": { lat: 36.0190, lng: 129.3434 },
+  "창원": { lat: 35.2277, lng: 128.6819 },
+  "수원": { lat: 37.2636, lng: 127.0286 },
+  "성남": { lat: 37.4449, lng: 127.1389 },
+  "용인": { lat: 37.2411, lng: 127.1775 },
+  "고양": { lat: 37.6584, lng: 126.8320 },
+  "남양주": { lat: 37.6365, lng: 127.2162 },
+  "하남": { lat: 37.5392, lng: 127.2148 },
+  "파주": { lat: 37.8154, lng: 126.7937 },
+  "김포": { lat: 37.6156, lng: 126.7155 },
+  "평택": { lat: 36.9920, lng: 127.1127 },
+  "오산": { lat: 37.1498, lng: 127.0772 },
+  "안산": { lat: 37.3219, lng: 126.8309 },
+  "시흥": { lat: 37.3799, lng: 126.8035 },
+  "군포": { lat: 37.3616, lng: 126.9357 },
+  "의왕": { lat: 37.3446, lng: 126.9683 },
+  "안양": { lat: 37.3942, lng: 126.9568 },
+  "과천": { lat: 37.4291, lng: 126.9878 },
+  "광명": { lat: 37.4792, lng: 126.8646 },
+  "부천": { lat: 37.5035, lng: 126.7660 },
+  "김해": { lat: 35.2284, lng: 128.8894 },
+  "양산": { lat: 35.3380, lng: 129.0334 },
+  "밀양": { lat: 35.5035, lng: 128.7464 },
+  "진주": { lat: 35.1802, lng: 128.1077 },
+  "통영": { lat: 34.8544, lng: 128.4331 },
+  "거제": { lat: 34.8806, lng: 128.6210 },
+  "목포": { lat: 34.8118, lng: 126.3928 },
+  "순천": { lat: 34.9506, lng: 127.4872 },
+  "나주": { lat: 35.0162, lng: 126.7108 },
+  "광양": { lat: 34.9407, lng: 127.6959 },
+  "제주시": { lat: 33.4996, lng: 126.5312 },
+  "서귀포시": { lat: 33.2541, lng: 126.5600 }
+};
+
 function HomePage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -179,13 +241,39 @@ function HomePage() {
 
   const handleConfirm = () => {
     setShowConfirmModal(false);
+    // 선택된 지역의 좌표 정보 가져오기
+    const coordinates = regionCoordinates[selectedRegion] || { lat: 36.5, lng: 127.8 };
+    
     navigate('/select', { 
       state: { 
         region: selectedRegion,
+        coordinates: coordinates,
         startDate: selectedDates.startDate,
         endDate: selectedDates.endDate
       } 
     });
+  };
+
+  // 슬라이더 설정
+  const sliderSettings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 5000,
+    arrows: true,
+    fade: true,
+    cssEase: 'linear',
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          arrows: false
+        }
+      }
+    ]
   };
 
   return (
@@ -219,37 +307,86 @@ function HomePage() {
         </div>
       </div>
 
-      {/* 베스트 여행지 카드 */}
-      <section className="best-destinations">
-        <h2> 베스트 여행지</h2>
-        <div className="card-container">
+      {/* 기능 소개 섹션 */}
+      <section className="features-section">
+        <Slider {...sliderSettings} className="feature-slider">
+          <div className="feature-slide">
+            <div className="feature-block">
+              <h2 className="feature-title">모든 사람을 위한 여행</h2>
+              <p className="feature-subtitle">장벽 없는 여행의 시작</p>
+              <div className="feature-content">
+                <div className="feature-image wheelchair"></div>
+                <div className="feature-description">
+                  <h3>편안한 이동, 자유로운 여행</h3>
+                  <p>휠체어 이용자도 걱정 없이 즐길 수 있는 여행지를 소개합니다. 무장애 시설이 완비된 관광지부터 휠체어 택시 예약, 장애인 전용 주차장까지. 여행의 모든 순간을 편안하게.</p>
+                  <ul className="feature-list">
+                    <li>✓ 무장애 시설 상세 정보 제공</li>
+                    <li>✓ 휠체어 대여/택시 예약 서비스</li>
+                    <li>✓ 장애인 전용 주차장 위치 안내</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
 
-    <div className="destination-card jeju">
-      <div className="overlay">
-        <h3>JEJU<br /><span>제주도</span></h3>
-      </div>
-    </div>
+          <div className="feature-slide">
+            <div className="feature-block reverse">
+              <h2 className="feature-title">시각장애인을 위한 여행</h2>
+              <p className="feature-subtitle">소리로 만나는 새로운 경험</p>
+              <div className="feature-content">
+                <div className="feature-description">
+                  <h3>더 풍부한 여행 경험</h3>
+                  <p>음성 안내로 여행지의 모든 것을 느껴보세요. 점자 안내판과 음성 설명이 있는 전시관, 촉각 체험 프로그램까지. 시각을 넘어선 특별한 여행 경험을 선사합니다.</p>
+                  <ul className="feature-list">
+                    <li>✓ 실시간 음성 안내 서비스</li>
+                    <li>✓ 점자 정보와 촉각 체험 프로그램</li>
+                    <li>✓ 시각장애인 전용 관광 코스</li>
+                  </ul>
+                </div>
+                <div className="feature-image visual"></div>
+              </div>
+            </div>
+          </div>
 
-    <div className="destination-card seoul">
-      <div className="overlay">
-        <h3>SEOUL<br /><span>서울</span></h3>
-      </div>
-    </div>
+          <div className="feature-slide">
+            <div className="feature-block">
+              <h2 className="feature-title">청각장애인을 위한 여행</h2>
+              <p className="feature-subtitle">소통의 즐거움, 여행의 행복</p>
+              <div className="feature-content">
+                <div className="feature-image hearing"></div>
+                <div className="feature-description">
+                  <h3>소통의 장벽을 넘어</h3>
+                  <p>수어 통역사와 함께하는 특별한 여행. 모든 안내와 설명이 수어로 제공되며, 자막이 있는 공연과 전시까지. 여행지에서 만나는 모든 순간을 편안하게 소통하세요.</p>
+                  <ul className="feature-list">
+                    <li>✓ 실시간 수어 통역 서비스</li>
+                    <li>✓ 자막이 있는 공연/전시 정보</li>
+                    <li>✓ 청각장애인 맞춤 관광 가이드</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
 
-    <div className="destination-card busan">
-      <div className="overlay">
-        <h3>BUSAN<br /><span>부산</span></h3>
-      </div>
-    </div>
-
-    <div className="destination-card suwon">
-      <div className="overlay">
-        <h3>SUWON<br /><span>수원</span></h3>
-      </div>
-    </div>
-    
-  </div>
-</section>
+          <div className="feature-slide">
+            <div className="feature-block reverse">
+              <h2 className="feature-title">맞춤형 여행 계획</h2>
+              <p className="feature-subtitle">AI가 제안하는 특별한 여행</p>
+              <div className="feature-content">
+                <div className="feature-description">
+                  <h3>나만을 위한 완벽한 여행</h3>
+                  <p>장애 유형과 선호도를 고려한 맞춤형 여행 코스를 추천해드립니다. 편의시설, 교통, 숙박까지 모든 것을 고려한 완벽한 여행 계획. AI가 당신의 여행을 더 특별하게 만들어드립니다.</p>
+                  <ul className="feature-list">
+                    <li>✓ AI 기반 맞춤형 여행 코스</li>
+                    <li>✓ 실시간 교통/편의시설 정보</li>
+                    <li>✓ 장애인 친화 숙소 추천</li>
+                  </ul>
+                </div>
+                <div className="feature-image ai"></div>
+              </div>
+            </div>
+          </div>
+        </Slider>
+      </section>
 
       <RegionModal
         isOpen={showRegionModal}

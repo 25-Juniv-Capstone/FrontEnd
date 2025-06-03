@@ -1,14 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
 import styles from '../../css/selectpages/MustVisitPlaces.module.css';
 import { FaPlus, FaTrash } from 'react-icons/fa';
+import { useLocation } from 'react-router-dom';
 
 const MustVisitPlaces = ({ onChange }) => {
+  const location = useLocation();
   const [input, setInput] = useState("");
   const [places, setPlaces] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [mapCenter, setMapCenter] = useState({ lat: 36.5, lng: 127.8 }); // 대한민국 중심
+  
+  // HomePage에서 전달받은 좌표 사용
+  const initialCoordinates = location.state?.coordinates || { lat: 36.5, lng: 127.8 };
+  const [mapCenter, setMapCenter] = useState(initialCoordinates);
+  
   const [markers, setMarkers] = useState([]);
   const searchRef = useRef(null);
   const autocompleteService = useRef(null);
@@ -17,17 +23,17 @@ const MustVisitPlaces = ({ onChange }) => {
   const mapInstance = useRef(null);
   const resultMarkers = useRef([]);
 
-  // 지도 최초 1회만 생성 (CourseCreatePage 방식)
+  // 지도 초기화 - HomePage에서 선택한 지역 좌표 사용
   useEffect(() => {
-    if (window.google && mapRef.current) {
+    if (window.google && mapRef.current && !mapInstance.current) {
       mapInstance.current = new window.google.maps.Map(mapRef.current, {
-        center: { lat: 36.5, lng: 127.8 },
+        center: initialCoordinates,
         zoom: 12,
       });
       placesService.current = new window.google.maps.places.PlacesService(mapInstance.current);
       autocompleteService.current = new window.google.maps.places.AutocompleteService();
     }
-  }, []);
+  }, [initialCoordinates]);
 
   // mapCenter가 바뀔 때 setCenter만 (지도 생성 후에만)
   useEffect(() => {

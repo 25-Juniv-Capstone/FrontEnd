@@ -1,13 +1,23 @@
 import React, { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 
 function KakaoCallbackPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
 
   useEffect(() => {
     const token = searchParams.get('token');
     const userId = searchParams.get('id');
+    const error = searchParams.get('error');
+
+    if (error) {
+      console.error('카카오 로그인 에러:', error);
+      alert('로그인에 실패했습니다. 다시 시도해주세요.');
+      // 이전 페이지로 돌아가기
+      navigate(-1);
+      return;
+    }
 
     if (token && userId) {
       // 토큰과 사용자 ID를 로컬 스토리지에 저장
@@ -17,13 +27,15 @@ function KakaoCallbackPage() {
       // 커스텀 "login" 이벤트를 발생시켜 Header 컴포넌트에 알림
       window.dispatchEvent(new Event('login'));
 
-      window.location.href = '/';
+      // 이전 페이지가 있었다면 그 페이지로, 없으면 메인 페이지로
+      const from = location.state?.from || '/';
+      navigate(from, { replace: true });
     } else {
-      alert('로그인 실패');
-      window.location.href = '/';
+      console.error('토큰 또는 사용자 ID가 없습니다.');
+      alert('로그인에 실패했습니다. 다시 시도해주세요.');
+      navigate(-1);
     }
-    // eslint-disable-next-line
-  }, []);
+  }, [navigate, searchParams, location]);
 
   return (
     <div style={{

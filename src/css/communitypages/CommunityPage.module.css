@@ -1,264 +1,319 @@
+/************** Apple Store Inspired Community Main **************/
+
 .mainContainer {
-  display: flex;
-  overflow: hidden;
-  flex-direction: column;
-  background-color: white;
+  min-height: 100vh;
+  background: #f5f6fa;
+  font-family: 'SF Pro Display', 'Pretendard', 'Noto Sans KR', sans-serif;
+  padding-bottom: 60px;
+}
+
+.titleSection {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 56px 0 18px 0;
+  text-align: left;
+}
+.titleSection h1 {
+  font-size: 2.3rem;
+  font-weight: 800;
+  color: #222;
+  margin-bottom: 8px;
+  letter-spacing: -0.03em;
+}
+.titleSection p {
+  font-size: 1.1rem;
+  color: #888;
+  font-weight: 400;
+  margin: 0;
 }
 
 .filterSection {
   display: flex;
-  overflow: hidden;
-  flex-wrap: wrap;
-  gap: 8px;
+  gap: 18px;
   align-items: center;
-  align-self: center;
-  padding-left: center;
-  padding-right: center;
-  padding-top: 20px;
-  padding-bottom: 20px;
-  font-size: 16px;
-  line-height: 1;
-  color: black;
-  background-color: white;
-}
-
-/* For max-md:px-5 and max-md:max-w-full */
-@media (max-width: 767px) {
-  .filterSection {
-    padding-left: 20px;
-    padding-right: 20px;
-    max-width: 100%;
-  }
-}
-
-.cardSection {
-  padding-top: 16px;
-  padding-bottom: 384px;
-  margin-top: 16px;
-  width: 100%;
-  font-size: 20px;
-  font-weight: 500;
-  letter-spacing: -0.025em;
-  line-height: 40px;
-  color: white;
-}
-
-/* For max-md:pb-24 and max-md:max-w-full */
-@media (max-width: 767px) {
-  .cardSection {
-    padding-bottom: 96px;
-    max-width: 100%;
-  }
-}
-
-.cardGrid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 40px;
-  justify-content: flex-start;
-  padding-left: 18rem;
-  padding-right: 18rem;
-  padding-bottom: 10px;
-  width: 100%;
-  min-height: 400px;
-}
-
-.cardGridSecondRow {
-  composes: cardGrid;
-  margin-top: 32px;
-}
-
-
-/* For max-md:px-5 and max-md:max-w-full on cardGrid */
-@media (max-width: 767px) {
-  .cardGrid, .cardGridSecondRow {
-    padding-left: 20px;
-    padding-right: 20px;
-    max-width: 100%;
-    justify-content: center;
-  }
-}
-
-/* 글쓰기 버튼 스타일 추가 */
-.createPostButton {
-  padding: 8px 16px;
-  font-size: 16px;
-  background-color: #007bff; /* 예시 색상 */
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-left: 10px; /* SearchBar와의 간격 */
-}
-
-.createPostButton:hover {
-  background-color: #0056b3;
-}
-
-/* CommunityPage.module.css */
-.communityPageContainer {
-  max-width: 1200px;
-  margin: 20px auto;
-  padding: 20px;
-  font-family: 'Pretendard', sans-serif;
-  background-color: #fff; /* 배경색 변경 */
-  border-radius: 8px;
-  /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); */ /* 그림자 일단 제거 */
-}
-
-.pageHeader {
-  display: flex;
   justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto 32px auto;
+  padding: 0 0 0 0;
+  background: transparent;
+}
+
+.filterLeft {
+  display: flex;
+  gap: 18px;
   align-items: center;
-  margin-bottom: 25px;
-  padding-bottom: 15px;
-  /* border-bottom: 2px solid #007bff; */ /* 헤더 하단 강조선 제거 */
 }
 
-.pageHeader h1 {
-  font-size: 2.2em;
-  font-weight: 700;
-  color: #333;
+.tabGroup {
+  display: flex;
+  gap: 10px;
 }
-
-.writeButton {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
+.tabButton, .tabButtonActive {
+  padding: 10px 28px;
+  font-size: 1.08rem;
+  background: #f7f8fa;
+  color: #222;
   border: none;
-  border-radius: 20px; /* 더 둥글게 */
+  border-radius: 22px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  letter-spacing: -0.01em;
   cursor: pointer;
-  font-size: 1em;
-  font-weight: 500;
-  transition: background-color 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
-
-.writeButton:hover {
-  background-color: #0056b3;
+.tabButtonActive {
+  background: #fff;
+  color: #0071e3;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
 }
-
-.controlsContainer {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 25px;
-  padding: 15px;
-  background-color: #f9f9f9;
-  border-radius: 6px;
-}
-
-.searchInput, .filterSelect, .sortSelect {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.95em;
+.tabButton:hover {
+  background: #ececec;
 }
 
 .searchInput {
-  flex-grow: 1;
+  margin-left: 18px;
+  padding: 12px 22px;
+  font-size: 1.08rem;
+  border: none;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  color: #222;
+  outline: none;
+  width: 500px;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+.searchInput:focus {
+  background: #f7f8fa;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
 }
 
-.postsTable {
+.cardSection {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  background-color: #fff;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  border-radius: 6px;
-  overflow: hidden; /* for border-radius on table */
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0;
+}
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  padding: 1rem;
 }
 
-.postsTable th, .postsTable td {
-  padding: 12px 15px;
-  text-align: left;
-  border-bottom: 1px solid #f0f0f0;
+.card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  cursor: pointer;
 }
 
-.postsTable th {
-  background-color: #f8f9fa;
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.cardImage {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.card:hover .cardImage {
+  transform: scale(1.05);
+}
+
+.cardBody {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.cardTitle {
+  font-size: 1.25rem;
   font-weight: 600;
   color: #333;
-  font-size: 0.9em;
-  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.postsTable tbody tr:hover {
-  background-color: #f5f5f5;
+.cardTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.thNumber { width: 8%; text-align: center; }
-.thCategory { width: 12%; }
-.thTitle { width: 40%; }
-.thAuthor { width: 15%; }
-.thDate { width: 10%; text-align: center;}
-.thViews { width: 7%; text-align: center;}
-.thLikes { width: 8%; text-align: center;}
-/* .thComments { width: 8%; text-align: center;} */
-
-.tdTitle .postTitleLink {
-  color: #007bff;
-  text-decoration: none;
+.cardTag {
+  background: #f0f7ff;
+  color: #4a90e2;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
   font-weight: 500;
 }
 
-.tdTitle .postTitleLink:hover {
-  text-decoration: underline;
-}
-
-.courseBadge {
-  background-color: #e9ecef;
-  color: #495057;
-  padding: 3px 7px;
-  border-radius: 10px;
-  font-size: 0.75em;
-  margin-left: 8px;
-  vertical-align: middle;
-}
-
-.postRow td {
-  font-size: 0.95em;
-  color: #555;
-}
-
-.paginationContainer {
+.cardLocal {
+  color: #666;
+  font-size: 0.9rem;
   display: flex;
-  justify-content: center;
   align-items: center;
-  margin-top: 30px;
-  gap: 8px;
+  gap: 0.4rem;
 }
 
-.paginationContainer button, .paginationContainer span {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  background-color: #fff;
-  color: #007bff;
-  cursor: pointer;
-  border-radius: 4px;
+.cardLocal::before {
+  content: "📍";
+  font-size: 1rem;
 }
 
-.paginationContainer button:hover {
-  background-color: #f0f0f0;
+.cardAuthor {
+  color: #888;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 0.8rem;
+  border-top: 1px solid #eee;
 }
 
-.paginationContainer span {
-  background-color: #007bff;
+.cardAuthor::before {
+  content: "👤";
+  font-size: 1rem;
+}
+
+/* 장애 유형별 배지 */
+.cardType {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
   color: white;
-  border-color: #007bff;
+  z-index: 1;
 }
 
-.loadingContainer, .errorContainer, .noPosts {
+.typeWheelchair {
+  background: #4a90e2;
+}
+
+.typeVisual {
+  background: #9c27b0;
+}
+
+.typeHearing {
+  background: #2ecc71;
+}
+
+.noResult {
+  grid-column: 1/-1;
   text-align: center;
-  padding: 40px 20px;
-  font-size: 1.1em;
-  color: #777;
-  background-color: #f9f9f9;
-  border-radius: 6px;
-  margin-top: 20px;
+  color: #bbb;
+  font-size: 1.15rem;
+  padding: 60px 0;
 }
 
-.errorContainer {
-  color: #d9534f;
+.writeButton {
+  margin-left: 14px;
+  padding: 12px 28px;
+  font-size: 1.08rem;
+  background: #0071e3;
+  color: #fff;
+  border: none;
+  border-radius: 22px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  letter-spacing: -0.01em;
+  height: 44px;
+  white-space: nowrap;
+}
+.writeButton:hover {
+  background: #005bb5;
+  color: #fff;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .cardGrid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding: 0.5rem;
+  }
+
+  .cardImage {
+    height: 180px;
+  }
+
+  .cardBody {
+    padding: 1.2rem;
+  }
+
+  .cardTitle {
+    font-size: 1.1rem;
+  }
+
+  .searchInput {
+    width: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cardGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .cardImage {
+    height: 200px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .mainContainer, .cardSection, .filterSection {
+    max-width: 100vw;
+    padding: 0 12px;
+  }
+  .titleSection {
+    padding: 32px 0 12px 0;
+  }
+  .searchInput {
+    width: 400px;
+  }
+}
+@media (max-width: 600px) {
+  .titleSection h1 {
+    font-size: 1.3rem;
+  }
+  .filterSection {
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 12px;
+    align-items: stretch;
+  }
+  .filterLeft {
+    flex-direction: column;
+    width: 100%;
+  }
+  .searchInput {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 8px;
+  }
+  .writeButton {
+    margin-left: 0;
+    width: 100%;
+  }
 } 

@@ -5,7 +5,7 @@ body {
 .hero {
   background-image: url('src/images/beach.png');
   background-position: center;
-  height: 60vh;
+  height: 70vh;
   display: flex; /*안에 요소 정렬*/
   justify-content: center;
   align-items: center;
@@ -20,7 +20,7 @@ body {
   gap: 2px; /* 제목과 검색창 사이 여백 */
   text-align: center;
   color: white;
-  margin-top: -18rem;;
+  margin-top: -12rem;
 }
 
 .searchBox {
@@ -86,21 +86,24 @@ body {
 
 .travelBtn {
   position: absolute; 
-  bottom: 80px;       
-  right: 80px;       
+  bottom: 120px;
+  right: 120px;
   background-color: rgba(18, 123, 243, 0.85);
   color: white;           
-  padding: 0.9rem 1.2rem;      
+  padding: 1rem 1.5rem;
   border-radius: 12px;       
-  font-size: 1rem;        
+  font-size: 1.1rem;        
   border: none;              
   cursor: pointer;           
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .travelBtn:hover {
   background-color: #357ab7; 
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
-
 
 /* 베스트 여행지 */
 .best-destinations {
@@ -402,6 +405,341 @@ body {
 
   .modal-buttons button {
     padding: 10px;
+  }
+}
+
+/* 기능 소개 섹션 */
+.features-section {
+  background-color: #fff;
+  padding: 80px 0;
+  margin-top: -80px;
+  position: relative;
+  z-index: 2;
+}
+
+.feature-block {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 60px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background-color: transparent; /* 배경색 제거 */
+}
+
+.feature-block.reverse {
+  background-color: transparent; /* 배경색 제거 */
+}
+
+.feature-title {
+  font-size: 48px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+
+.feature-subtitle {
+  font-size: 24px;
+  color: #86868b;
+  margin-bottom: 48px;
+  font-weight: 400;
+}
+
+.feature-content {
+  display: flex;
+  align-items: center;
+  gap: 60px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.feature-block.reverse .feature-content {
+  flex-direction: row-reverse;
+}
+
+.feature-image {
+  flex: 1;
+  height: 400px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-image::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.3));
+  z-index: 1;
+}
+
+.feature-image:hover {
+  transform: scale(1.02);
+}
+
+.feature-image.wheelchair {
+  background-image: url('../images/wheelchair.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.feature-image.visual {
+  background-image: url('../images/visual.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.feature-image.hearing {
+  background-image: url('../images/hearing.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.feature-image.ai {
+  background-image: url('../images/ai.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.feature-description {
+  flex: 1;
+  text-align: left;
+}
+
+.feature-description h3 {
+  font-size: 32px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 16px;
+  letter-spacing: -0.3px;
+}
+
+.feature-description p {
+  font-size: 17px;
+  line-height: 1.6;
+  color: #515154;
+  margin: 0 0 24px 0;
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.feature-list li {
+  font-size: 16px;
+  color: #515154;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  line-height: 1.4;
+}
+
+.feature-list li:last-child {
+  margin-bottom: 0;
+}
+
+.feature-list li::before {
+  content: '✓';
+  color: #007AFF;
+  font-weight: bold;
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .feature-title {
+    font-size: 40px;
+  }
+
+  .feature-subtitle {
+    font-size: 21px;
+  }
+
+  .feature-content {
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .feature-block.reverse .feature-content {
+    flex-direction: column;
+  }
+
+  .feature-image {
+    width: 100%;
+    height: 300px;
+  }
+
+  .feature-description {
+    text-align: center;
+  }
+
+  .feature-description h3 {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 768px) {
+  .features-section {
+    padding: 60px 0;
+  }
+
+  .feature-block {
+    padding: 40px 20px;
+  }
+
+  .feature-title {
+    font-size: 32px;
+  }
+
+  .feature-subtitle {
+    font-size: 18px;
+    margin-bottom: 32px;
+  }
+
+  .feature-description h3 {
+    font-size: 24px;
+  }
+
+  .feature-description p {
+    font-size: 16px;
+  }
+
+  .travelBtn {
+    bottom: 80px;
+    right: 50%;
+    transform: translateX(50%);
+    width: 80%;
+    max-width: 300px;
+  }
+  
+  .travelBtn:hover {
+    transform: translateX(50%) translateY(-2px);
+  }
+}
+
+@media (max-width: 480px) {
+  .feature-title {
+    font-size: 28px;
+  }
+
+  .feature-subtitle {
+    font-size: 16px;
+  }
+
+  .feature-image {
+    height: 200px;
+  }
+
+  .feature-description h3 {
+    font-size: 22px;
+  }
+}
+
+/* 슬라이더 스타일 */
+.feature-slider {
+  width: 100%;
+  overflow: hidden;
+}
+
+.feature-slide {
+  outline: none;
+  background-color: #fff;
+}
+
+.feature-slide:nth-child(even) {
+  background-color: #f5f5f7;
+}
+
+/* 슬라이더 화살표 스타일 */
+.slick-prev,
+.slick-next {
+  width: 50px;
+  height: 50px;
+  z-index: 1;
+}
+
+.slick-prev {
+  left: 30px;
+}
+
+.slick-next {
+  right: 30px;
+}
+
+.slick-prev:before,
+.slick-next:before {
+  font-size: 50px;
+  color: #1d1d1f;
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+}
+
+.slick-prev:hover:before,
+.slick-next:hover:before {
+  opacity: 1;
+}
+
+/* 슬라이더 도트 스타일 */
+.slick-dots {
+  bottom: 30px;
+}
+
+.slick-dots li button:before {
+  font-size: 12px;
+  color: #1d1d1f;
+  opacity: 0.3;
+}
+
+.slick-dots li.slick-active button:before {
+  color: #1d1d1f;
+  opacity: 1;
+}
+
+/* 슬라이더 애니메이션 */
+.feature-slide {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.slick-active .feature-slide {
+  opacity: 1;
+}
+
+/* 반응형 디자인 수정 */
+@media (max-width: 1024px) {
+  .slick-prev,
+  .slick-next {
+    display: none !important;
+  }
+
+  .feature-slider {
+    padding: 0 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .slick-dots {
+    bottom: 20px;
+  }
+
+  .slick-dots li button:before {
+    font-size: 10px;
   }
 }
 
