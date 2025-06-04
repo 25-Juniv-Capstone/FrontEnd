@@ -7,27 +7,22 @@ const TravelThemeSelection = ({ onSelect }) => {
     {
       id: "history",
       title: "역사탐방",
-      imageUrl: "https://cdn.builder.io/api/v1/image/assets/48204828aedf4b3e9d1bc563b87457c6/645713b954d11b1aa22db62550e582af133e44ec?placeholderIfAbsent=true",
+      imageUrl: "/images/themes/history.jpg",
     },
     {
       id: "nature",
       title: "자연주의",
-      imageUrl: "https://cdn.builder.io/api/v1/image/assets/48204828aedf4b3e9d1bc563b87457c6/8428a3168a300e47ef7dacb5300722d95ac30234?placeholderIfAbsent=true",
+      imageUrl: "/images/themes/nature.jpg",
     },
     {
       id: "city",
       title: "도시위주",
-      imageUrl: "https://cdn.builder.io/api/v1/image/assets/48204828aedf4b3e9d1bc563b87457c6/26a0bdcfde47145ed84054fbe2c692c203e86771?placeholderIfAbsent=true",
-    },
-    {
-      id: "activity",
-      title: "엑티비티",
-      imageUrl: "https://cdn.builder.io/api/v1/image/assets/48204828aedf4b3e9d1bc563b87457c6/26a0bdcfde47145ed84054fbe2c692c203e86771?placeholderIfAbsent=true",
+      imageUrl: "/images/themes/city.jpg",
     },
     {
       id: "cafe",
       title: "예쁜카페",
-      imageUrl: "https://cdn.builder.io/api/v1/image/assets/48204828aedf4b3e9d1bc563b87457c6/26a0bdcfde47145ed84054fbe2c692c203e86771?placeholderIfAbsent=true",
+      imageUrl: "/images/themes/cafe.jpg",
     },
   ];
 
