@@ -1,13 +1,15 @@
 import React from "react";
 import styles from '../../css/selectpages/AddedPlacesList.module.css';
+import { useConfirmAction } from '../../hooks/useConfirmAction';
 
 const AddedPlacesList = ({ places, onRemovePlace }) => {
+  const confirmAction = useConfirmAction();
 
-  // 삭제 확인 핸들러 함수 추가
-  const handleConfirmRemove = (id, name) => {
-    if (window.confirm(`'${name}' 장소를 정말로 삭제하시겠습니까?`)) {
-      onRemovePlace(id);
-    }
+  const handleRemovePlace = (id, name) => {
+    confirmAction(
+      () => onRemovePlace(id),
+      `'${name}' 장소를 정말로 삭제하시겠습니까?`
+    );
   };
 
   return (
@@ -40,12 +42,10 @@ const AddedPlacesList = ({ places, onRemovePlace }) => {
                     {place.name}
                   </div>
                   <button
-                    // 변경: onClick 핸들러 수정
-                    onClick={() => handleConfirmRemove(place.id, place.name)} 
                     className={styles.removeButton}
-                    aria-label={`Remove ${place.name}`}
+                    onClick={() => handleRemovePlace(place.id, place.name)}
                   >
-                    -
+                    삭제
                   </button>
                 </div>
                 {place.memo && (

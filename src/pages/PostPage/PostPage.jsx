@@ -1,32 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom'; // useParams 추가
-import styles from './PostPage.module.css'; // CSS 모듈 import
+import { useParams } from 'react-router-dom';
+import styles from './PostPage.module.css';
+import { placeTypeToEmoji } from '../../constants/placeTypes';
 // import { FaHeart, FaRegHeart, FaShareSquare, FaCommentDots } from 'react-icons/fa'; // 아이콘 예시 (react-icons 설치 필요)
-
-// CourseCreatePage.jsx의 placeTypeToEmoji와 유사하게 정의 (필요시 아이콘 변경)
-const placeTypeToEmoji = {
-  "한식당": "🍴",
-  "카페": "☕",
-  "공원": "🏞️",
-  "박물관": "🏛️",
-  "호텔": "🏨",
-  "백화점": "🏬",
-  "공연예술 극장": "🎭",
-  "관광지": "🗺️",
-  "기타": "📍"
-};
 
 // mockPostData는 이제 사용하지 않거나, API 호출 실패 시 fallback으로 사용할 수 있습니다.
 // const mockPostData = { ... }; 
 
 const PostPage = () => {
-  const { postId } = useParams(); // URL에서 postId 가져오기
-  const [postData, setPostData] = useState(null); // 초기 상태 null
+  const { postId } = useParams();
+  const [postData, setPostData] = useState(null);
   const [selectedDay, setSelectedDay] = useState(1);
-  const [likes, setLikes] = useState(0); // 초기 상태 0
-  const [isLiked, setIsLiked] = useState(false); // 초기 상태 false
+  const [likes, setLikes] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
   const [newComment, setNewComment] = useState("");
-  const [comments, setComments] = useState([]); // 초기 상태 빈 배열
+  const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -35,8 +23,7 @@ const PostPage = () => {
       setLoading(true);
       setError(null);
       try {
-        // --- 실제 API 엔드포인트로 수정해주세요 ---
-        const response = await fetch(`/api/posts/${postId}`); 
+        const response = await fetch(`/api/posts/${postId}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
