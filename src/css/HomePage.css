@@ -5,7 +5,7 @@ body {
 .hero {
   background-image: url('src/images/beach.png');
   background-position: center;
-  height: 70vh;
+  height: 80vh;
   display: flex; /*안에 요소 정렬*/
   justify-content: center;
   align-items: center;
@@ -20,7 +20,7 @@ body {
   gap: 2px; /* 제목과 검색창 사이 여백 */
   text-align: center;
   color: white;
-  margin-top: -22rem;
+  margin-top: -26rem;
 }
 
 .searchBox {

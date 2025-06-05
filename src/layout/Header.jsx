@@ -1,6 +1,7 @@
 // src/layout/Header.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import logoImg from '../images/2.png';
 
 function Header() { 
   const navigate = useNavigate();
@@ -58,7 +59,18 @@ function Header() {
       zIndex: 10,
     }}>
       <Link to="/" style={{ textDecoration: 'none' }}>
-        <div style={{ fontWeight: 'bold', fontSize: '20px', color: '#0068DF' }}>여행의 배프</div>
+        <img 
+          src={logoImg} 
+          alt="여행의 배프 로고" 
+          style={{ 
+            width: 90, 
+            height: 85, 
+            objectFit: 'contain', 
+            borderRadius: 12, 
+            background: '#fff', 
+            boxShadow: '0 0 4px rgba(0,0,0,0.04)'
+          }} 
+        />
       </Link>
       <nav style={{ display: 'flex', gap: '16px', fontSize: '14px', color: '#555' }}>
         <Link to="/community" style={{ textDecoration: 'none', color: '#555' }}>
