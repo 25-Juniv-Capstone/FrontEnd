@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+//import { useNavigate } from "react-router-dom";
 import styles from "../../css/communitypages/CommunityPage.module.css";
 import WritePageModal from "../WritePage/WritePageModal";
 import axiosInstance from "../../utils/axiosConfig";
@@ -22,9 +22,9 @@ function CommunityPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+//  const [searchQuery, setSearchQuery] = useState("");
   
-  const navigate = useNavigate();
+//  const navigate = useNavigate();
 
   // API 호출 로직 (axiosInstance 사용)
   useEffect(() => {
