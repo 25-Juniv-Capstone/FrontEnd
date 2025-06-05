@@ -69,6 +69,56 @@ function getNumberedMarkerIcon(number, placeType) {
 }
 */
 
+// 시간 수정 모달 컴포넌트
+const TimeModal = ({ isOpen, onClose, onTimeChange, currentTime, placeName }) => {
+  const [time, setTime] = useState(currentTime);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTime(currentTime);
+    }
+  }, [isOpen, currentTime]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onTimeChange(time);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="time-modal">
+        <div className="modal-header">
+          <div className="header-content">
+            <h3>방문 시간 수정</h3>
+            <p className="header-subtitle">{placeName}</p>
+          </div>
+          <button onClick={onClose} className="close-button">✕</button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="time-form">
+          <div className="time-input-group">
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="time-input"
+              required
+            />
+          </div>
+
+          <div className="modal-buttons">
+            <button type="button" onClick={onClose}>취소</button>
+            <button type="submit">저장</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 function CourseCreatePage() {
   const location = useLocation();
   const mustVisitPlaces = location.state?.mustVisitPlaces || [];
@@ -98,6 +148,8 @@ function CourseCreatePage() {
   const [showRoutes, setShowRoutes] = useState(false);
   const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
   const [courseTitle, setCourseTitle] = useState('');
+  const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState(null);
   
   // 지도 관련 설정
   const mapInstance = useRef(null);
@@ -955,6 +1007,45 @@ function CourseCreatePage() {
   .modal-buttons button:hover:not(:disabled) {
     opacity: 0.9;
   }
+
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+  }
+
+  .loading-content {
+    text-align: center;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .loading-content p {
+    margin: 12px 0 0 0;
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  .add-place-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+
+  .add-place-button .loading-spinner {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
   `;
 
   // 스타일 태그 추가
@@ -966,6 +1057,70 @@ function CourseCreatePage() {
       document.head.removeChild(styleSheet);
     };
   }, [showRoutes]);
+
+  // 시간 수정 핸들러
+  const handleTimeChange = (newTime) => {
+    if (!selectedPlace) return;
+
+    setPlacesByDay(prev => {
+      const updatedPlaces = { ...prev };
+      const dayPlaces = [...updatedPlaces[selectedDay]];
+      const placeIndex = dayPlaces.findIndex(p => p.id === selectedPlace.id);
+      
+      if (placeIndex !== -1) {
+        dayPlaces[placeIndex] = {
+          ...dayPlaces[placeIndex],
+          time: newTime
+        };
+        updatedPlaces[selectedDay] = dayPlaces;
+      }
+      
+      return updatedPlaces;
+    });
+  };
+
+  // 장소 카드 렌더링 부분 수정
+  const renderPlaceCard = (place, index) => (
+    <Draggable key={place.id} draggableId={place.id} index={index}>
+      {(provided) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          className="course-card"
+        >
+          <div className="left">
+            <div 
+              className="circle-number" 
+              style={{ backgroundColor: placeTypeToColor[place.place_type] || "#2196F3" }}
+            >
+              {index + 1}
+            </div>
+            <div className="time">{place.time || '--:--'}</div>
+            <div className="title">{place.place_name}</div>
+            <div className="place-type">
+              {placeTypeToEmoji[place.place_type] || "📍 기타"}
+            </div>
+            <div style={{ display: 'flex', gap: '8px', margin: '12px 0' }}>
+              <button
+                className="info-btn"
+                onClick={() => setModalInfo({ open: true, type: 'info', place })}
+              >장소 정보</button>
+              <button
+                className="access-btn"
+                onClick={() => setModalInfo({ open: true, type: 'accessibility', place })}
+              >무장애 정보</button>
+            </div>
+          </div>
+          <div className="right">
+            <div className="action-buttons">
+              <button onClick={() => handleDeletePlace(place.id)}>🗑️</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </Draggable>
+  );
 
   return (
     <div className="course-page">
@@ -1024,48 +1179,7 @@ function CourseCreatePage() {
                   {...provided.droppableProps}
                   ref={provided.innerRef}
                 >
-                  {currentDayPlaces.map((place, index) => (
-                    <Draggable key={place.id} draggableId={place.id} index={index}>
-                      {(provided) => (
-                        <div
-                          className="course-card"
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                        >
-                          <div className="left">
-                            <div 
-                              className="circle-number" 
-                              style={{ backgroundColor: placeTypeToColor[place.place_type] || "#2196F3" }}
-                            >
-                              {index + 1}
-                            </div>
-                            <div className="time">{place.time || '--:--'}</div>
-                            <div className="title">{place.place_name}</div>
-                            <div className="place-type">
-                              {placeTypeToEmoji[place.place_type] || "📍 기타"}
-                            </div>
-                            {/* 버튼만 남김 */}
-                            <div style={{ display: 'flex', gap: '8px', margin: '12px 0' }}>
-                              <button
-                                className="info-btn"
-                                onClick={() => setModalInfo({ open: true, type: 'info', place })}
-                              >장소 정보</button>
-                              <button
-                                className="access-btn"
-                                onClick={() => setModalInfo({ open: true, type: 'accessibility', place })}
-                              >무장애 정보</button>
-                            </div>
-                          </div>
-                          <div className="right">
-                            <div className="action-buttons">
-                              <button onClick={() => handleDeletePlace(place.id)}>🗑️</button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
+                  {currentDayPlaces.map((place, index) => renderPlaceCard(place, index))}
                   {provided.placeholder}
                 </div>
               )}
@@ -1206,6 +1320,18 @@ function CourseCreatePage() {
         defaultTitle={courseData?.recommended_courses?.[0]?.course_name || `${region} 여행 코스`}
         isSaving={isSaving}
       />
+      
+      {/* 시간 수정 모달 */}
+      <TimeModal
+        isOpen={isTimeModalOpen}
+        onClose={() => {
+          setIsTimeModalOpen(false);
+          setSelectedPlace(null);
+        }}
+        onTimeChange={handleTimeChange}
+        currentTime={selectedPlace?.time || "09:00"}
+        placeName={selectedPlace?.place_name || ""}
+      />
     </div>
   );
 }
@@ -1218,7 +1344,20 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
   const placesService = useRef(null);
+
+  // 카테고리 정의
+  const categories = [
+    { id: "all", label: "전체", emoji: "🔍" },
+    { id: "restaurant", label: "식당", emoji: "🍴" },
+    { id: "cafe", label: "카페", emoji: "☕" },
+    { id: "attraction", label: "관광지", emoji: "🗺️" },
+    { id: "museum", label: "박물관", emoji: "🏛️" },
+    { id: "park", label: "공원", emoji: "🏞️" },
+    { id: "shopping", label: "쇼핑", emoji: "🛍️" }
+  ];
 
   // Places 서비스 초기화
   useEffect(() => {
@@ -1227,7 +1366,55 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
     }
   }, [mapInstance]);
 
-  // 검색 함수
+  // 장소 상세 정보 가져오기
+  const getPlaceDetails = (placeId) => {
+    return new Promise((resolve, reject) => {
+      if (!placesService.current) {
+        reject(new Error("Places 서비스가 초기화되지 않았습니다."));
+        return;
+      }
+
+      const request = {
+        placeId: placeId,
+        fields: [
+          'name',
+          'formatted_address',
+          'geometry',
+          'types',
+          'wheelchair_accessible_entrance',
+          'wheelchair_accessible_parking',
+          'wheelchair_accessible_restroom',
+          'elevator',
+          'ramp'
+        ]
+      };
+
+      placesService.current.getDetails(request, (place, status) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+          // 기존 데이터 구조와 동일한 형태로 변환
+          const transformedPlace = {
+            id: place.place_id,
+            place_name: place.name,
+            place_type: getPlaceType(place.types),
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+            description: place.formatted_address,
+            accessibility_features: {
+              wheelchair_accessible_parking: place.wheelchair_accessible_parking ? "있음" : "정보 없음",
+              wheelchair_accessible_restroom: place.wheelchair_accessible_restroom ? "있음" : "정보 없음",
+              elevator: place.elevator ? "있음" : "정보 없음",
+              ramp: place.ramp ? "있음" : "정보 없음"
+            }
+          };
+          resolve(transformedPlace);
+        } else {
+          reject(new Error(`장소 상세 정보를 가져오는데 실패했습니다: ${status}`));
+        }
+      });
+    });
+  };
+
+  // 검색 함수 수정
   const handleSearch = () => {
     if (!searchQuery.trim()) return;
     
@@ -1240,32 +1427,81 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
     }
 
     const request = {
-      query: `${region} ${searchQuery}`,
-      fields: ['name', 'geometry', 'types', 'formatted_address']
+      query: `${region} ${searchQuery} 무장애`,
+      fields: ['name', 'geometry', 'types', 'formatted_address', 'place_id'],
+      location: mapInstance.getCenter(),
+      radius: 5000
     };
 
     placesService.current.textSearch(request, (results, status) => {
       setIsLoading(false);
       
       if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
-        const places = results.map(place => ({
+        const filteredResults = results.filter(place => {
+          if (selectedCategory === "all") return true;
+          return place.types.some(type => {
+            switch (selectedCategory) {
+              case "restaurant": return type.includes("restaurant");
+              case "cafe": return type.includes("cafe");
+              case "attraction": return type.includes("tourist_attraction");
+              case "museum": return type.includes("museum");
+              case "park": return type.includes("park");
+              case "shopping": return type.includes("shopping_mall");
+              default: return true;
+            }
+          });
+        });
+
+        // 기본 정보만 포함하는 검색 결과
+        const places = filteredResults.map(place => ({
           id: place.place_id,
           place_name: place.name,
           place_type: getPlaceType(place.types),
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng(),
           description: place.formatted_address,
+          // 상세 정보는 나중에 getDetails로 채워질 예정
           accessibility_features: {
             wheelchair_accessible_parking: "정보 없음",
-            wheelchair_accessible_restroom: "정보 없음"
+            wheelchair_accessible_restroom: "정보 없음",
+            elevator: "정보 없음",
+            ramp: "정보 없음"
           }
         }));
+
         setSearchResults(places);
       } else {
         console.error("검색 실패:", status);
         setSearchResults([]);
       }
     });
+  };
+
+  // 장소 선택 핸들러 수정
+  const handlePlaceSelect = async (place) => {
+    try {
+      setIsDetailLoading(true);
+      // 상세 정보 가져오기
+      const detailedPlace = await getPlaceDetails(place.id);
+      // 기존 place 정보와 상세 정보 병합
+      const finalPlace = {
+        ...place,
+        ...detailedPlace,
+        time: "09:00" // 기본 시간 설정
+      };
+      onPlaceSelect(finalPlace);
+      onClose();
+    } catch (error) {
+      console.error("장소 상세 정보를 가져오는데 실패했습니다:", error);
+      // 에러가 발생해도 기본 정보로라도 추가
+      onPlaceSelect({
+        ...place,
+        time: "09:00"
+      });
+      onClose();
+    } finally {
+      setIsDetailLoading(false);
+    }
   };
 
   // 장소 타입 변환
@@ -1292,21 +1528,54 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
     <div className="modal-overlay">
       <div className="search-modal">
         <div className="modal-header">
-          <h3>{region} 무장애 여행지 검색</h3>
-          <button onClick={onClose}>✕</button>
+          <div className="header-content">
+            <h3>장소를 검색하고 코스에 추가해보세요</h3>
+          </div>
+          <button onClick={onClose} className="close-button">✕</button>
         </div>
         
-        <div className="search-box">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder={`${region}의 무장애 여행지를 검색해보세요`}
-          />
-          <button onClick={handleSearch} disabled={isLoading}>
-            {isLoading ? '검색 중...' : '검색'}
-          </button>
+        <div className="search-container">
+          <div className="search-box">
+            <div className="search-input-wrapper">
+              <span className="search-icon">🔍</span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={`${region}의 무장애 여행지를 검색해보세요`}
+                className="search-input"
+              />
+              {searchQuery && (
+                <button 
+                  className="clear-button"
+                  onClick={() => setSearchQuery("")}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            <button 
+              onClick={handleSearch} 
+              disabled={!searchQuery.trim()}
+              className="search-button"
+            >
+              검색
+            </button>
+          </div>
+
+          <div className="category-filter">
+            {categories.map(category => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`category-button ${selectedCategory === category.id ? 'active' : ''}`}
+              >
+                <span className="category-emoji">{category.emoji}</span>
+                <span className="category-label">{category.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="search-results">
@@ -1314,23 +1583,43 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
             <div
               key={place.id}
               className="search-result-item"
-              onClick={() => {
-                onPlaceSelect({
-                  ...place,
-                  time: "09:00",
-                });
-                onClose();
-              }}
+              onClick={() => handlePlaceSelect(place)}
             >
-              <div>
-                <div className="place-name">{place.place_name}</div>
+              <div className="place-info">
+                <div className="place-header">
+                  <span className="place-type-badge">
+                    {placeTypeToEmoji[place.place_type] || "📍"}
+                  </span>
+                  <h4 className="place-name">{place.place_name}</h4>
+                </div>
                 <div className="place-address">{place.description}</div>
+                <div className="accessibility-info">
+                  <span className="accessibility-tag">
+                    <span className="tag-icon">♿</span>
+                    무장애 시설
+                  </span>
+                  <span className="accessibility-tag">
+                    <span className="tag-icon">🅿️</span>
+                    주차 가능
+                  </span>
+                </div>
               </div>
-              <div className="place-type">{placeTypeToEmoji[place.place_type] || "📍 기타"}</div>
+              <button 
+                className="add-place-button"
+                disabled={isDetailLoading}
+              >
+                추가하기
+              </button>
             </div>
           ))}
           {searchResults.length === 0 && searchQuery && !isLoading && (
-            <div className="no-results">검색 결과가 없습니다</div>
+            <div className="no-results">
+              <div className="no-results-icon">🔍</div>
+              <p>검색 결과가 없습니다</p>
+              <p className="no-results-suggestion">
+                다른 검색어로 시도해보세요
+              </p>
+            </div>
           )}
         </div>
       </div>
