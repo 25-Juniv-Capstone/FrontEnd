@@ -3,6 +3,7 @@ import '../css/MyPage.css';
 import UserEditModal from './UserEditModal';
 import communityStyles from '../css/communitypages/CommunityPage.module.css';
 import axiosInstance from '../utils/axiosConfig';
+import { useNavigate } from 'react-router-dom';
 
 function MyPage() {
   const [userInfo, setUserInfo] = useState(null);
@@ -11,6 +12,7 @@ function MyPage() {
   const [activeTab, setActiveTab] = useState('my');
   const [showEditModal, setShowEditModal] = useState(false);
   const [myCourses, setMyCourses] = useState([]);
+  const navigate = useNavigate();
 
   const fetchUserData = async () => {
     try {
@@ -84,6 +86,10 @@ function MyPage() {
     }
   };
 
+  const handleCourseClick = (courseId) => {
+    navigate(`/courses/${courseId}`);
+  };
+
   const renderCourseCards = (courses) => {
     if (!courses || courses.length === 0) {
       return (
@@ -96,7 +102,12 @@ function MyPage() {
     return (
       <div className={communityStyles.cardGrid}>
         {courses.map((course) => (
-          <div key={course.courseId} className={communityStyles.card}>
+          <div 
+            key={course.courseId} 
+            className={communityStyles.card}
+            onClick={() => handleCourseClick(course.courseId)}
+            style={{ cursor: 'pointer' }}
+          >
             <div 
               className={communityStyles.cardImage} 
               style={{

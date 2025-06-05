@@ -96,6 +96,8 @@ function CourseCreatePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [modalInfo, setModalInfo] = useState({ open: false, type: '', place: null });
   const [showRoutes, setShowRoutes] = useState(false);
+  const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
+  const [courseTitle, setCourseTitle] = useState('');
   
   // 지도 관련 설정
   const mapInstance = useRef(null);
@@ -785,22 +787,29 @@ function CourseCreatePage() {
       return;
     }
 
-    setIsSaving(true);  // 저장 시작 시 상태 변경
+    // 코스 제목 입력 모달 열기
+    setIsTitleModalOpen(true);
+  };
+
+  // 실제 저장 로직을 별도 함수로 분리
+  const saveCourseWithTitle = async (title) => {
+    setIsSaving(true);
 
     try {
-      // 백엔드 DTO와 DB 스키마에 맞게 데이터 변환
+      // durationDays를 정수로 변환
+      const durationDays = parseInt(courseData.metadata.duration) || Object.keys(placesByDay).length;
+      
       const courseToSave = {
-        title: courseData?.recommended_courses?.[0]?.course_name || `${region} 여행 코스`,
-        courseImageUrl: courseData?.recommended_courses?.[0]?.course_image_url || null,  // course_image_url 추가
+        title: title,
+        courseImageUrl: courseData?.recommended_courses?.[0]?.course_image_url || null,
         region: region,
-        startDate: courseData.metadata.start_date,  // YYYY-MM-DD 형식
-        endDate: courseData.metadata.end_date,      // YYYY-MM-DD 형식
-        durationDays: courseData.metadata.duration || Object.keys(placesByDay).length,
-        keywords: courseData?.metadata?.keywords || courseData?.recommended_courses?.[0]?.keywords || '',  // metadata의 keywords 사용
+        startDate: courseData.metadata.start_date,
+        endDate: courseData.metadata.end_date,
+        durationDays: durationDays,  // 정수로 변환된 값 사용
+        keywords: courseData?.metadata?.keywords || courseData?.recommended_courses?.[0]?.keywords || '',
         days: Object.entries(placesByDay).map(([day, places]) => ({
-          dayNumber: parseInt(day),
+          dayNumber: parseInt(day),  // dayNumber도 확실히 정수로 변환
           itinerary: places.map(place => {
-            // coordinates 객체가 없는 경우 lat, lng 직접 사용
             const latitude = place.coordinates?.lat || place.lat;
             const longitude = place.coordinates?.lng || place.lng;
 
@@ -809,43 +818,38 @@ function CourseCreatePage() {
               return null;
             }
 
-            // 시간 형식 변환 (HH:mm -> HH:mm)
             const time = place.time ? place.time.split(' ')[1] || place.time : '09:00';
-
-            // travel_from_previous 정보 가져오기
             const travelInfo = place.travel_from_previous || place.travelInfo || {};
 
             return {
-              time: time,  // VARCHAR(20)
-              placeName: place.place_name,  // VARCHAR(255)
-              placeType: place.place_type || '기타',  // VARCHAR(50)
-              description: place.description || '',  // TEXT
-              details: place.details || '',  // TEXT - details 필드 추가
+              time: time,
+              placeName: place.place_name,
+              placeType: place.place_type || '기타',
+              description: place.description || '',
+              details: place.details || '',
               coordinates: {
-                latitude: parseFloat(latitude),  // DECIMAL(10,8)
-                longitude: parseFloat(longitude)  // DECIMAL(11,8)
+                latitude: parseFloat(latitude),
+                longitude: parseFloat(longitude)
               },
               accessibilityFeatures: Object.entries(place.accessibility_features || {})
                 .reduce((acc, [key, value]) => {
                   if (value && value !== 'null' && value !== 'undefined' && String(value).trim() !== '') {
-                    acc[key] = String(value);  // TEXT로 저장될 값
+                    acc[key] = String(value);
                   }
                   return acc;
                 }, {}),
               travelFromPrevious: {
-                distance: travelInfo.distance || '',  // VARCHAR(50) - travel_from_previous에서 가져옴
-                travelTime: travelInfo.travel_time || travelInfo.duration || ''  // VARCHAR(50) - travel_from_previous에서 가져옴
+                distance: travelInfo.distance || '',
+                travelTime: travelInfo.travel_time || travelInfo.duration || ''
               }
             };
-          }).filter(Boolean)  // null 값 제거
+          }).filter(Boolean)
         }))
       };
 
       console.log('Saving course with data:', courseToSave);
-      console.log('Start date:', courseToSave.startDate);
-      console.log('End date:', courseToSave.endDate);
-      console.log('Course image URL:', courseToSave.courseImageUrl);  // 로깅 추가
-      console.log('Keywords:', courseToSave.keywords);  // 로깅 추가
+      // durationDays 값 로깅 추가
+      console.log('Duration days:', durationDays, typeof durationDays);
 
       const response = await axiosInstance.post('/courses', courseToSave);
       console.log('Course saved successfully:', response.data);
@@ -860,7 +864,8 @@ function CourseCreatePage() {
         alert('코스 저장 중 오류가 발생했습니다.');
       }
     } finally {
-      setIsSaving(false);  // 저장 완료 또는 실패 시 상태 변경
+      setIsSaving(false);
+      setIsTitleModalOpen(false);
     }
   };
 
@@ -880,6 +885,75 @@ function CourseCreatePage() {
 
   .route-toggle-btn.active {
     color: #4285F4;
+  }
+
+  .title-modal {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .title-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .title-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .title-input-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+
+  .title-input-group input:focus {
+    outline: none;
+    border-color: #4285F4;
+    box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+  }
+
+  .modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .modal-buttons button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+
+  .modal-buttons button[type="button"] {
+    background-color: #f1f3f4;
+    color: #202124;
+  }
+
+  .modal-buttons button[type="submit"] {
+    background-color: #4285F4;
+    color: white;
+  }
+
+  .modal-buttons button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .modal-buttons button:hover:not(:disabled) {
+    opacity: 0.9;
   }
   `;
 
@@ -1123,6 +1197,15 @@ function CourseCreatePage() {
           </div>
         </div>
       )}
+      
+      {/* 코스 제목 입력 모달 추가 */}
+      <TitleModal
+        isOpen={isTitleModalOpen}
+        onClose={() => setIsTitleModalOpen(false)}
+        onSave={saveCourseWithTitle}
+        defaultTitle={courseData?.recommended_courses?.[0]?.course_name || `${region} 여행 코스`}
+        isSaving={isSaving}
+      />
     </div>
   );
 }
@@ -1301,6 +1384,61 @@ const DateModal = ({ isOpen, onClose, onDateChange, startDate, endDate }) => {
           <div className="modal-buttons">
             <button type="button" onClick={onClose}>취소</button>
             <button type="submit">저장</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * 코스 제목 입력 모달 컴포넌트
+ */
+const TitleModal = ({ isOpen, onClose, onSave, defaultTitle, isSaving }) => {
+  const [title, setTitle] = useState(defaultTitle);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTitle(defaultTitle);
+    }
+  }, [isOpen, defaultTitle]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!title.trim()) {
+      alert('코스 제목을 입력해주세요.');
+      return;
+    }
+    onSave(title.trim());
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="title-modal">
+        <div className="modal-header">
+          <h3>코스 제목 입력</h3>
+          <button onClick={onClose} disabled={isSaving}>✕</button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="title-form">
+          <div className="title-input-group">
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="코스 제목을 입력해주세요"
+              maxLength={100}
+              disabled={isSaving}
+            />
+          </div>
+
+          <div className="modal-buttons">
+            <button type="button" onClick={onClose} disabled={isSaving}>취소</button>
+            <button type="submit" disabled={isSaving}>
+              {isSaving ? '저장 중...' : '저장하기'}
+            </button>
           </div>
         </form>
       </div>
