@@ -156,7 +156,9 @@ function CourseDetailPage() {
   const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
 
   // 진입 경로 구분: 커뮤니티에서 오면 댓글/좋아요 보이게, 마이페이지면 숨김
-  const isCommunity = location.state?.from === 'community' || new URLSearchParams(window.location.search).get('mode') === 'community';
+  const isCommunity = location.state?.from === 'community';
+  const postTitle = location.state?.postTitle;
+  const postId = location.state?.postId; // 게시글 ID 추가
 
   useEffect(() => {
     // 구글 지도 API 로드 확인
@@ -209,13 +211,21 @@ function CourseDetailPage() {
 
   // 댓글 목록 가져오기
   const fetchComments = async () => {
+    if (!postId) return;
     try {
-      const data = await getComments(courseId);
-      setComments(data);
+      const response = await axiosInstance.get(`/comments/post/${postId}`);
+      setComments(response.data);
     } catch (error) {
       console.error('댓글 목록 조회 실패:', error);
     }
   };
+
+  // 댓글 목록 최초/갱신 시 호출
+  useEffect(() => {
+    if (isCommunity && postId && isCommentOpen) {
+      fetchComments();
+    }
+  }, [isCommunity, postId, isCommentOpen]);
 
   // 구글 지도 초기화
   useEffect(() => {
@@ -457,44 +467,60 @@ function CourseDetailPage() {
     };
   }, [courseDetail, selectedDay]);
 
-  // 좋아요 처리 (목데이터)
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
-    
-    // 백엔드 서버가 준비되면 아래 주석을 해제하세요
-    // try {
-    //   await toggleLike(courseId);
-    // } catch (error) {
-    //   console.error('좋아요 처리 실패:', error);
-    //   // 실패 시 상태 되돌리기
-    //   setIsLiked(!isLiked);
-    //   setLikeCount(prev => !isLiked ? prev - 1 : prev + 1);
-    // }
+  // 게시글 정보 가져오기
+  useEffect(() => {
+    const fetchPostInfo = async () => {
+      if (!isCommunity || !postId) return;
+      
+      try {
+        console.log('게시글 정보 요청 시작 - postId:', postId);
+        const token = localStorage.getItem('token');
+        console.log('현재 토큰:', token);
+        
+        const response = await axiosInstance.get(`/posts/${postId}`);
+        console.log('게시글 정보 응답:', response.data);
+        console.log('liked 상태:', response.data.liked);
+        
+        setIsLiked(response.data.liked);
+        setLikeCount(response.data.likeCount);
+      } catch (error) {
+        console.error('게시글 정보 가져오기 실패:', error);
+        console.error('에러 응답:', error.response?.data);
+        setIsLiked(false);
+        setLikeCount(0);
+      }
+    };
+
+    fetchPostInfo();
+  }, [postId, isCommunity]);
+
+  // 좋아요 처리
+  const handleLike = async () => {
+    if (!isCommunity || !postId) return;
+
+    try {
+      const response = await axiosInstance.post(`/posts/${postId}/like`);
+      const newLikeStatus = response.data === "liked";
+      
+      setIsLiked(newLikeStatus);
+      setLikeCount(prev => newLikeStatus ? prev + 1 : prev - 1);
+    } catch (error) {
+      console.error('좋아요 처리 실패:', error);
+      alert('좋아요 처리에 실패했습니다.');
+    }
   };
 
-  // 댓글 작성 (목데이터)
+  // 댓글 작성
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-
     setIsCommentLoading(true);
     try {
-      // 백엔드 서버가 준비되면 아래 주석을 해제하고 목데이터 부분을 제거하세요
-      // const result = await createComment(courseId, newComment.trim());
-      // setComments(prev => [result, ...prev]);
-
-      // 목데이터 사용
-      const newCommentData = {
-        commentId: Date.now().toString(),
-        userId: "currentUser",
-        userName: "현재 사용자",
-        userProfileImage: null,
+      const result = await axiosInstance.post('/comments', {
+        postId: postId,
         content: newComment.trim(),
-        createdAt: new Date().toISOString(),
-        isAuthor: true
-      };
-      setComments(prev => [newCommentData, ...prev]);
+      });
+      setComments(prev => [result.data, ...prev]);
       setNewComment('');
       if (commentInputRef.current) {
         commentInputRef.current.focus();
@@ -507,17 +533,32 @@ function CourseDetailPage() {
     }
   };
 
-  // 댓글 삭제 (목데이터)
+  // 댓글 삭제
   const handleCommentDelete = async (commentId) => {
     if (!window.confirm('댓글을 삭제하시겠습니까?')) return;
-
     try {
-      // 백엔드 서버가 준비되면 아래 주석을 해제하세요
-      // await deleteComment(courseId, commentId);
+      await axiosInstance.delete(`/comments/${commentId}`);
       setComments(prev => prev.filter(comment => comment.commentId !== commentId));
     } catch (error) {
       console.error('댓글 삭제 실패:', error);
       alert('댓글 삭제에 실패했습니다.');
+    }
+  };
+
+  // 댓글 수정 (간단한 예시: prompt로 수정)
+  const handleCommentEdit = async (commentId, oldContent) => {
+    const newContent = window.prompt('댓글을 수정하세요', oldContent);
+    if (!newContent || newContent.trim() === oldContent) return;
+    try {
+      const response = await axiosInstance.put(`/comments/${commentId}`, {
+        content: newContent.trim(),
+      });
+      setComments(prev => prev.map(comment =>
+        comment.commentId === commentId ? { ...comment, content: response.data.content } : comment
+      ));
+    } catch (error) {
+      console.error('댓글 수정 실패:', error);
+      alert('댓글 수정에 실패했습니다.');
     }
   };
 
@@ -562,28 +603,34 @@ function CourseDetailPage() {
       <div className="course-header">
         <div className="header-content">
           <div className="course-title-section">
-            <h1>{courseDetail?.title}</h1>
+            <div className="course-title">
+              <h1>{isCommunity ? postTitle : courseDetail?.course_name}</h1>
+            </div>
             <div className="course-meta">
-              <span className="region">
-                <FaMapMarkerAlt /> {courseDetail?.region}
-              </span>
-              <span className="date">
-                <FaClock /> {getDateDisplay()}
-              </span>
+              <div className="meta-row">
+                <span className="region">
+                  <FaMapMarkerAlt /> {courseDetail?.region}
+                </span>
+                <span className="date">
+                  <FaClock /> {getDateDisplay()}
+                </span>
+              </div>
             </div>
           </div>
+          {/* 오른쪽: 좋아요/댓글 버튼 */}
           {isCommunity && (
             <div className="course-actions">
               <button 
                 className={`like-button ${isLiked ? 'liked' : ''}`}
                 onClick={handleLike}
+                disabled={!isCommunity}
               >
                 {isLiked ? <FaHeart /> : <FaRegHeart />}
                 <span>{likeCount}</span>
               </button>
               <button 
                 className="comment-button"
-                onClick={() => setIsCommentOpen(!isCommentOpen)}
+                onClick={() => setIsCommentOpen((prev) => !prev)}
               >
                 <FaComment />
                 <span>댓글</span>
@@ -698,12 +745,20 @@ function CourseDetailPage() {
                     </div>
                   </div>
                   {comment.isAuthor && (
-                    <button
-                      className="delete-comment"
-                      onClick={() => handleCommentDelete(comment.commentId)}
-                    >
-                      <FaTrash />
-                    </button>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button
+                        className="edit-comment"
+                        onClick={() => handleCommentEdit(comment.commentId, comment.content)}
+                      >
+                        수정
+                      </button>
+                      <button
+                        className="delete-comment"
+                        onClick={() => handleCommentDelete(comment.commentId)}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
                   )}
                 </div>
                 <div className="comment-content">

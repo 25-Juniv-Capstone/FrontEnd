@@ -93,7 +93,7 @@ function WritePageContent({ isOpen, onClose }) {
       // 전송되는 데이터 확인
       console.log('Sending post data:', postData);
 
-      const response = await axiosInstance.post('/post', postData);
+      const response = await axiosInstance.post('/posts', postData);
       console.log('Post created successfully:', response.data);
       alert('게시글이 성공적으로 작성되었습니다.');
       onClose();

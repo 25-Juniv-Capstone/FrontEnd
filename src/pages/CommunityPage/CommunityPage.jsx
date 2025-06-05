@@ -70,8 +70,14 @@ function CommunityPage() {
     setSearchTerm(e.target.value);
   };
 
-  const handleCardClick = (courseId) => {
-    navigate(`/courses/${courseId}`, { state: { from: 'community' } });
+  const handleCardClick = (courseId, postTitle, postId) => {
+    navigate(`/courses/${courseId}`, {
+      state: {
+        from: 'community',
+        postTitle,
+        postId
+      }
+    });
   };
 
   if (loading) {
@@ -134,7 +140,7 @@ function CommunityPage() {
               <div 
                 key={post.postId} 
                 className={styles.card}
-                onClick={() => handleCardClick(post.courseId)}
+                onClick={() => handleCardClick(post.courseId, post.title, post.postId)}
                 style={{ cursor: 'pointer' }}
               >
                 <div className={`${styles.cardType} ${styles[`type${post.disabilityType.charAt(0).toUpperCase() + post.disabilityType.slice(1)}`]}`}>
@@ -161,7 +167,7 @@ function CommunityPage() {
                     </div>
                     <div className={styles.cardStats}>
                       <span>👁️ {post.viewCount || 0}</span>
-                      <span>❤️ {post.likeCount || 0}</span>
+                      <span className={post.isLiked ? styles.likedHeart : ''}>❤️ {post.likeCount || 0}</span>
                     </div>
                   </div>
                   <div className={styles.cardAuthor}>

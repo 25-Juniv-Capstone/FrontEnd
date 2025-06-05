@@ -27,9 +27,16 @@ function KakaoCallbackPage() {
       // 커스텀 "login" 이벤트를 발생시켜 Header 컴포넌트에 알림
       window.dispatchEvent(new Event('login'));
 
-      // 이전 페이지가 있었다면 그 페이지로, 없으면 메인 페이지로
-      const from = location.state?.from || '/';
-      navigate(from, { replace: true });
+      // 이전 페이지가 있으면 그 페이지로, 없으면 메인 페이지로
+      const redirectPath = searchParams.get('redirect') || '/';
+      
+      if (redirectPath === '/') {
+        // 메인 페이지로 이동할 때는 새로고침
+        window.location.href = '/';
+      } else {
+        // 다른 페이지로 이동할 때는 새로고침 없이 이동
+        navigate(redirectPath, { replace: true });
+      }
     } else {
       console.error('토큰 또는 사용자 ID가 없습니다.');
       alert('로그인에 실패했습니다. 다시 시도해주세요.');

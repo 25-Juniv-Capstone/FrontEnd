@@ -316,4 +316,21 @@
     margin-left: 0;
     width: 100%;
   }
+}
+
+.cardStats {
+  display: flex;
+  gap: 1rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.cardStats span {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.likedHeart {
+  color: #ff4d4d;
 } 
