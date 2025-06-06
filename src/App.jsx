@@ -20,12 +20,12 @@ function App() {
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/selectpage" element={<SelectPages />} />
         <Route path="/course" element={<CourseCreatePage />} />
-        <Route path="/course/:courseId" element={<CourseDetailPage />} />
+        <Route path="/courses/:courseId" element={<CourseDetailPage />} />
         <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
         <Route path="/community" element={<CommunityPage />} />
         <Route path="/write" element={<WritePage />} />
         <Route path="/select" element={<SelectPage />} />
-        <Route path="/post" element={<PostPage />} />
+        <Route path="/post/:postId" element={<PostPage />} />
       </Routes>
     </>
   );

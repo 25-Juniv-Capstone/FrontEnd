@@ -10,9 +10,10 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import "../css/CourseDetailPage.css";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { FaHeart, FaRegHeart, FaComment, FaMapMarkerAlt, FaClock, FaWheelchair, FaInfoCircle, FaTrash, FaUser } from 'react-icons/fa';
 import { getCourseDetail, toggleLike, getComments, createComment, deleteComment } from '../api/courseApi';
+import axiosInstance from '../utils/axiosConfig';
 
 // 목데이터
 const MOCK_COURSE_DATA = {
@@ -127,7 +128,10 @@ const MOCK_COMMENTS = [
 function CourseDetailPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const [courseData, setCourseData] = useState(null);
+  const location = useLocation();
+  const [courseDetail, setCourseDetail] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedDay, setSelectedDay] = useState(1);
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
@@ -151,6 +155,11 @@ function CourseDetailPage() {
   // 구글 지도 API 로드 확인
   const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
 
+  // 진입 경로 구분: 커뮤니티에서 오면 댓글/좋아요 보이게, 마이페이지면 숨김
+  const isCommunity = location.state?.from === 'community';
+  const postTitle = location.state?.postTitle;
+  const postId = location.state?.postId; // 게시글 ID 추가
+
   useEffect(() => {
     // 구글 지도 API 로드 확인
     const checkGoogleMapsLoaded = () => {
@@ -163,53 +172,68 @@ function CourseDetailPage() {
     checkGoogleMapsLoaded();
   }, []);
 
+  useEffect(() => {
+    const fetchCourseDetail = async () => {
+      try {
+        console.log('코스 상세 정보 요청 시작 - 코스 ID:', courseId);
+        const response = await axiosInstance.get(`/courses/${courseId}`);
+        console.log('=== 코스 상세 정보 응답 ===');
+        console.log('코스명:', response.data.course_name);
+        console.log('이미지 URL:', response.data.course_image_url);
+        console.log('지역:', response.data.region);
+        console.log('시작일:', response.data.start_date);
+        console.log('종료일:', response.data.end_date);
+        console.log('일차 수:', response.data.days.length);
+        response.data.days.forEach(day => {
+          console.log(`=== 일차 ${day.day} ===`);
+          day.itinerary.forEach(item => {
+            console.log('장소:', item.place_name);
+            console.log('시간:', item.time);
+            console.log('거리:', item.travel_from_previous.distance);
+            console.log('이동시간:', item.travel_from_previous.travel_time);
+            console.log('위치:', item.coordinates);
+            console.log('무장애 시설:', item.accessibility_features);
+            console.log('---');
+          });
+        });
+        console.log('=== 응답 데이터 끝 ===');
+        setCourseDetail(response.data);
+      } catch (err) {
+        console.error('코스 상세 정보 가져오기 실패:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourseDetail();
+  }, [courseId]);
+
   // 댓글 목록 가져오기
   const fetchComments = async () => {
+    if (!postId) return;
     try {
-      const data = await getComments(courseId);
-      setComments(data);
+      const response = await axiosInstance.get(`/comments/post/${postId}`);
+      setComments(response.data);
     } catch (error) {
       console.error('댓글 목록 조회 실패:', error);
     }
   };
 
-  // 코스 데이터 가져오기 (목데이터 사용)
+  // 댓글 목록 최초/갱신 시 호출
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // 백엔드 서버가 준비되면 아래 주석을 해제하고 목데이터 부분을 제거하세요
-        // const [courseData, commentsData] = await Promise.all([
-        //   getCourseDetail(courseId),
-        //   getComments(courseId)
-        // ]);
-        // setCourseData(courseData);
-        // setLikeCount(courseData.likeCount || 0);
-        // setIsLiked(courseData.isLiked || false);
-        // setComments(commentsData);
-
-        // 목데이터 사용
-        setCourseData(MOCK_COURSE_DATA);
-        setLikeCount(MOCK_COURSE_DATA.likeCount);
-        setIsLiked(MOCK_COURSE_DATA.isLiked);
-        setComments(MOCK_COMMENTS);
-      } catch (error) {
-        console.error('데이터 로딩 실패:', error);
-        // 백엔드 서버가 없을 때는 에러 메시지를 표시하지 않음
-        // alert('데이터를 불러오는데 실패했습니다.');
-        // navigate('/community');
-      }
-    };
-
-    fetchData();
-  }, [courseId, navigate]);
+    if (isCommunity && postId && isCommentOpen) {
+      fetchComments();
+    }
+  }, [isCommunity, postId, isCommentOpen]);
 
   // 구글 지도 초기화
   useEffect(() => {
-    if (!isGoogleMapsLoaded || !mapRef.current || !courseData) {
+    if (!isGoogleMapsLoaded || !mapRef.current || !courseDetail) {
       console.log('지도 초기화 조건 미충족:', {
         isGoogleMapsLoaded,
         hasMapRef: !!mapRef.current,
-        hasCourseData: !!courseData
+        hasCourseData: !!courseDetail
       });
       return;
     }
@@ -251,7 +275,7 @@ function CourseDetailPage() {
       });
 
       // 기존 마커와 경로 업데이트
-      updateMapMarkersAndRoute();
+      updateMapMarkersAndRoute(selectedDay);
 
     } catch (error) {
       console.error('지도 초기화 중 오류 발생:', error);
@@ -273,18 +297,17 @@ function CourseDetailPage() {
         infoWindowRef.current = null;
       }
     };
-  }, [isGoogleMapsLoaded, courseData, selectedDay]);
+  }, [isGoogleMapsLoaded, courseDetail, selectedDay]);
 
-  // mapCenter나 mapZoom이 변경될 때 지도 업데이트
+  // selectedDay가 바뀔 때마다 지도 마커와 경로를 갱신
   useEffect(() => {
-    if (mapInstance.current) {
-      mapInstance.current.setCenter(mapCenter);
-      mapInstance.current.setZoom(mapZoom);
+    if (isGoogleMapsLoaded && mapInstance.current && courseDetail) {
+      updateMapMarkersAndRoute(selectedDay);
     }
-  }, [mapCenter, mapZoom]);
+  }, [selectedDay]);
 
   // 마커와 경로 업데이트
-  const updateMapMarkersAndRoute = () => {
+  const updateMapMarkersAndRoute = (dayNumber) => {
     console.log('마커와 경로 업데이트 시작');
     if (!mapInstance.current) {
       console.error('지도 인스턴스가 없음');
@@ -299,28 +322,28 @@ function CourseDetailPage() {
       pathLine.current = null;
     }
 
-    const currentDay = courseData?.days?.find(day => day.dayNumber === selectedDay);
-    if (!currentDay || !currentDay.itineraryItems || currentDay.itineraryItems.length === 0) {
+    const currentDay = courseDetail?.days?.find(day => day.day === dayNumber);
+    if (!currentDay || !currentDay.itinerary || currentDay.itinerary.length === 0) {
       console.log('일정 데이터가 없음:', currentDay);
       return;
     }
 
-    const places = currentDay.itineraryItems;
+    const places = currentDay.itinerary;
     console.log('장소 목록:', places);
     const pathCoordinates = [];
 
     // 마커 생성
     places.forEach((place, index) => {
-      if (!place.latitude || !place.longitude) {
+      if (!place.coordinates?.latitude || !place.coordinates?.longitude) {
         console.error('위치 정보가 없는 장소:', place);
         return;
       }
 
-      console.log(`마커 생성 시도: ${place.placeName} (${place.latitude}, ${place.longitude})`);
+      console.log(`마커 생성 시도: ${place.place_name} (${place.coordinates.latitude}, ${place.coordinates.longitude})`);
       
       try {
         // 장소 타입에 따른 색상 결정
-        const color = placeTypeToColor[place.placeType] || "#2196F3";
+        const color = placeTypeToColor[place.place_type] || "#2196F3";
         
         // SVG 마커 아이콘 생성
         const icon = {
@@ -335,17 +358,17 @@ function CourseDetailPage() {
         };
 
         const marker = new window.google.maps.Marker({
-          position: { lat: place.latitude, lng: place.longitude },
+          position: { lat: place.coordinates.latitude, lng: place.coordinates.longitude },
           map: mapInstance.current,
           icon: icon,
-          title: place.placeName
+          title: place.place_name
         });
 
         // infoWindow
         const infoWindow = new window.google.maps.InfoWindow({
           content: `
             <div style="min-width:180px">
-              <h3 style="margin:0 0 4px 0;font-size:1.1rem;color:#1976d2;">${place.placeName}</h3>
+              <h3 style="margin:0 0 4px 0;font-size:1.1rem;color:#1976d2;">${place.place_name}</h3>
               <div style="font-size:0.95rem;color:#555;">${place.description || ""}</div>
               <div style="font-size:0.9rem;color:#888;margin-top:4px;">${place.time ? `⏰ ${place.time}` : ""}</div>
             </div>
@@ -357,9 +380,9 @@ function CourseDetailPage() {
         });
 
         markersRef.current.push(marker);
-        pathCoordinates.push({ lat: place.latitude, lng: place.longitude });
+        pathCoordinates.push({ lat: place.coordinates.latitude, lng: place.coordinates.longitude });
       } catch (error) {
-        console.error(`마커 생성 실패 (${place.placeName}):`, error);
+        console.error(`마커 생성 실패 (${place.place_name}):`, error);
       }
     });
 
@@ -379,8 +402,8 @@ function CourseDetailPage() {
     try {
       const bounds = new window.google.maps.LatLngBounds();
       places.forEach(place => {
-        if (place.latitude && place.longitude) {
-          bounds.extend(new window.google.maps.LatLng(place.latitude, place.longitude));
+        if (place.coordinates?.latitude && place.coordinates?.longitude) {
+          bounds.extend(new window.google.maps.LatLng(place.coordinates.latitude, place.coordinates.longitude));
         }
       });
       mapInstance.current.fitBounds(bounds, { padding: 50 });
@@ -411,7 +434,7 @@ function CourseDetailPage() {
   // 전역 함수 등록 (마커 인포윈도우의 버튼 클릭 이벤트용)
   useEffect(() => {
     window.showPlaceDetails = (placeName) => {
-      const place = courseData?.days
+      const place = courseDetail?.days
         ?.find(day => day.dayNumber === selectedDay)
         ?.itineraryItems
         ?.find(item => item.placeName === placeName);
@@ -425,7 +448,7 @@ function CourseDetailPage() {
     };
 
     window.showAccessibilityInfo = (placeName) => {
-      const place = courseData?.days
+      const place = courseDetail?.days
         ?.find(day => day.dayNumber === selectedDay)
         ?.itineraryItems
         ?.find(item => item.placeName === placeName);
@@ -442,46 +465,62 @@ function CourseDetailPage() {
       delete window.showPlaceDetails;
       delete window.showAccessibilityInfo;
     };
-  }, [courseData, selectedDay]);
+  }, [courseDetail, selectedDay]);
 
-  // 좋아요 처리 (목데이터)
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
-    
-    // 백엔드 서버가 준비되면 아래 주석을 해제하세요
-    // try {
-    //   await toggleLike(courseId);
-    // } catch (error) {
-    //   console.error('좋아요 처리 실패:', error);
-    //   // 실패 시 상태 되돌리기
-    //   setIsLiked(!isLiked);
-    //   setLikeCount(prev => !isLiked ? prev - 1 : prev + 1);
-    // }
+  // 게시글 정보 가져오기
+  useEffect(() => {
+    const fetchPostInfo = async () => {
+      if (!isCommunity || !postId) return;
+      
+      try {
+        console.log('게시글 정보 요청 시작 - postId:', postId);
+        const token = localStorage.getItem('token');
+        console.log('현재 토큰:', token);
+        
+        const response = await axiosInstance.get(`/posts/${postId}`);
+        console.log('게시글 정보 응답:', response.data);
+        console.log('liked 상태:', response.data.liked);
+        
+        setIsLiked(response.data.liked);
+        setLikeCount(response.data.likeCount);
+      } catch (error) {
+        console.error('게시글 정보 가져오기 실패:', error);
+        console.error('에러 응답:', error.response?.data);
+        setIsLiked(false);
+        setLikeCount(0);
+      }
+    };
+
+    fetchPostInfo();
+  }, [postId, isCommunity]);
+
+  // 좋아요 처리
+  const handleLike = async () => {
+    if (!isCommunity || !postId) return;
+
+    try {
+      const response = await axiosInstance.post(`/posts/${postId}/like`);
+      const newLikeStatus = response.data === "liked";
+      
+      setIsLiked(newLikeStatus);
+      setLikeCount(prev => newLikeStatus ? prev + 1 : prev - 1);
+    } catch (error) {
+      console.error('좋아요 처리 실패:', error);
+      alert('좋아요 처리에 실패했습니다.');
+    }
   };
 
-  // 댓글 작성 (목데이터)
+  // 댓글 작성
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-
     setIsCommentLoading(true);
     try {
-      // 백엔드 서버가 준비되면 아래 주석을 해제하고 목데이터 부분을 제거하세요
-      // const result = await createComment(courseId, newComment.trim());
-      // setComments(prev => [result, ...prev]);
-
-      // 목데이터 사용
-      const newCommentData = {
-        commentId: Date.now().toString(),
-        userId: "currentUser",
-        userName: "현재 사용자",
-        userProfileImage: null,
+      const result = await axiosInstance.post('/comments', {
+        postId: postId,
         content: newComment.trim(),
-        createdAt: new Date().toISOString(),
-        isAuthor: true
-      };
-      setComments(prev => [newCommentData, ...prev]);
+      });
+      setComments(prev => [result.data, ...prev]);
       setNewComment('');
       if (commentInputRef.current) {
         commentInputRef.current.focus();
@@ -494,13 +533,11 @@ function CourseDetailPage() {
     }
   };
 
-  // 댓글 삭제 (목데이터)
+  // 댓글 삭제
   const handleCommentDelete = async (commentId) => {
     if (!window.confirm('댓글을 삭제하시겠습니까?')) return;
-
     try {
-      // 백엔드 서버가 준비되면 아래 주석을 해제하세요
-      // await deleteComment(courseId, commentId);
+      await axiosInstance.delete(`/comments/${commentId}`);
       setComments(prev => prev.filter(comment => comment.commentId !== commentId));
     } catch (error) {
       console.error('댓글 삭제 실패:', error);
@@ -508,36 +545,57 @@ function CourseDetailPage() {
     }
   };
 
+  // 댓글 수정 (간단한 예시: prompt로 수정)
+  const handleCommentEdit = async (commentId, oldContent) => {
+    const newContent = window.prompt('댓글을 수정하세요', oldContent);
+    if (!newContent || newContent.trim() === oldContent) return;
+    try {
+      const response = await axiosInstance.put(`/comments/${commentId}`, {
+        content: newContent.trim(),
+      });
+      setComments(prev => prev.map(comment =>
+        comment.commentId === commentId ? { ...comment, content: response.data.content } : comment
+      ));
+    } catch (error) {
+      console.error('댓글 수정 실패:', error);
+      alert('댓글 수정에 실패했습니다.');
+    }
+  };
+
   // 날짜 포맷팅
   const formatDate = (dateString) => {
+    if (!dateString) return "";
     const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) {
-      return '오늘';
-    } else if (diffDays === 1) {
-      return '어제';
-    } else if (diffDays < 7) {
-      return `${diffDays}일 전`;
-    } else {
-      return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
-    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}.${month}.${day}`;
   };
 
   // 여행 기간 표시 문자열 생성
   const getDateDisplay = () => {
-    const startDate = courseData?.startDate;
-    const endDate = courseData?.endDate;
+    const startDate = courseDetail?.startDate || courseDetail?.start_date;
+    const endDate = courseDetail?.endDate || courseDetail?.end_date;
     
     if (!startDate || !endDate) return "날짜 정보 없음";
     
     return `${formatDate(startDate)} ~ ${formatDate(endDate)}`;
   };
 
-  const currentDay = courseData?.days?.find(day => day.dayNumber === selectedDay);
-  const totalDays = courseData?.durationDays || 1;
+  const currentDay = courseDetail?.days?.find(day => day.day === selectedDay);
+  const totalDays = courseDetail?.days?.length || 1;
+
+  if (loading) {
+    return <div className="loading">로딩 중...</div>;
+  }
+
+  if (error) {
+    return <div className="error">에러: {error}</div>;
+  }
+
+  if (!courseDetail) {
+    return <div className="error">코스 정보를 찾을 수 없습니다.</div>;
+  }
 
   return (
     <div className="course-detail-container">
@@ -545,32 +603,40 @@ function CourseDetailPage() {
       <div className="course-header">
         <div className="header-content">
           <div className="course-title-section">
-            <h1>{courseData?.title}</h1>
+            <div className="course-title">
+              <h1>{isCommunity ? postTitle : courseDetail?.course_name}</h1>
+            </div>
             <div className="course-meta">
-              <span className="region">
-                <FaMapMarkerAlt /> {courseData?.region}
-              </span>
-              <span className="date">
-                <FaClock /> {getDateDisplay()}
-              </span>
+              <div className="meta-row">
+                <span className="region">
+                  <FaMapMarkerAlt /> {courseDetail?.region}
+                </span>
+                <span className="date">
+                  <FaClock /> {getDateDisplay()}
+                </span>
+              </div>
             </div>
           </div>
-          <div className="course-actions">
-            <button 
-              className={`like-button ${isLiked ? 'liked' : ''}`}
-              onClick={handleLike}
-            >
-              {isLiked ? <FaHeart /> : <FaRegHeart />}
-              <span>{likeCount}</span>
-            </button>
-            <button 
-              className="comment-button"
-              onClick={() => setIsCommentOpen(!isCommentOpen)}
-            >
-              <FaComment />
-              <span>댓글</span>
-            </button>
-          </div>
+          {/* 오른쪽: 좋아요/댓글 버튼 */}
+          {isCommunity && (
+            <div className="course-actions">
+              <button 
+                className={`like-button ${isLiked ? 'liked' : ''}`}
+                onClick={handleLike}
+                disabled={!isCommunity}
+              >
+                {isLiked ? <FaHeart /> : <FaRegHeart />}
+                <span>{likeCount}</span>
+              </button>
+              <button 
+                className="comment-button"
+                onClick={() => setIsCommentOpen((prev) => !prev)}
+              >
+                <FaComment />
+                <span>댓글</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -593,21 +659,18 @@ function CourseDetailPage() {
 
           {/* 일정 목록 */}
           <div className="itinerary-list">
-            {currentDay?.itineraryItems.map((place, index) => (
+            {currentDay?.itinerary?.map((place, index) => (
               <div key={index} className="itinerary-card">
                 <div className="itinerary-header">
-                  <div className="place-number">{index + 1}</div>
+                  <div className="place-number" style={{ backgroundColor: placeTypeToColor[place.place_type] || "#2196F3", color: '#fff', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, marginRight: 8 }}>
+                    {index + 1}
+                  </div>
                   <div className="place-time">{place.time}</div>
                 </div>
                 <div className="place-info">
-                  <h3>{place.placeName}</h3>
-                  <p className="place-type">{place.placeType}</p>
+                  <h3>{place.place_name}</h3>
+                  <p className="place-type">{place.place_type}</p>
                   <p className="place-description">{place.description}</p>
-                  {place.distance !== "0km" && (
-                    <div className="travel-info">
-                      <FaClock /> 이동: {place.distance} ({place.travelTime})
-                    </div>
-                  )}
                 </div>
                 <div className="place-actions">
                   <button
@@ -635,7 +698,7 @@ function CourseDetailPage() {
       </div>
 
       {/* 댓글 섹션 */}
-      {isCommentOpen && (
+      {isCommunity && isCommentOpen && (
         <div className="comments-section">
           <div className="comments-header">
             <h3>댓글 {comments.length}개</h3>
@@ -682,12 +745,20 @@ function CourseDetailPage() {
                     </div>
                   </div>
                   {comment.isAuthor && (
-                    <button
-                      className="delete-comment"
-                      onClick={() => handleCommentDelete(comment.commentId)}
-                    >
-                      <FaTrash />
-                    </button>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button
+                        className="edit-comment"
+                        onClick={() => handleCommentEdit(comment.commentId, comment.content)}
+                      >
+                        수정
+                      </button>
+                      <button
+                        className="delete-comment"
+                        onClick={() => handleCommentDelete(comment.commentId)}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
                   )}
                 </div>
                 <div className="comment-content">
@@ -707,45 +778,65 @@ function CourseDetailPage() {
       {/* 장소 정보 모달 */}
       {modalInfo.open && (
         <div className="modal-overlay">
-          <div className="modal-content">
+          <div className="info-modal">
             <div className="modal-header">
-              <h2>
-                {modalInfo.type === 'info' ? '장소 상세 정보' : '무장애 시설 정보'}
-              </h2>
-              <button 
-                className="close-button"
-                onClick={() => setModalInfo({ open: false, type: '', place: null })}
-              >
-                ✕
-              </button>
+              <h3>{modalInfo.type === 'info' ? '장소 정보' : '무장애 정보'}</h3>
+              <button onClick={() => setModalInfo({ open: false, type: '', place: null })}>✕</button>
             </div>
-            <div className="modal-body">
-              {modalInfo.type === 'info' ? (
-                <div className="place-details">
-                  <h3>{modalInfo.place.placeName}</h3>
-                  <div className="detail-item">
-                    <strong>주소:</strong> {modalInfo.place.details}
-                  </div>
-                  <div className="detail-item">
-                    <strong>설명:</strong> {modalInfo.place.description}
-                  </div>
-                  <div className="detail-item">
-                    <strong>장소 유형:</strong> {modalInfo.place.placeType}
-                  </div>
-                </div>
-              ) : (
-                <div className="accessibility-details">
-                  <h3>무장애 시설 현황</h3>
-                  <div className="accessibility-grid">
-                    {Object.entries(modalInfo.place.accessibilityFeatures || {}).map(([key, value]) => (
-                      <div key={key} className="accessibility-item">
-                        <span className="feature-name">{key}</span>
-                        <span className={`feature-value ${value === '있음' ? 'available' : 'unavailable'}`}>
-                          {value}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+            <div className="modal-content">
+              {modalInfo.type === 'info' && (
+                <>
+                  <div style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: 8 }}>{modalInfo.place.place_name || modalInfo.place.placeName}</div>
+                  <div style={{ color: '#444', fontSize: '0.98rem', marginBottom: '4px' }}>{modalInfo.place.description}</div>
+                </>
+              )}
+              {modalInfo.type === 'accessibility' && (
+                <div className="accessibility-info">
+                  {(() => {
+                    const keyMapping = {
+                      'parking': '주차장',
+                      'public_transport': '대중교통 접근',
+                      'restroom': '화장실',
+                      'wheelchair_rental': '휠체어 대여',
+                      'elevator': '엘리베이터',
+                      'exit': '출입구',
+                      'braile_block': '점자블록',
+                      'braille_promotion': '점자 안내',
+                      'human_guide': '안내요원',
+                      'audio_guide': '음성안내',
+                      'ticket_office': '매표소',
+                      'guide_dog': '안내견',
+                      'infants_info_baby_spare_chair': '유아용 의자',
+                      'infants_info_stroller': '유모차 대여',
+                      'infants_info_lactation_room': '수유실',
+                      'infants_info_etc': '유아 편의시설',
+                      'visual_impairment_info_guide_dog': '시각장애인 안내견',
+                      'visual_impairment_info_human_guide': '시각장애인 안내',
+                      'visual_impairment_info_braille_promotion': '시각장애인 점자안내',
+                      'facilities_room': '장애인 객실',
+                      'facilities_etc': '기타 편의시설'
+                    };
+                    return Object.entries(modalInfo.place.accessibilityFeatures || modalInfo.place.accessibility_features || {})
+                      .filter(([, value]) => value && value !== 'null' && value !== 'undefined' && String(value).trim() !== '')
+                      .map(([key, value]) => {
+                        let displayValue = value;
+                        if (typeof value === 'object' && value !== null) {
+                          if (Array.isArray(value)) {
+                            displayValue = value.join(', ');
+                          } else {
+                            displayValue = Object.keys(value).join(', ') || JSON.stringify(value);
+                          }
+                        } else if (typeof value !== 'string' && typeof value !== 'number') {
+                          displayValue = String(value);
+                        }
+                        const displayKey = keyMapping[key] || key.replace(/_/g, ' ');
+                        return (
+                          <div key={key} className="accessibility-item">
+                            • {displayKey}: {displayValue}
+                          </div>
+                        );
+                      });
+                  })()}
                 </div>
               )}
             </div>
