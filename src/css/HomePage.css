@@ -3,7 +3,7 @@ body {
 }
 
 .hero {
-  background-image: url('src/images/beach.png');
+  background-image: url('/images/beach.png');
   background-position: center;
   height: 80vh;
   display: flex; /*안에 요소 정렬*/
