@@ -68,7 +68,6 @@ function Header() {
             objectFit: 'contain', 
             borderRadius: 12, 
             background: '#fff', 
-            boxShadow: '0 0 4px rgba(0,0,0,0.04)'
           }} 
         />
       </Link>

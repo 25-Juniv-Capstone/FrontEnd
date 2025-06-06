@@ -147,7 +147,6 @@ function CourseCreatePage() {
   const [modalInfo, setModalInfo] = useState({ open: false, type: '', place: null });
   const [showRoutes, setShowRoutes] = useState(false);
   const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
-  const [courseTitle, setCourseTitle] = useState('');
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
   
@@ -1096,25 +1095,27 @@ function CourseCreatePage() {
             >
               {index + 1}
             </div>
-            <div className="time">{place.time || '--:--'}</div>
-            <div className="title">{place.place_name}</div>
-            <div className="place-type">
+            <div className="time" style={{ fontSize: '1.1rem', fontWeight: '500' }}>{place.time || '--:--'}</div>
+            <div className="title" style={{ fontSize: '1.2rem', fontWeight: '600' }}>{place.place_name}</div>
+            <div className="place-type" style={{ fontSize: '1.1rem', fontWeight: '500' }}>
               {placeTypeToEmoji[place.place_type] || "📍 기타"}
             </div>
             <div style={{ display: 'flex', gap: '8px', margin: '12px 0' }}>
               <button
                 className="info-btn"
                 onClick={() => setModalInfo({ open: true, type: 'info', place })}
+                style={{ fontSize: '1rem', fontWeight: '500' }}
               >장소 정보</button>
               <button
                 className="access-btn"
                 onClick={() => setModalInfo({ open: true, type: 'accessibility', place })}
+                style={{ fontSize: '1rem', fontWeight: '500' }}
               >무장애 정보</button>
             </div>
           </div>
           <div className="right">
             <div className="action-buttons">
-              <button onClick={() => handleDeletePlace(place.id)}>🗑️</button>
+              <button onClick={() => handleDeletePlace(place.id)} style={{ fontSize: '1.2rem' }}>🗑️</button>
             </div>
           </div>
         </div>
