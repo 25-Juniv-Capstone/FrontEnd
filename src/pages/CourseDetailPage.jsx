@@ -11,119 +11,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import "../css/CourseDetailPage.css";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { FaHeart, FaRegHeart, FaComment, FaMapMarkerAlt, FaClock, FaWheelchair, FaInfoCircle, FaTrash, FaUser } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaComment, FaMapMarkerAlt, FaClock, FaWheelchair, FaInfoCircle, FaUser, FaTrash } from 'react-icons/fa';
+import { MdDeleteOutline, MdContentCopy } from 'react-icons/md';
+import { TbPencilMinus } from 'react-icons/tb';
 import { getCourseDetail, toggleLike, getComments, createComment, deleteComment } from '../api/courseApi';
 import axiosInstance from '../utils/axiosConfig';
 
-// 목데이터
-const MOCK_COURSE_DATA = {
-  courseId: "1",
-  user: {
-    userId: "user123",
-    userName: "여행자1",
-    profileImage: "https://example.com/profile.jpg"
-  },
-  title: "서울 3일 코스 - 휠체어 이용자를 위한 무장애 여행",
-  keywords: "서울, 휠체어, 무장애, 관광",
-  courseImageUrl: "https://example.com/course-image.jpg",
-  startDate: "2024-03-01",
-  endDate: "2024-03-03",
-  region: "서울",
-  durationDays: 3,
-  isRecommended: true,
-  createdAt: "2024-02-20T10:00:00Z",
-  publicYn: true,
-  likeCount: 5,
-  isLiked: false,
-  days: [
-    {
-      dayNumber: 1,
-      itineraryItems: [
-        {
-          time: "10:00",
-          placeName: "경복궁",
-          placeType: "관광지",
-          description: "조선왕조 제일의 법궁",
-          details: "서울 종로구 사직로 161",
-          latitude: 37.5796,
-          longitude: 126.9770,
-          distance: "0km",
-          travelTime: "0분",
-          accessibilityFeatures: {
-            "휠체어 진입로": "있음",
-            "엘리베이터": "있음",
-            "장애인 화장실": "있음",
-            "점자 안내": "없음",
-            "수어 안내": "없음"
-          }
-        },
-        {
-          time: "14:00",
-          placeName: "인사동",
-          placeType: "관광지/상점",
-          description: "전통 문화의 거리",
-          details: "서울 종로구 인사동길 44",
-          latitude: 37.5737,
-          longitude: 126.9820,
-          distance: "0.8km",
-          travelTime: "12분",
-          accessibilityFeatures: {
-            "휠체어 진입로": "있음",
-            "엘리베이터": "일부 있음",
-            "장애인 화장실": "있음",
-            "점자 안내": "없음",
-            "수어 안내": "없음"
-          }
-        }
-      ]
-    },
-    {
-      dayNumber: 2,
-      itineraryItems: [
-        {
-          time: "11:00",
-          placeName: "남산타워",
-          placeType: "관광지",
-          description: "서울의 상징",
-          details: "서울 용산구 남산공원길 105",
-          latitude: 37.5512,
-          longitude: 126.9882,
-          distance: "0km",
-          travelTime: "0분",
-          accessibilityFeatures: {
-            "휠체어 진입로": "있음",
-            "엘리베이터": "있음",
-            "장애인 화장실": "있음",
-            "점자 안내": "있음",
-            "수어 안내": "있음"
-          }
-        }
-      ]
-    }
-  ]
-};
 
-// 목데이터 댓글
-const MOCK_COMMENTS = [
-  {
-    commentId: "1",
-    userId: "user456",
-    userName: "여행자2",
-    userProfileImage: null,
-    content: "정말 유용한 코스네요! 휠체어 이용자분들께 추천드립니다.",
-    createdAt: "2024-02-21T15:30:00Z",
-    isAuthor: false
-  },
-  {
-    commentId: "2",
-    userId: "user789",
-    userName: "여행자3",
-    userProfileImage: "https://example.com/profile2.jpg",
-    content: "경복궁의 무장애 시설이 정말 잘 되어있어요. 편하게 관람할 수 있었습니다.",
-    createdAt: "2024-02-22T09:15:00Z",
-    isAuthor: false
-  }
-];
 
 function CourseDetailPage() {
   const { courseId } = useParams();
@@ -159,6 +53,12 @@ function CourseDetailPage() {
   const isCommunity = location.state?.from === 'community';
   const postTitle = location.state?.postTitle;
   const postId = location.state?.postId; // 게시글 ID 추가
+
+  const [isCourseSaved, setIsCourseSaved] = useState(false);
+  const [post, setPost] = useState(null);
+
+  const currentUserId = localStorage.getItem('userId');
+  const authorId = post?.userId;
 
   useEffect(() => {
     // 구글 지도 API 로드 확인
@@ -209,23 +109,35 @@ function CourseDetailPage() {
     fetchCourseDetail();
   }, [courseId]);
 
-  // 댓글 목록 가져오기
-  const fetchComments = async () => {
-    if (!postId) return;
-    try {
-      const response = await axiosInstance.get(`/comments/post/${postId}`);
-      setComments(response.data);
-    } catch (error) {
-      console.error('댓글 목록 조회 실패:', error);
-    }
-  };
-
-  // 댓글 목록 최초/갱신 시 호출
+  // 게시글 정보 받아오기
   useEffect(() => {
-    if (isCommunity && postId && isCommentOpen) {
-      fetchComments();
-    }
-  }, [isCommunity, postId, isCommentOpen]);
+    const fetchPost = async () => {
+      if (!postId) return;
+      try {
+        const response = await axiosInstance.get(`/posts/${postId}`);
+        setPost(response.data);
+        setIsLiked(response.data.isLiked);
+        setLikeCount(response.data.likeCount);
+      } catch (e) {
+        console.error('게시글 정보 불러오기 실패:', e);
+      }
+    };
+    fetchPost();
+  }, [postId]);
+
+  // 댓글 목록 받아오기
+  useEffect(() => {
+    const fetchComments = async () => {
+      if (!postId) return;
+      try {
+        const response = await axiosInstance.get(`/comments/post/${postId}`);
+        setComments(response.data);
+      } catch (e) {
+        console.error('댓글 목록 불러오기 실패:', e);
+      }
+    };
+    fetchComments();
+  }, [postId]);
 
   // 구글 지도 초기화
   useEffect(() => {
@@ -467,43 +379,16 @@ function CourseDetailPage() {
     };
   }, [courseDetail, selectedDay]);
 
-  // 게시글 정보 가져오기
-  useEffect(() => {
-    const fetchPostInfo = async () => {
-      if (!isCommunity || !postId) return;
-      
-      try {
-        console.log('게시글 정보 요청 시작 - postId:', postId);
-        const token = localStorage.getItem('token');
-        console.log('현재 토큰:', token);
-        
-        const response = await axiosInstance.get(`/posts/${postId}`);
-        console.log('게시글 정보 응답:', response.data);
-        console.log('liked 상태:', response.data.liked);
-        
-        setIsLiked(response.data.liked);
-        setLikeCount(response.data.likeCount);
-      } catch (error) {
-        console.error('게시글 정보 가져오기 실패:', error);
-        console.error('에러 응답:', error.response?.data);
-        setIsLiked(false);
-        setLikeCount(0);
-      }
-    };
-
-    fetchPostInfo();
-  }, [postId, isCommunity]);
-
   // 좋아요 처리
   const handleLike = async () => {
-    if (!isCommunity || !postId) return;
-
+    if (!postId) return;
     try {
-      const response = await axiosInstance.post(`/posts/${postId}/like`);
-      const newLikeStatus = response.data === "liked";
-      
-      setIsLiked(newLikeStatus);
-      setLikeCount(prev => newLikeStatus ? prev + 1 : prev - 1);
+      await axiosInstance.post(`/posts/${postId}/like`, {
+        userId: currentUserId,
+      });
+      // 좋아요 상태 갱신은 별도 API 응답에 따라 처리
+      setIsLiked(prev => !prev);
+      setLikeCount(prev => prev + (isLiked ? -1 : 1));
     } catch (error) {
       console.error('좋아요 처리 실패:', error);
       alert('좋아요 처리에 실패했습니다.');
@@ -517,14 +402,12 @@ function CourseDetailPage() {
     setIsCommentLoading(true);
     try {
       const result = await axiosInstance.post('/comments', {
-        postId: postId,
+        postId: post.postId,
+        userId: currentUserId,
         content: newComment.trim(),
       });
       setComments(prev => [result.data, ...prev]);
       setNewComment('');
-      if (commentInputRef.current) {
-        commentInputRef.current.focus();
-      }
     } catch (error) {
       console.error('댓글 작성 실패:', error);
       alert('댓글 작성에 실패했습니다.');
@@ -545,12 +428,13 @@ function CourseDetailPage() {
     }
   };
 
-  // 댓글 수정 (간단한 예시: prompt로 수정)
+  // 댓글 수정 (prompt 사용 예시)
   const handleCommentEdit = async (commentId, oldContent) => {
     const newContent = window.prompt('댓글을 수정하세요', oldContent);
     if (!newContent || newContent.trim() === oldContent) return;
     try {
       const response = await axiosInstance.put(`/comments/${commentId}`, {
+        userId: currentUserId,
         content: newContent.trim(),
       });
       setComments(prev => prev.map(comment =>
@@ -585,6 +469,59 @@ function CourseDetailPage() {
   const currentDay = courseDetail?.days?.find(day => day.day === selectedDay);
   const totalDays = courseDetail?.days?.length || 1;
 
+  // 게시글 저장 핸들러
+  const handleSaveCourse = async () => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      alert('로그인이 필요합니다.');
+      window.location.href = '/kakao/login';
+      return;
+    }
+    if (!post || !post.courseId) {
+      alert('코스 정보가 없습니다.');
+      return;
+    }
+    try {
+      const saveData = {
+        userId,
+        courseId: post.courseId,
+        title: post.title || post.course_name,
+        imageUrl: post.courseImageUrl || post.course_image_url,
+        region: post.region,
+      };
+      await axiosInstance.post(`/user/${userId}/saved-courses`, saveData);
+      setIsCourseSaved(true);
+      alert('마이페이지에 저장되었습니다.');
+    } catch (err) {
+      if (err.response?.status === 409) {
+        alert('이미 저장된 코스입니다.');
+        setIsCourseSaved(true);
+      } else {
+        alert('코스 저장에 실패했습니다.');
+      }
+    }
+  };
+
+  // 수정 버튼 클릭 시 이동
+  const handleEditCourse = () => {
+    if (!post || !post.courseId) return;
+    window.location.href = `/course-edit/${post.courseId}`;
+  };
+
+  // 게시글 삭제 핸들러
+  const handleDeletePost = async () => {
+    if (!postId) return;
+    if (!window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) return;
+    try {
+      await axiosInstance.delete(`/posts/${postId}`);
+      alert('게시글이 삭제되었습니다.');
+      navigate('/community');
+    } catch (error) {
+      console.error('게시글 삭제 실패:', error);
+      alert('게시글 삭제에 실패했습니다.');
+    }
+  };
+
   if (loading) {
     return <div className="loading">로딩 중...</div>;
   }
@@ -617,7 +554,7 @@ function CourseDetailPage() {
               </div>
             </div>
           </div>
-          {/* 오른쪽: 좋아요/댓글 버튼 */}
+          {/* 오른쪽: 좋아요/댓글/저장/수정 버튼 */}
           {isCommunity && (
             <div className="course-actions">
               <button 
@@ -630,14 +567,46 @@ function CourseDetailPage() {
               </button>
               <button 
                 className="comment-button"
-                onClick={() => setIsCommentOpen((prev) => !prev)}
+                onClick={() => setIsCommentOpen(true)}
               >
                 <FaComment />
                 <span>댓글</span>
               </button>
+              {/* 내 userId와 post.userId가 같으면 수정, 다르면 게시글 저장 */}
+              {String(currentUserId) === String(authorId) ? (
+                <>
+                  <button
+                    className="delete-course-button"
+                    onClick={handleDeletePost}
+                    style={{ marginLeft: 8, background: 'none', color: 'inherit', border: 'none', display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}
+                  >
+                    <MdDeleteOutline size={18} />
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="save-course-button"
+                  onClick={handleSaveCourse}
+                  disabled={isCourseSaved}
+                  style={{ marginLeft: 8 }}
+                >
+                  {isCourseSaved ? '저장된 코스스' : '코스 저장'}
+                </button>
+              )}
+                <button
+                className="copy-link-button"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  alert('링크가 복사되었습니다!');
+                }}
+                style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: '1.1rem', padding: '4px' }}
+              >
+                <MdContentCopy size={18} />
+              </button>
             </div>
           )}
         </div>
+
       </div>
 
       {/* 메인 콘텐츠 영역 */}
@@ -744,13 +713,13 @@ function CourseDetailPage() {
                       <span className="comment-date">{formatDate(comment.createdAt)}</span>
                     </div>
                   </div>
-                  {comment.isAuthor && (
+                  {String(comment.userId) === String(currentUserId) && (
                     <div style={{ display: 'flex', gap: '4px' }}>
                       <button
                         className="edit-comment"
                         onClick={() => handleCommentEdit(comment.commentId, comment.content)}
                       >
-                        수정
+                        <TbPencilMinus />
                       </button>
                       <button
                         className="delete-comment"

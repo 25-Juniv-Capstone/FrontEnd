@@ -527,6 +527,30 @@
   border-radius: 8px;
   font-size: 0.95rem;
 }
+.edit-comment{
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  outline: none;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem;
+}
+.edit-comment:focus {
+  outline: none;
+}
+.edit-comment:hover {
+  color: #4a90e2;
+}
+
+.edit-comment svg {
+  position: relative;
+  top: -2px;
+}
 
 /* 반응형 스타일 */
 @media (max-width: 768px) {
