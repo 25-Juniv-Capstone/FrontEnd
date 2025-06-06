@@ -64,7 +64,7 @@ function Header() {
           alt="여행의 배프 로고" 
           style={{ 
             width: 90, 
-            height: 85, 
+            height: 80, 
             objectFit: 'contain', 
             borderRadius: 12, 
             background: '#fff', 
