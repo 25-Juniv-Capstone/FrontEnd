@@ -661,23 +661,6 @@ function CourseDetailPage() {
           <div className="itinerary-list">
             {currentDay?.itinerary?.map((place, index) => (
               <div key={index} className="itinerary-card">
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                <div className="itinerary-header">
-                  <div className="place-number" style={{ backgroundColor: placeTypeToColor[place.place_type] || "#2196F3", color: '#fff', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, marginRight: 8 }}>
-                    {index + 1}
-                  </div>
-                  <div className="place-time">{place.time}</div>
-                </div>
-                <div className="place-info">
-                  <h3>{place.place_name}</h3>
-                  <p className="place-type">{place.place_type}</p>
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
                 <div className="place-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                     <h3>{place.placeName}</h3>
@@ -688,7 +671,6 @@ function CourseDetailPage() {
                     >🗑️</button>
                   </div>
                   <p className="place-type">{place.placeType}</p>
->>>>>>> Stashed changes
                   <p className="place-description">{place.description}</p>
                 </div>
                 <div className="place-actions">

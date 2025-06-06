@@ -1211,57 +1211,7 @@ function CourseCreatePage() {
                   {...provided.droppableProps}
                   ref={provided.innerRef}
                 >
-<<<<<<< Updated upstream
                   {currentDayPlaces.map((place, index) => renderPlaceCard(place, index))}
-=======
-                  {currentDayPlaces.map((place, index) => (
-                    <Draggable key={place.id} draggableId={place.id} index={index}>
-                      {(provided) => (
-                        <div
-                          className="course-card"
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                        >
-                          <div className="left" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                              <div 
-                                className="circle-number" 
-                                style={{ backgroundColor: placeTypeToColor[place.place_type] || "#2196F3" }}
-                              > 
-                                {index + 1} 
-                              </div> 
-                              <button 
-                                className="delete-btn" 
-                                onClick={() => handleDeletePlace(place.id)} 
-                                style={{ marginLeft: '8px' }} 
-                              >🗑️</button> 
-                            </div> 
-                            <div className="time">{place.time || '--:--'}</div> 
-                            <div className="title">{place.place_name}</div> 
-                            <div className="place-type"> 
-                              {placeTypeToEmoji[place.place_type] || "📍 기타"} 
-                            </div> 
-                            <div className="place-actions"> 
-                              <button 
-                                className="info-btn" 
-                                onClick={() => setModalInfo({ open: true, type: 'info', place })} 
-                              > 
-                                <FaInfoCircle style={{ marginRight: '6px' }} /> 상세정보 
-                              </button> 
-                              <button 
-                                className="access-btn" 
-                                onClick={() => setModalInfo({ open: true, type: 'accessibility', place })} 
-                              > 
-                                <FaWheelchair style={{ marginRight: '6px' }} /> 무장애 정보 
-                              </button> 
-                            </div> 
-                          </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
->>>>>>> Stashed changes
                   {provided.placeholder}
                 </div>
               )}
@@ -1423,80 +1373,67 @@ function CourseCreatePage() {
  * Google Places API를 사용하여 장소를 검색하고 선택할 수 있는 모달
  */
 const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("all");
   const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const placesService = useRef(null);
 
-  // 카테고리 정의
-  const categories = [
-    { id: "all", label: "전체", emoji: "🔍" },
-    { id: "restaurant", label: "식당", emoji: "🍴" },
-    { id: "cafe", label: "카페", emoji: "☕" },
-    { id: "attraction", label: "관광지", emoji: "🗺️" },
-    { id: "museum", label: "박물관", emoji: "🏛️" },
-    { id: "park", label: "공원", emoji: "🏞️" },
-    { id: "shopping", label: "쇼핑", emoji: "🛍️" }
-  ];
-
-  // Places 서비스 초기화
   useEffect(() => {
-    if (window.google && window.google.maps && window.google.maps.places && mapInstance) {
+    if (isOpen && mapInstance) {
       placesService.current = new window.google.maps.places.PlacesService(mapInstance);
     }
-  }, [mapInstance]);
+  }, [isOpen, mapInstance]);
 
-  // 장소 상세 정보 가져오기
+  const categories = [
+    { id: 'all', label: '전체', emoji: '🔍' },
+    { id: 'restaurant', label: '식당', emoji: '🍴' },
+    { id: 'cafe', label: '카페', emoji: '☕' },
+    { id: 'attraction', label: '관광지', emoji: '🗺️' },
+    { id: 'museum', label: '박물관', emoji: '🏛️' },
+    { id: 'park', label: '공원', emoji: '🏞️' },
+    { id: 'shopping', label: '쇼핑', emoji: '🛍️' }
+  ];
+
   const getPlaceDetails = (placeId) => {
     return new Promise((resolve, reject) => {
       if (!placesService.current) {
-        reject(new Error("Places 서비스가 초기화되지 않았습니다."));
+        reject(new Error('Places 서비스가 초기화되지 않았습니다.'));
         return;
       }
 
-      const request = {
-        placeId: placeId,
-        fields: [
-          'name',
-          'formatted_address',
-          'geometry',
-          'types',
-          'wheelchair_accessible_entrance',
-          'wheelchair_accessible_parking',
-          'wheelchair_accessible_restroom',
-          'elevator',
-          'ramp'
-        ]
-      };
-
-      placesService.current.getDetails(request, (place, status) => {
-        if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
-          // 기존 데이터 구조와 동일한 형태로 변환
-          const transformedPlace = {
-            id: place.place_id,
-            place_name: place.name,
-            place_type: getPlaceType(place.types),
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-            description: place.formatted_address,
-            accessibility_features: {
-              wheelchair_accessible_parking: place.wheelchair_accessible_parking ? "있음" : "정보 없음",
-              wheelchair_accessible_restroom: place.wheelchair_accessible_restroom ? "있음" : "정보 없음",
-              elevator: place.elevator ? "있음" : "정보 없음",
-              ramp: place.ramp ? "있음" : "정보 없음"
-            }
-          };
-          resolve(transformedPlace);
-        } else {
-          reject(new Error(`장소 상세 정보를 가져오는데 실패했습니다: ${status}`));
+      placesService.current.getDetails(
+        {
+          placeId: placeId,
+          fields: ['name', 'formatted_address', 'geometry', 'types', 'wheelchair_accessible_entrance', 'wheelchair_accessible_parking', 'wheelchair_accessible_restroom', 'elevator', 'ramp']
+        },
+        (place, status) => {
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+            const transformedPlace = {
+              id: placeId,
+              place_name: place.name,
+              place_type: getPlaceType(place.types),
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+              description: place.formatted_address,
+              accessibility_features: {
+                wheelchair_accessible_entrance: place.wheelchair_accessible_entrance || '정보 없음',
+                wheelchair_accessible_parking: place.wheelchair_accessible_parking || '정보 없음',
+                wheelchair_accessible_restroom: place.wheelchair_accessible_restroom || '정보 없음',
+                elevator: place.elevator || '정보 없음',
+                ramp: place.ramp || '정보 없음'
+              }
+            };
+            resolve(transformedPlace);
+          } else {
+            reject(new Error(`장소 상세 정보를 가져오는데 실패했습니다: ${status}`));
+          }
         }
-      });
+      );
     });
   };
 
-  // 검색 함수 수정
   const handleSearch = () => {
     if (!searchQuery.trim()) return;
     
@@ -1534,7 +1471,6 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
           });
         });
 
-        // 기본 정보만 포함하는 검색 결과
         const places = filteredResults.map(place => ({
           id: place.place_id,
           place_name: place.name,
@@ -1542,7 +1478,6 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng(),
           description: place.formatted_address,
-          // 상세 정보는 나중에 getDetails로 채워질 예정
           accessibility_features: {
             wheelchair_accessible_parking: "정보 없음",
             wheelchair_accessible_restroom: "정보 없음",
@@ -1559,23 +1494,19 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
     });
   };
 
-  // 장소 선택 핸들러 수정
   const handlePlaceSelect = async (place) => {
     try {
       setIsDetailLoading(true);
-      // 상세 정보 가져오기
       const detailedPlace = await getPlaceDetails(place.id);
-      // 기존 place 정보와 상세 정보 병합
       const finalPlace = {
         ...place,
         ...detailedPlace,
-        time: "09:00" // 기본 시간 설정
+        time: "09:00"
       };
       onPlaceSelect(finalPlace);
       onClose();
     } catch (error) {
       console.error("장소 상세 정보를 가져오는데 실패했습니다:", error);
-      // 에러가 발생해도 기본 정보로라도 추가
       onPlaceSelect({
         ...place,
         time: "09:00"
@@ -1586,7 +1517,6 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
     }
   };
 
-  // 장소 타입 변환
   const getPlaceType = (types) => {
     if (types.includes('restaurant')) return "한식당";
     if (types.includes('cafe')) return "카페";
@@ -1709,9 +1639,7 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
   );
 };
 
-/**
- * 날짜 수정 모달 컴포넌트
- */
+// DateModal 컴포넌트
 const DateModal = ({ isOpen, onClose, onDateChange, startDate, endDate }) => {
   const [newStartDate, setNewStartDate] = useState(startDate);
   const [newEndDate, setNewEndDate] = useState(endDate);
@@ -1762,9 +1690,7 @@ const DateModal = ({ isOpen, onClose, onDateChange, startDate, endDate }) => {
   );
 };
 
-/**
- * 코스 제목 입력 모달 컴포넌트
- */
+// TitleModal 컴포넌트
 const TitleModal = ({ isOpen, onClose, onSave, defaultTitle, isSaving }) => {
   const [title, setTitle] = useState(defaultTitle);
 
