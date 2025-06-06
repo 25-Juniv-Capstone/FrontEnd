@@ -663,6 +663,7 @@ function CourseDetailPage() {
               <div key={index} className="itinerary-card">
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 <div className="itinerary-header">
                   <div className="place-number" style={{ backgroundColor: placeTypeToColor[place.place_type] || "#2196F3", color: '#fff', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, marginRight: 8 }}>
                     {index + 1}
@@ -673,6 +674,8 @@ function CourseDetailPage() {
                   <h3>{place.place_name}</h3>
                   <p className="place-type">{place.place_type}</p>
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
                 <div className="place-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
