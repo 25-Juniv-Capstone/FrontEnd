@@ -15,6 +15,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"; // �
 import { useLocation, useNavigate } from "react-router-dom";
 import axiosInstance from '../utils/axiosConfig';
 import { LiaToggleOnSolid, LiaToggleOffSolid } from "react-icons/lia";
+import { FaInfoCircle, FaWheelchair } from "react-icons/fa";
 
 // 장소 타입별 색상 매핑
 const placeTypeToColor = {
@@ -157,6 +158,7 @@ function CourseCreatePage() {
   const directionsRenderer = useRef(null);
   const markers = useRef([]); // 마커 배열 추가
   const directionsRenderers = useRef([]);
+  const infoWindowRef = useRef(null); // InfoWindow 하나만 사용
 
   // Directions API를 Promise로 감싸는 헬퍼 함수
   const getDirections = (directionsService, request) => {
@@ -490,19 +492,37 @@ function CourseCreatePage() {
       }
     });
 
-    // 마커 클릭 시 정보창 표시
-    const infoWindow = new window.google.maps.InfoWindow({
-      content: `
-        <div style="padding: 8px;">
-          <h3 style="margin: 0 0 8px 0;">${place.place_name}</h3>
-          <p style="margin: 0;">${place.place_type}</p>
-          <p style="margin: 4px 0 0 0;">${place.description || ''}</p>
-        </div>
-      `
-    });
+    // InfoWindow를 하나만 사용
+    if (!infoWindowRef.current) {
+      infoWindowRef.current = new window.google.maps.InfoWindow();
+    }
 
     marker.addListener('click', () => {
-      infoWindow.open(mapInstance.current, marker);
+      infoWindowRef.current.close();
+      infoWindowRef.current.setContent(`
+        <div style="padding: 16px; min-width: 220px; min-height: 60px; font-size: 15px; position: relative;">
+          <button id="custom-info-close" style="
+            position: absolute; top: 8px; right: 8px; background: transparent; border: none; font-size: 20px; cursor: pointer; z-index: 10;">
+            &times;
+          </button>
+          <h3 style="margin: 0 0 8px 0; font-size: 18px;">${place.place_name}</h3>
+          <p style="margin: 0; color: #666;">${place.place_type}</p>
+          <p style="margin: 4px 0 0 0; color: #444;">${place.description || ''}</p>
+        </div>
+      `);
+      infoWindowRef.current.open(mapInstance.current, marker);
+      // 커스텀 X버튼 이벤트 연결 및 구글 기본 X버튼 숨기기
+      window.setTimeout(() => {
+        const closeBtn = document.getElementById('custom-info-close');
+        if (closeBtn) {
+          closeBtn.onclick = () => infoWindowRef.current.close();
+        }
+        // 구글 기본 X버튼 숨기기
+        const defaultClose = document.querySelector('.gm-ui-hover-effect');
+        if (defaultClose) {
+          defaultClose.style.display = 'none';
+        }
+      }, 0);
     });
 
     return marker;
@@ -541,6 +561,10 @@ function CourseCreatePage() {
       }
       if (directionsRenderer.current) {
         directionsRenderer.current = null;
+      }
+      if (infoWindowRef.current) {
+        infoWindowRef.current.close();
+        infoWindowRef.current = null;
       }
     };
   }, []);
@@ -1139,7 +1163,7 @@ function CourseCreatePage() {
               className={`route-toggle-btn ${showRoutes ? 'active' : ''}`}
               onClick={toggleRoutes}
               style={{
-                padding: '8px',
+                padding: '12px 20px', // 크기 키움
                 margin: '10px 0',
                 border: 'none',
                 backgroundColor: 'transparent',
@@ -1149,14 +1173,21 @@ function CourseCreatePage() {
                 alignItems: 'center',
                 justifyContent: 'flex-start',
                 transition: 'all 0.3s ease',
-                fontSize: '24px'
+                fontSize: '28px', // 아이콘 크기 키움
+                borderRadius: '8px',
+                minWidth: '120px',
+                minHeight: '48px',
+                gap: '10px'
               }}
             >
               {showRoutes ? (
-                <LiaToggleOnSolid size={32} />
+                <LiaToggleOnSolid size={36} />
               ) : (
-                <LiaToggleOffSolid size={32} />
+                <LiaToggleOffSolid size={36} />
               )}
+              <span style={{ fontSize: '18px', fontWeight: 500, color: showRoutes ? '#4285F4' : '#666', marginLeft: '6px' }}>
+                {showRoutes ? '경로 숨기기' : '경로 표시'}
+              </span>
             </button>
           </div>
 
@@ -1180,7 +1211,57 @@ function CourseCreatePage() {
                   {...provided.droppableProps}
                   ref={provided.innerRef}
                 >
+<<<<<<< Updated upstream
                   {currentDayPlaces.map((place, index) => renderPlaceCard(place, index))}
+=======
+                  {currentDayPlaces.map((place, index) => (
+                    <Draggable key={place.id} draggableId={place.id} index={index}>
+                      {(provided) => (
+                        <div
+                          className="course-card"
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                        >
+                          <div className="left" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                              <div 
+                                className="circle-number" 
+                                style={{ backgroundColor: placeTypeToColor[place.place_type] || "#2196F3" }}
+                              > 
+                                {index + 1} 
+                              </div> 
+                              <button 
+                                className="delete-btn" 
+                                onClick={() => handleDeletePlace(place.id)} 
+                                style={{ marginLeft: '8px' }} 
+                              >🗑️</button> 
+                            </div> 
+                            <div className="time">{place.time || '--:--'}</div> 
+                            <div className="title">{place.place_name}</div> 
+                            <div className="place-type"> 
+                              {placeTypeToEmoji[place.place_type] || "📍 기타"} 
+                            </div> 
+                            <div className="place-actions"> 
+                              <button 
+                                className="info-btn" 
+                                onClick={() => setModalInfo({ open: true, type: 'info', place })} 
+                              > 
+                                <FaInfoCircle style={{ marginRight: '6px' }} /> 상세정보 
+                              </button> 
+                              <button 
+                                className="access-btn" 
+                                onClick={() => setModalInfo({ open: true, type: 'accessibility', place })} 
+                              > 
+                                <FaWheelchair style={{ marginRight: '6px' }} /> 무장애 정보 
+                              </button> 
+                            </div> 
+                          </div>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+>>>>>>> Stashed changes
                   {provided.placeholder}
                 </div>
               )}

@@ -212,16 +212,6 @@
   transition: all 0.2s;
 }
 
-.info-button {
-  background-color: #f8f9fa;
-  color: #666;
-}
-
-.access-button {
-  background-color: #e3f2fd;
-  color: #0068DF;
-}
-
 /* 지도 영역 */
 .map-container {
   flex: 1;

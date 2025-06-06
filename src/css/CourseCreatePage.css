@@ -179,6 +179,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  margin-right: 16px;
 }
 
 .course-card .right button {
@@ -457,26 +458,34 @@
   transform: scale(0.98);
 }
 
-.course-card .info-btn, .course-card .access-btn {
+.info-btn, .access-btn, .info-button, .access-button, .delete-btn {
   background: #f5f5f5;
   color: #4285F4;
   border: 1.5px solid #cfe2ff;
   border-radius: 6px;
-  padding: 4px 12px;
+  padding: 2px 6px;
+  font-size: 12px;
   cursor: pointer;
   font-weight: 500;
-  font-size: 14px;
-  transition: background 0.2s, color 0.2s, border 0.2s;
-  margin-right: 4px;
+  min-width: 30px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
-.course-card .info-btn:last-child, .course-card .access-btn:last-child {
+.info-btn:last-child, .access-btn:last-child, .info-button:last-child, .access-button:last-child, .delete-btn:last-child {
   margin-right: 0;
 }
-.course-card .info-btn:hover, .course-card .access-btn:hover {
+.info-btn:hover, .access-btn:hover, .info-button:hover, .access-button:hover, .delete-btn:hover {
   background: #e0ecff;
   color: #1976d2;
   border-color: #90c2ff;
 }
+<<<<<<< Updated upstream
 
 /* 검색 모달 스타일 */
 .search-modal {
@@ -854,4 +863,61 @@
 
 .time-input.editing::-webkit-calendar-picker-indicator:hover {
   filter: invert(0.3);
+=======
+.info-btn svg, .access-btn svg, .info-button svg, .access-button svg, .delete-btn svg {
+  font-size: 1rem !important;
+  vertical-align: -0.125em !important;
+  line-height: 1 !important;
+  position: static !important;
+  margin-bottom: 0 !important;
+}
+
+.place-actions {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.place-actions button,
+.info-btn, .access-btn, .info-button, .access-button {
+  flex: 1 1 auto;
+  min-width: 120px;
+  box-sizing: border-box;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.info-btn svg, .access-btn svg, .info-button svg, .access-button svg {
+  font-size: 1rem !important;
+  vertical-align: -0.125em !important;
+  line-height: 1 !important;
+  position: static !important;
+  margin-bottom: 0 !important;
+}
+
+/* (delete-btn 스타일 수정) */
+.delete-btn {
+  border: 1.5px solid white;
+  background: white;
+  color: #666;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 12px;
+  min-width: 30px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+>>>>>>> Stashed changes
 }
