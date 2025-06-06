@@ -1129,12 +1129,16 @@ function CourseCreatePage() {
                 className="info-btn"
                 onClick={() => setModalInfo({ open: true, type: 'info', place })}
                 style={{ fontSize: '1rem', fontWeight: '500' }}
-              >장소 정보</button>
+              >
+                <FaInfoCircle style={{ marginRight: '6px' }} /> 상세정보
+              </button>
               <button
                 className="access-btn"
                 onClick={() => setModalInfo({ open: true, type: 'accessibility', place })}
                 style={{ fontSize: '1rem', fontWeight: '500' }}
-              >무장애 정보</button>
+              >
+                <FaWheelchair style={{ marginRight: '6px' }} /> 무장애 정보
+              </button>
             </div>
           </div>
           <div className="right">
