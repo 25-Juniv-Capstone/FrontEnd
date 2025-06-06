@@ -63,6 +63,7 @@ const SelectPages = () => {
   const handleGenerate = async () => {
     setError(null);
     setIsLoading(true);
+    console.log('Loading started:', { isLoading: true, region });  // 디버깅용 로그
     
     try {
       // 필수 데이터 검증
@@ -183,7 +184,7 @@ const SelectPages = () => {
       });
 
     } catch (error) {
-      // console.error('Error details:', error);
+      console.error('Error in handleGenerate:', error);  // 디버깅용 로그
       let errorMessage = '코스 생성 중 오류가 발생했습니다.';
       
       if (error.response?.data) {
@@ -204,6 +205,7 @@ const SelectPages = () => {
       
       setError(errorMessage);
     } finally {
+      console.log('Loading finished:', { isLoading: false });  // 디버깅용 로그
       setIsLoading(false);
     }
   };
@@ -218,6 +220,7 @@ const SelectPages = () => {
 
   return (
     <div className={styles.container}>
+      {console.log('Render state:', { isLoading, region })}
       {isLoading && <LoadingSpinner region={region} />}
       <main className={styles.main}>
         <UserTypeSelection onSelect={handleUserTypeSelect} />
