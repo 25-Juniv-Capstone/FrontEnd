@@ -486,6 +486,7 @@
   border-color: #90c2ff;
 }
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
 /* 검색 모달 스타일 */
 .search-modal {
@@ -864,6 +865,8 @@
 .time-input.editing::-webkit-calendar-picker-indicator:hover {
   filter: invert(0.3);
 =======
+=======
+>>>>>>> Stashed changes
 .info-btn svg, .access-btn svg, .info-button svg, .access-button svg, .delete-btn svg {
   font-size: 1rem !important;
   vertical-align: -0.125em !important;
@@ -919,5 +922,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 }
