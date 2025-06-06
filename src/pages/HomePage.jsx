@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import ConfirmModal from '../components/ConfirmModal';
 import '../css/HomePage.css';
 
 // 지역 선택 모달 컴포넌트
@@ -11,18 +10,12 @@ const RegionModal = ({ isOpen, onClose, onConfirm, destination }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="region-modal">
-        <div className="modal-header">
-          <h3>여행 지역 확인</h3>
-          <button onClick={onClose}>✕</button>
-        </div>
-        <div className="modal-content">
-          <p>{destination}으로 여행을 떠나시겠습니까?</p>
-        </div>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="region-modal" onClick={e => e.stopPropagation()}>
+        <h2 className="modal-title">{destination}으로 여행을 떠나시겠습니까?</h2>
         <div className="modal-buttons">
-          <button onClick={onClose}>아니오</button>
-          <button onClick={() => onConfirm(destination)}>예</button>
+          <button className="cancel-button" onClick={onClose}>아니오</button>
+          <button className="confirm-button" onClick={() => onConfirm(destination)}>예</button>
         </div>
       </div>
     </div>
@@ -47,7 +40,6 @@ const DateInputModal = ({ isOpen, onClose, onConfirm, region }) => {
       <div className="date-input-modal">
         <div className="modal-header">
           <h3>여행 날짜를 선택해주세요</h3>
-          <button onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="date-input-group">
@@ -228,6 +220,8 @@ function HomePage() {
   const [selectedRegion, setSelectedRegion] = useState('');
   const [selectedDates, setSelectedDates] = useState({ startDate: "", endDate: "" });
   const searchRef = useRef(null);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
 
   // 한국의 주요 도시 및 관광지 목록
   const destinations = [
@@ -334,7 +328,8 @@ function HomePage() {
   // 여행하기 버튼 클릭 시
   const handleTravelClick = () => {
     if (!selectedRegion) {
-      alert('여행 지역을 먼저 선택해주세요.');
+      setAlertMessage('여행 지역을 먼저 선택해주세요');
+      setShowAlert(true);
       return;
     }
     setShowRegionModal(true);
@@ -429,6 +424,47 @@ function HomePage() {
         onClose={() => setShowConfirmModal(false)}
         onConfirm={handleConfirm}
       />
+
+      {/* 커스텀 알림 모달 */}
+      {showAlert && (
+        <div className="modal-overlay" onClick={() => setShowAlert(false)}>
+          <div className="alert-modal" onClick={e => e.stopPropagation()}>
+            <div className="alert-content">
+              <p style={{ fontSize: '1.2rem', fontWeight: '600' }}>{alertMessage}</p>
+            </div>
+            <button 
+              onClick={() => setShowAlert(false)}
+              style={{ 
+                padding: '8px 16px',
+                fontSize: '1rem',
+                fontWeight: '500',
+                backgroundColor: '#4285F4',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        .alert-modal {
+          background: white;
+          padding: 24px;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+          text-align: center;
+          min-width: 300px;
+        }
+
+        .alert-content {
+          margin-bottom: 20px;
+        }
+      `}</style>
     </div>
   );
 }

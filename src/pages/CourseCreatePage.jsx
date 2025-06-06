@@ -69,6 +69,56 @@ function getNumberedMarkerIcon(number, placeType) {
 }
 */
 
+// 시간 수정 모달 컴포넌트
+const TimeModal = ({ isOpen, onClose, onTimeChange, currentTime, placeName }) => {
+  const [time, setTime] = useState(currentTime);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTime(currentTime);
+    }
+  }, [isOpen, currentTime]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onTimeChange(time);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="time-modal">
+        <div className="modal-header">
+          <div className="header-content">
+            <h3>방문 시간 수정</h3>
+            <p className="header-subtitle">{placeName}</p>
+          </div>
+          <button onClick={onClose} className="close-button">✕</button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="time-form">
+          <div className="time-input-group">
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="time-input"
+              required
+            />
+          </div>
+
+          <div className="modal-buttons">
+            <button type="button" onClick={onClose}>취소</button>
+            <button type="submit">저장</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 function CourseCreatePage() {
   const location = useLocation();
   const mustVisitPlaces = location.state?.mustVisitPlaces || [];
@@ -96,6 +146,9 @@ function CourseCreatePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [modalInfo, setModalInfo] = useState({ open: false, type: '', place: null });
   const [showRoutes, setShowRoutes] = useState(false);
+  const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
+  const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState(null);
   
   // 지도 관련 설정
   const mapInstance = useRef(null);
@@ -785,22 +838,29 @@ function CourseCreatePage() {
       return;
     }
 
-    setIsSaving(true);  // 저장 시작 시 상태 변경
+    // 코스 제목 입력 모달 열기
+    setIsTitleModalOpen(true);
+  };
+
+  // 실제 저장 로직을 별도 함수로 분리
+  const saveCourseWithTitle = async (title) => {
+    setIsSaving(true);
 
     try {
-      // 백엔드 DTO와 DB 스키마에 맞게 데이터 변환
+      // durationDays를 정수로 변환
+      const durationDays = parseInt(courseData.metadata.duration) || Object.keys(placesByDay).length;
+      
       const courseToSave = {
-        title: courseData?.recommended_courses?.[0]?.course_name || `${region} 여행 코스`,
-        courseImageUrl: courseData?.recommended_courses?.[0]?.course_image_url || null,  // course_image_url 추가
+        title: title,
+        courseImageUrl: courseData?.recommended_courses?.[0]?.course_image_url || null,
         region: region,
-        startDate: courseData.metadata.start_date,  // YYYY-MM-DD 형식
-        endDate: courseData.metadata.end_date,      // YYYY-MM-DD 형식
-        durationDays: courseData.metadata.duration || Object.keys(placesByDay).length,
-        keywords: courseData?.metadata?.keywords || courseData?.recommended_courses?.[0]?.keywords || '',  // metadata의 keywords 사용
+        startDate: courseData.metadata.start_date,
+        endDate: courseData.metadata.end_date,
+        durationDays: durationDays,  // 정수로 변환된 값 사용
+        keywords: courseData?.metadata?.keywords || courseData?.recommended_courses?.[0]?.keywords || '',
         days: Object.entries(placesByDay).map(([day, places]) => ({
-          dayNumber: parseInt(day),
+          dayNumber: parseInt(day),  // dayNumber도 확실히 정수로 변환
           itinerary: places.map(place => {
-            // coordinates 객체가 없는 경우 lat, lng 직접 사용
             const latitude = place.coordinates?.lat || place.lat;
             const longitude = place.coordinates?.lng || place.lng;
 
@@ -809,43 +869,38 @@ function CourseCreatePage() {
               return null;
             }
 
-            // 시간 형식 변환 (HH:mm -> HH:mm)
             const time = place.time ? place.time.split(' ')[1] || place.time : '09:00';
-
-            // travel_from_previous 정보 가져오기
             const travelInfo = place.travel_from_previous || place.travelInfo || {};
 
             return {
-              time: time,  // VARCHAR(20)
-              placeName: place.place_name,  // VARCHAR(255)
-              placeType: place.place_type || '기타',  // VARCHAR(50)
-              description: place.description || '',  // TEXT
-              details: place.details || '',  // TEXT - details 필드 추가
+              time: time,
+              placeName: place.place_name,
+              placeType: place.place_type || '기타',
+              description: place.description || '',
+              details: place.details || '',
               coordinates: {
-                latitude: parseFloat(latitude),  // DECIMAL(10,8)
-                longitude: parseFloat(longitude)  // DECIMAL(11,8)
+                latitude: parseFloat(latitude),
+                longitude: parseFloat(longitude)
               },
               accessibilityFeatures: Object.entries(place.accessibility_features || {})
                 .reduce((acc, [key, value]) => {
                   if (value && value !== 'null' && value !== 'undefined' && String(value).trim() !== '') {
-                    acc[key] = String(value);  // TEXT로 저장될 값
+                    acc[key] = String(value);
                   }
                   return acc;
                 }, {}),
               travelFromPrevious: {
-                distance: travelInfo.distance || '',  // VARCHAR(50) - travel_from_previous에서 가져옴
-                travelTime: travelInfo.travel_time || travelInfo.duration || ''  // VARCHAR(50) - travel_from_previous에서 가져옴
+                distance: travelInfo.distance || '',
+                travelTime: travelInfo.travel_time || travelInfo.duration || ''
               }
             };
-          }).filter(Boolean)  // null 값 제거
+          }).filter(Boolean)
         }))
       };
 
       console.log('Saving course with data:', courseToSave);
-      console.log('Start date:', courseToSave.startDate);
-      console.log('End date:', courseToSave.endDate);
-      console.log('Course image URL:', courseToSave.courseImageUrl);  // 로깅 추가
-      console.log('Keywords:', courseToSave.keywords);  // 로깅 추가
+      // durationDays 값 로깅 추가
+      console.log('Duration days:', durationDays, typeof durationDays);
 
       const response = await axiosInstance.post('/courses', courseToSave);
       console.log('Course saved successfully:', response.data);
@@ -860,7 +915,8 @@ function CourseCreatePage() {
         alert('코스 저장 중 오류가 발생했습니다.');
       }
     } finally {
-      setIsSaving(false);  // 저장 완료 또는 실패 시 상태 변경
+      setIsSaving(false);
+      setIsTitleModalOpen(false);
     }
   };
 
@@ -881,6 +937,114 @@ function CourseCreatePage() {
   .route-toggle-btn.active {
     color: #4285F4;
   }
+
+  .title-modal {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .title-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .title-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .title-input-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+
+  .title-input-group input:focus {
+    outline: none;
+    border-color: #4285F4;
+    box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+  }
+
+  .modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .modal-buttons button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+
+  .modal-buttons button[type="button"] {
+    background-color: #f1f3f4;
+    color: #202124;
+  }
+
+  .modal-buttons button[type="submit"] {
+    background-color: #4285F4;
+    color: white;
+  }
+
+  .modal-buttons button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .modal-buttons button:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+  }
+
+  .loading-content {
+    text-align: center;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .loading-content p {
+    margin: 12px 0 0 0;
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  .add-place-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+
+  .add-place-button .loading-spinner {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
   `;
 
   // 스타일 태그 추가
@@ -892,6 +1056,72 @@ function CourseCreatePage() {
       document.head.removeChild(styleSheet);
     };
   }, [showRoutes]);
+
+  // 시간 수정 핸들러
+  const handleTimeChange = (newTime) => {
+    if (!selectedPlace) return;
+
+    setPlacesByDay(prev => {
+      const updatedPlaces = { ...prev };
+      const dayPlaces = [...updatedPlaces[selectedDay]];
+      const placeIndex = dayPlaces.findIndex(p => p.id === selectedPlace.id);
+      
+      if (placeIndex !== -1) {
+        dayPlaces[placeIndex] = {
+          ...dayPlaces[placeIndex],
+          time: newTime
+        };
+        updatedPlaces[selectedDay] = dayPlaces;
+      }
+      
+      return updatedPlaces;
+    });
+  };
+
+  // 장소 카드 렌더링 부분 수정
+  const renderPlaceCard = (place, index) => (
+    <Draggable key={place.id} draggableId={place.id} index={index}>
+      {(provided) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          className="course-card"
+        >
+          <div className="left">
+            <div 
+              className="circle-number" 
+              style={{ backgroundColor: placeTypeToColor[place.place_type] || "#2196F3" }}
+            >
+              {index + 1}
+            </div>
+            <div className="time" style={{ fontSize: '1.1rem', fontWeight: '500' }}>{place.time || '--:--'}</div>
+            <div className="title" style={{ fontSize: '1.2rem', fontWeight: '600' }}>{place.place_name}</div>
+            <div className="place-type" style={{ fontSize: '1.1rem', fontWeight: '500' }}>
+              {placeTypeToEmoji[place.place_type] || "📍 기타"}
+            </div>
+            <div style={{ display: 'flex', gap: '8px', margin: '12px 0' }}>
+              <button
+                className="info-btn"
+                onClick={() => setModalInfo({ open: true, type: 'info', place })}
+                style={{ fontSize: '1rem', fontWeight: '500' }}
+              >장소 정보</button>
+              <button
+                className="access-btn"
+                onClick={() => setModalInfo({ open: true, type: 'accessibility', place })}
+                style={{ fontSize: '1rem', fontWeight: '500' }}
+              >무장애 정보</button>
+            </div>
+          </div>
+          <div className="right">
+            <div className="action-buttons">
+              <button onClick={() => handleDeletePlace(place.id)} style={{ fontSize: '1.2rem' }}>🗑️</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </Draggable>
+  );
 
   return (
     <div className="course-page">
@@ -950,48 +1180,7 @@ function CourseCreatePage() {
                   {...provided.droppableProps}
                   ref={provided.innerRef}
                 >
-                  {currentDayPlaces.map((place, index) => (
-                    <Draggable key={place.id} draggableId={place.id} index={index}>
-                      {(provided) => (
-                        <div
-                          className="course-card"
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                        >
-                          <div className="left">
-                            <div 
-                              className="circle-number" 
-                              style={{ backgroundColor: placeTypeToColor[place.place_type] || "#2196F3" }}
-                            >
-                              {index + 1}
-                            </div>
-                            <div className="time">{place.time || '--:--'}</div>
-                            <div className="title">{place.place_name}</div>
-                            <div className="place-type">
-                              {placeTypeToEmoji[place.place_type] || "📍 기타"}
-                            </div>
-                            {/* 버튼만 남김 */}
-                            <div style={{ display: 'flex', gap: '8px', margin: '12px 0' }}>
-                              <button
-                                className="info-btn"
-                                onClick={() => setModalInfo({ open: true, type: 'info', place })}
-                              >장소 정보</button>
-                              <button
-                                className="access-btn"
-                                onClick={() => setModalInfo({ open: true, type: 'accessibility', place })}
-                              >무장애 정보</button>
-                            </div>
-                          </div>
-                          <div className="right">
-                            <div className="action-buttons">
-                              <button onClick={() => handleDeletePlace(place.id)}>🗑️</button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
+                  {currentDayPlaces.map((place, index) => renderPlaceCard(place, index))}
                   {provided.placeholder}
                 </div>
               )}
@@ -1123,6 +1312,27 @@ function CourseCreatePage() {
           </div>
         </div>
       )}
+      
+      {/* 코스 제목 입력 모달 추가 */}
+      <TitleModal
+        isOpen={isTitleModalOpen}
+        onClose={() => setIsTitleModalOpen(false)}
+        onSave={saveCourseWithTitle}
+        defaultTitle={courseData?.recommended_courses?.[0]?.course_name || `${region} 여행 코스`}
+        isSaving={isSaving}
+      />
+      
+      {/* 시간 수정 모달 */}
+      <TimeModal
+        isOpen={isTimeModalOpen}
+        onClose={() => {
+          setIsTimeModalOpen(false);
+          setSelectedPlace(null);
+        }}
+        onTimeChange={handleTimeChange}
+        currentTime={selectedPlace?.time || "09:00"}
+        placeName={selectedPlace?.place_name || ""}
+      />
     </div>
   );
 }
@@ -1135,7 +1345,20 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
   const placesService = useRef(null);
+
+  // 카테고리 정의
+  const categories = [
+    { id: "all", label: "전체", emoji: "🔍" },
+    { id: "restaurant", label: "식당", emoji: "🍴" },
+    { id: "cafe", label: "카페", emoji: "☕" },
+    { id: "attraction", label: "관광지", emoji: "🗺️" },
+    { id: "museum", label: "박물관", emoji: "🏛️" },
+    { id: "park", label: "공원", emoji: "🏞️" },
+    { id: "shopping", label: "쇼핑", emoji: "🛍️" }
+  ];
 
   // Places 서비스 초기화
   useEffect(() => {
@@ -1144,7 +1367,55 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
     }
   }, [mapInstance]);
 
-  // 검색 함수
+  // 장소 상세 정보 가져오기
+  const getPlaceDetails = (placeId) => {
+    return new Promise((resolve, reject) => {
+      if (!placesService.current) {
+        reject(new Error("Places 서비스가 초기화되지 않았습니다."));
+        return;
+      }
+
+      const request = {
+        placeId: placeId,
+        fields: [
+          'name',
+          'formatted_address',
+          'geometry',
+          'types',
+          'wheelchair_accessible_entrance',
+          'wheelchair_accessible_parking',
+          'wheelchair_accessible_restroom',
+          'elevator',
+          'ramp'
+        ]
+      };
+
+      placesService.current.getDetails(request, (place, status) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+          // 기존 데이터 구조와 동일한 형태로 변환
+          const transformedPlace = {
+            id: place.place_id,
+            place_name: place.name,
+            place_type: getPlaceType(place.types),
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+            description: place.formatted_address,
+            accessibility_features: {
+              wheelchair_accessible_parking: place.wheelchair_accessible_parking ? "있음" : "정보 없음",
+              wheelchair_accessible_restroom: place.wheelchair_accessible_restroom ? "있음" : "정보 없음",
+              elevator: place.elevator ? "있음" : "정보 없음",
+              ramp: place.ramp ? "있음" : "정보 없음"
+            }
+          };
+          resolve(transformedPlace);
+        } else {
+          reject(new Error(`장소 상세 정보를 가져오는데 실패했습니다: ${status}`));
+        }
+      });
+    });
+  };
+
+  // 검색 함수 수정
   const handleSearch = () => {
     if (!searchQuery.trim()) return;
     
@@ -1157,32 +1428,81 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
     }
 
     const request = {
-      query: `${region} ${searchQuery}`,
-      fields: ['name', 'geometry', 'types', 'formatted_address']
+      query: `${region} ${searchQuery} 무장애`,
+      fields: ['name', 'geometry', 'types', 'formatted_address', 'place_id'],
+      location: mapInstance.getCenter(),
+      radius: 5000
     };
 
     placesService.current.textSearch(request, (results, status) => {
       setIsLoading(false);
       
       if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
-        const places = results.map(place => ({
+        const filteredResults = results.filter(place => {
+          if (selectedCategory === "all") return true;
+          return place.types.some(type => {
+            switch (selectedCategory) {
+              case "restaurant": return type.includes("restaurant");
+              case "cafe": return type.includes("cafe");
+              case "attraction": return type.includes("tourist_attraction");
+              case "museum": return type.includes("museum");
+              case "park": return type.includes("park");
+              case "shopping": return type.includes("shopping_mall");
+              default: return true;
+            }
+          });
+        });
+
+        // 기본 정보만 포함하는 검색 결과
+        const places = filteredResults.map(place => ({
           id: place.place_id,
           place_name: place.name,
           place_type: getPlaceType(place.types),
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng(),
           description: place.formatted_address,
+          // 상세 정보는 나중에 getDetails로 채워질 예정
           accessibility_features: {
             wheelchair_accessible_parking: "정보 없음",
-            wheelchair_accessible_restroom: "정보 없음"
+            wheelchair_accessible_restroom: "정보 없음",
+            elevator: "정보 없음",
+            ramp: "정보 없음"
           }
         }));
+
         setSearchResults(places);
       } else {
         console.error("검색 실패:", status);
         setSearchResults([]);
       }
     });
+  };
+
+  // 장소 선택 핸들러 수정
+  const handlePlaceSelect = async (place) => {
+    try {
+      setIsDetailLoading(true);
+      // 상세 정보 가져오기
+      const detailedPlace = await getPlaceDetails(place.id);
+      // 기존 place 정보와 상세 정보 병합
+      const finalPlace = {
+        ...place,
+        ...detailedPlace,
+        time: "09:00" // 기본 시간 설정
+      };
+      onPlaceSelect(finalPlace);
+      onClose();
+    } catch (error) {
+      console.error("장소 상세 정보를 가져오는데 실패했습니다:", error);
+      // 에러가 발생해도 기본 정보로라도 추가
+      onPlaceSelect({
+        ...place,
+        time: "09:00"
+      });
+      onClose();
+    } finally {
+      setIsDetailLoading(false);
+    }
   };
 
   // 장소 타입 변환
@@ -1209,21 +1529,54 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
     <div className="modal-overlay">
       <div className="search-modal">
         <div className="modal-header">
-          <h3>{region} 무장애 여행지 검색</h3>
-          <button onClick={onClose}>✕</button>
+          <div className="header-content">
+            <h3>장소를 검색하고 코스에 추가해보세요</h3>
+          </div>
+          <button onClick={onClose} className="close-button">✕</button>
         </div>
         
-        <div className="search-box">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder={`${region}의 무장애 여행지를 검색해보세요`}
-          />
-          <button onClick={handleSearch} disabled={isLoading}>
-            {isLoading ? '검색 중...' : '검색'}
-          </button>
+        <div className="search-container">
+          <div className="search-box">
+            <div className="search-input-wrapper">
+              <span className="search-icon">🔍</span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={`${region}의 무장애 여행지를 검색해보세요`}
+                className="search-input"
+              />
+              {searchQuery && (
+                <button 
+                  className="clear-button"
+                  onClick={() => setSearchQuery("")}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            <button 
+              onClick={handleSearch} 
+              disabled={!searchQuery.trim()}
+              className="search-button"
+            >
+              검색
+            </button>
+          </div>
+
+          <div className="category-filter">
+            {categories.map(category => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`category-button ${selectedCategory === category.id ? 'active' : ''}`}
+              >
+                <span className="category-emoji">{category.emoji}</span>
+                <span className="category-label">{category.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="search-results">
@@ -1231,23 +1584,43 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
             <div
               key={place.id}
               className="search-result-item"
-              onClick={() => {
-                onPlaceSelect({
-                  ...place,
-                  time: "09:00",
-                });
-                onClose();
-              }}
+              onClick={() => handlePlaceSelect(place)}
             >
-              <div>
-                <div className="place-name">{place.place_name}</div>
+              <div className="place-info">
+                <div className="place-header">
+                  <span className="place-type-badge">
+                    {placeTypeToEmoji[place.place_type] || "📍"}
+                  </span>
+                  <h4 className="place-name">{place.place_name}</h4>
+                </div>
                 <div className="place-address">{place.description}</div>
+                <div className="accessibility-info">
+                  <span className="accessibility-tag">
+                    <span className="tag-icon">♿</span>
+                    무장애 시설
+                  </span>
+                  <span className="accessibility-tag">
+                    <span className="tag-icon">🅿️</span>
+                    주차 가능
+                  </span>
+                </div>
               </div>
-              <div className="place-type">{placeTypeToEmoji[place.place_type] || "📍 기타"}</div>
+              <button 
+                className="add-place-button"
+                disabled={isDetailLoading}
+              >
+                추가하기
+              </button>
             </div>
           ))}
           {searchResults.length === 0 && searchQuery && !isLoading && (
-            <div className="no-results">검색 결과가 없습니다</div>
+            <div className="no-results">
+              <div className="no-results-icon">🔍</div>
+              <p>검색 결과가 없습니다</p>
+              <p className="no-results-suggestion">
+                다른 검색어로 시도해보세요
+              </p>
+            </div>
           )}
         </div>
       </div>
@@ -1301,6 +1674,61 @@ const DateModal = ({ isOpen, onClose, onDateChange, startDate, endDate }) => {
           <div className="modal-buttons">
             <button type="button" onClick={onClose}>취소</button>
             <button type="submit">저장</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * 코스 제목 입력 모달 컴포넌트
+ */
+const TitleModal = ({ isOpen, onClose, onSave, defaultTitle, isSaving }) => {
+  const [title, setTitle] = useState(defaultTitle);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTitle(defaultTitle);
+    }
+  }, [isOpen, defaultTitle]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!title.trim()) {
+      alert('코스 제목을 입력해주세요.');
+      return;
+    }
+    onSave(title.trim());
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="title-modal">
+        <div className="modal-header">
+          <h3>코스 제목 입력</h3>
+          <button onClick={onClose} disabled={isSaving}>✕</button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="title-form">
+          <div className="title-input-group">
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="코스 제목을 입력해주세요"
+              maxLength={100}
+              disabled={isSaving}
+            />
+          </div>
+
+          <div className="modal-buttons">
+            <button type="button" onClick={onClose} disabled={isSaving}>취소</button>
+            <button type="submit" disabled={isSaving}>
+              {isSaving ? '저장 중...' : '저장하기'}
+            </button>
           </div>
         </form>
       </div>
