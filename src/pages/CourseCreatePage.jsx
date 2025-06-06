@@ -15,6 +15,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"; // �
 import { useLocation, useNavigate } from "react-router-dom";
 import axiosInstance from '../utils/axiosConfig';
 import { LiaToggleOnSolid, LiaToggleOffSolid } from "react-icons/lia";
+import { FaInfoCircle, FaWheelchair } from "react-icons/fa";
 
 // 장소 타입별 색상 매핑
 const placeTypeToColor = {
@@ -157,6 +158,7 @@ function CourseCreatePage() {
   const directionsRenderer = useRef(null);
   const markers = useRef([]); // 마커 배열 추가
   const directionsRenderers = useRef([]);
+  const infoWindowRef = useRef(null); // InfoWindow 하나만 사용
 
   // Directions API를 Promise로 감싸는 헬퍼 함수
   const getDirections = (directionsService, request) => {
@@ -490,19 +492,37 @@ function CourseCreatePage() {
       }
     });
 
-    // 마커 클릭 시 정보창 표시
-    const infoWindow = new window.google.maps.InfoWindow({
-      content: `
-        <div style="padding: 8px;">
-          <h3 style="margin: 0 0 8px 0;">${place.place_name}</h3>
-          <p style="margin: 0;">${place.place_type}</p>
-          <p style="margin: 4px 0 0 0;">${place.description || ''}</p>
-        </div>
-      `
-    });
+    // InfoWindow를 하나만 사용
+    if (!infoWindowRef.current) {
+      infoWindowRef.current = new window.google.maps.InfoWindow();
+    }
 
     marker.addListener('click', () => {
-      infoWindow.open(mapInstance.current, marker);
+      infoWindowRef.current.close();
+      infoWindowRef.current.setContent(`
+        <div style="padding: 16px; min-width: 220px; min-height: 60px; font-size: 15px; position: relative;">
+          <button id="custom-info-close" style="
+            position: absolute; top: 8px; right: 8px; background: transparent; border: none; font-size: 20px; cursor: pointer; z-index: 10;">
+            &times;
+          </button>
+          <h3 style="margin: 0 0 8px 0; font-size: 18px;">${place.place_name}</h3>
+          <p style="margin: 0; color: #666;">${place.place_type}</p>
+          <p style="margin: 4px 0 0 0; color: #444;">${place.description || ''}</p>
+        </div>
+      `);
+      infoWindowRef.current.open(mapInstance.current, marker);
+      // 커스텀 X버튼 이벤트 연결 및 구글 기본 X버튼 숨기기
+      window.setTimeout(() => {
+        const closeBtn = document.getElementById('custom-info-close');
+        if (closeBtn) {
+          closeBtn.onclick = () => infoWindowRef.current.close();
+        }
+        // 구글 기본 X버튼 숨기기
+        const defaultClose = document.querySelector('.gm-ui-hover-effect');
+        if (defaultClose) {
+          defaultClose.style.display = 'none';
+        }
+      }, 0);
     });
 
     return marker;
@@ -541,6 +561,10 @@ function CourseCreatePage() {
       }
       if (directionsRenderer.current) {
         directionsRenderer.current = null;
+      }
+      if (infoWindowRef.current) {
+        infoWindowRef.current.close();
+        infoWindowRef.current = null;
       }
     };
   }, []);
@@ -1105,12 +1129,16 @@ function CourseCreatePage() {
                 className="info-btn"
                 onClick={() => setModalInfo({ open: true, type: 'info', place })}
                 style={{ fontSize: '1rem', fontWeight: '500' }}
-              >장소 정보</button>
+              >
+                <FaInfoCircle style={{ marginRight: '6px' }} /> 상세정보
+              </button>
               <button
                 className="access-btn"
                 onClick={() => setModalInfo({ open: true, type: 'accessibility', place })}
                 style={{ fontSize: '1rem', fontWeight: '500' }}
-              >무장애 정보</button>
+              >
+                <FaWheelchair style={{ marginRight: '6px' }} /> 무장애 정보
+              </button>
             </div>
           </div>
           <div className="right">
@@ -1139,7 +1167,7 @@ function CourseCreatePage() {
               className={`route-toggle-btn ${showRoutes ? 'active' : ''}`}
               onClick={toggleRoutes}
               style={{
-                padding: '8px',
+                padding: '12px 20px', // 크기 키움
                 margin: '10px 0',
                 border: 'none',
                 backgroundColor: 'transparent',
@@ -1149,14 +1177,21 @@ function CourseCreatePage() {
                 alignItems: 'center',
                 justifyContent: 'flex-start',
                 transition: 'all 0.3s ease',
-                fontSize: '24px'
+                fontSize: '28px', // 아이콘 크기 키움
+                borderRadius: '8px',
+                minWidth: '120px',
+                minHeight: '48px',
+                gap: '10px'
               }}
             >
               {showRoutes ? (
-                <LiaToggleOnSolid size={32} />
+                <LiaToggleOnSolid size={36} />
               ) : (
-                <LiaToggleOffSolid size={32} />
+                <LiaToggleOffSolid size={36} />
               )}
+              <span style={{ fontSize: '18px', fontWeight: 500, color: showRoutes ? '#4285F4' : '#666', marginLeft: '6px' }}>
+                {showRoutes ? '경로 숨기기' : '경로 표시'}
+              </span>
             </button>
           </div>
 
@@ -1342,80 +1377,67 @@ function CourseCreatePage() {
  * Google Places API를 사용하여 장소를 검색하고 선택할 수 있는 모달
  */
 const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("all");
   const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const placesService = useRef(null);
 
-  // 카테고리 정의
-  const categories = [
-    { id: "all", label: "전체", emoji: "🔍" },
-    { id: "restaurant", label: "식당", emoji: "🍴" },
-    { id: "cafe", label: "카페", emoji: "☕" },
-    { id: "attraction", label: "관광지", emoji: "🗺️" },
-    { id: "museum", label: "박물관", emoji: "🏛️" },
-    { id: "park", label: "공원", emoji: "🏞️" },
-    { id: "shopping", label: "쇼핑", emoji: "🛍️" }
-  ];
-
-  // Places 서비스 초기화
   useEffect(() => {
-    if (window.google && window.google.maps && window.google.maps.places && mapInstance) {
+    if (isOpen && mapInstance) {
       placesService.current = new window.google.maps.places.PlacesService(mapInstance);
     }
-  }, [mapInstance]);
+  }, [isOpen, mapInstance]);
 
-  // 장소 상세 정보 가져오기
+  const categories = [
+    { id: 'all', label: '전체', emoji: '🔍' },
+    { id: 'restaurant', label: '식당', emoji: '🍴' },
+    { id: 'cafe', label: '카페', emoji: '☕' },
+    { id: 'attraction', label: '관광지', emoji: '🗺️' },
+    { id: 'museum', label: '박물관', emoji: '🏛️' },
+    { id: 'park', label: '공원', emoji: '🏞️' },
+    { id: 'shopping', label: '쇼핑', emoji: '🛍️' }
+  ];
+
   const getPlaceDetails = (placeId) => {
     return new Promise((resolve, reject) => {
       if (!placesService.current) {
-        reject(new Error("Places 서비스가 초기화되지 않았습니다."));
+        reject(new Error('Places 서비스가 초기화되지 않았습니다.'));
         return;
       }
 
-      const request = {
-        placeId: placeId,
-        fields: [
-          'name',
-          'formatted_address',
-          'geometry',
-          'types',
-          'wheelchair_accessible_entrance',
-          'wheelchair_accessible_parking',
-          'wheelchair_accessible_restroom',
-          'elevator',
-          'ramp'
-        ]
-      };
-
-      placesService.current.getDetails(request, (place, status) => {
-        if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
-          // 기존 데이터 구조와 동일한 형태로 변환
-          const transformedPlace = {
-            id: place.place_id,
-            place_name: place.name,
-            place_type: getPlaceType(place.types),
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-            description: place.formatted_address,
-            accessibility_features: {
-              wheelchair_accessible_parking: place.wheelchair_accessible_parking ? "있음" : "정보 없음",
-              wheelchair_accessible_restroom: place.wheelchair_accessible_restroom ? "있음" : "정보 없음",
-              elevator: place.elevator ? "있음" : "정보 없음",
-              ramp: place.ramp ? "있음" : "정보 없음"
-            }
-          };
-          resolve(transformedPlace);
-        } else {
-          reject(new Error(`장소 상세 정보를 가져오는데 실패했습니다: ${status}`));
+      placesService.current.getDetails(
+        {
+          placeId: placeId,
+          fields: ['name', 'formatted_address', 'geometry', 'types', 'wheelchair_accessible_entrance', 'wheelchair_accessible_parking', 'wheelchair_accessible_restroom', 'elevator', 'ramp']
+        },
+        (place, status) => {
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+            const transformedPlace = {
+              id: placeId,
+              place_name: place.name,
+              place_type: getPlaceType(place.types),
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+              description: place.formatted_address,
+              accessibility_features: {
+                wheelchair_accessible_entrance: place.wheelchair_accessible_entrance || '정보 없음',
+                wheelchair_accessible_parking: place.wheelchair_accessible_parking || '정보 없음',
+                wheelchair_accessible_restroom: place.wheelchair_accessible_restroom || '정보 없음',
+                elevator: place.elevator || '정보 없음',
+                ramp: place.ramp || '정보 없음'
+              }
+            };
+            resolve(transformedPlace);
+          } else {
+            reject(new Error(`장소 상세 정보를 가져오는데 실패했습니다: ${status}`));
+          }
         }
-      });
+      );
     });
   };
 
-  // 검색 함수 수정
   const handleSearch = () => {
     if (!searchQuery.trim()) return;
     
@@ -1453,7 +1475,6 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
           });
         });
 
-        // 기본 정보만 포함하는 검색 결과
         const places = filteredResults.map(place => ({
           id: place.place_id,
           place_name: place.name,
@@ -1461,7 +1482,6 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng(),
           description: place.formatted_address,
-          // 상세 정보는 나중에 getDetails로 채워질 예정
           accessibility_features: {
             wheelchair_accessible_parking: "정보 없음",
             wheelchair_accessible_restroom: "정보 없음",
@@ -1478,23 +1498,19 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
     });
   };
 
-  // 장소 선택 핸들러 수정
   const handlePlaceSelect = async (place) => {
     try {
       setIsDetailLoading(true);
-      // 상세 정보 가져오기
       const detailedPlace = await getPlaceDetails(place.id);
-      // 기존 place 정보와 상세 정보 병합
       const finalPlace = {
         ...place,
         ...detailedPlace,
-        time: "09:00" // 기본 시간 설정
+        time: "09:00"
       };
       onPlaceSelect(finalPlace);
       onClose();
     } catch (error) {
       console.error("장소 상세 정보를 가져오는데 실패했습니다:", error);
-      // 에러가 발생해도 기본 정보로라도 추가
       onPlaceSelect({
         ...place,
         time: "09:00"
@@ -1505,7 +1521,6 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
     }
   };
 
-  // 장소 타입 변환
   const getPlaceType = (types) => {
     if (types.includes('restaurant')) return "한식당";
     if (types.includes('cafe')) return "카페";
@@ -1628,9 +1643,7 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
   );
 };
 
-/**
- * 날짜 수정 모달 컴포넌트
- */
+// DateModal 컴포넌트
 const DateModal = ({ isOpen, onClose, onDateChange, startDate, endDate }) => {
   const [newStartDate, setNewStartDate] = useState(startDate);
   const [newEndDate, setNewEndDate] = useState(endDate);
@@ -1681,9 +1694,7 @@ const DateModal = ({ isOpen, onClose, onDateChange, startDate, endDate }) => {
   );
 };
 
-/**
- * 코스 제목 입력 모달 컴포넌트
- */
+// TitleModal 컴포넌트
 const TitleModal = ({ isOpen, onClose, onSave, defaultTitle, isSaving }) => {
   const [title, setTitle] = useState(defaultTitle);
 
