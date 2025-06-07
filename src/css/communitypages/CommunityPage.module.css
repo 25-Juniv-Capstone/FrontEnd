@@ -71,22 +71,42 @@
   background: #ececec;
 }
 
-.searchInput {
-  margin-left: 18px;
-  padding: 12px 22px;
-  font-size: 1.08rem;
-  border: none;
-  border-radius: 22px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  color: #222;
-  outline: none;
-  width: 500px;
-  transition: box-shadow 0.2s, background 0.2s;
+.searchForm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 16px;
 }
+
+.searchTypeSelect {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 100px;
+  height: 40px;
+}
+
+.searchTypeSelect:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 200px;
+  height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
 .searchInput:focus {
-  background: #f7f8fa;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  outline: none;
+  border-color: #007bff;
 }
 
 .cardSection {
