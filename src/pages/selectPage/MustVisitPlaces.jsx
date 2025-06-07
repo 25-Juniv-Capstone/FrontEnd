@@ -172,7 +172,7 @@ const MustVisitPlaces = ({ onChange }) => {
 
   return (
     <>
-      <div className={styles.title}>📍 꼭 포함하고 싶은 여행지를 입력하세요</div>
+      <div className={styles.title}>📍 포함하고 싶은 여행지를 입력하세요 (선택사항)</div>
       <div className={styles.inputRow} ref={searchRef}>
         <input
           className={styles.input}
