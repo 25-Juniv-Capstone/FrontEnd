@@ -16,6 +16,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axiosInstance from '../utils/axiosConfig';
 import { LiaToggleOnSolid, LiaToggleOffSolid } from "react-icons/lia";
 import { FaInfoCircle, FaWheelchair } from "react-icons/fa";
+import { LuPencilLine } from "react-icons/lu";
+import { IoTrashBinOutline } from "react-icons/io5";
 
 // 장소 타입별 색상 매핑
 const placeTypeToColor = {
@@ -159,6 +161,9 @@ function CourseCreatePage() {
   const markers = useRef([]); // 마커 배열 추가
   const directionsRenderers = useRef([]);
   const infoWindowRef = useRef(null); // InfoWindow 하나만 사용
+
+  // 경로 색상 정보를 저장할 상태 추가
+  const [routeColorsByPlace, setRouteColorsByPlace] = useState({});
 
   // Directions API를 Promise로 감싸는 헬퍼 함수
   const getDirections = (directionsService, request) => {
@@ -612,17 +617,14 @@ function CourseCreatePage() {
       '#795548', // Brown
       '#607D8B'  // Blue Grey
     ];
-
-    // 경로를 저장할 배열
-    const routes = [];
-    let hasError = false;
+    
+    // 장소별 경로 색상 정보 초기화
+    const newRouteColorsByPlace = {};
 
     // 연속된 장소들 사이의 경로 계산
     for (let i = 0; i < places.length - 1; i++) {
       const origin = places[i];
       const destination = places[i + 1];
-      
-      // 현재 구간의 색상 선택 (색상 배열을 순환하면서 사용)
       const routeColor = routeColors[i % routeColors.length];
       
       const originLat = origin.coordinates?.latitude || origin.lat;
@@ -630,18 +632,7 @@ function CourseCreatePage() {
       const destLat = destination.coordinates?.latitude || destination.lat;
       const destLng = destination.coordinates?.longitude || destination.lng;
 
-      console.log(`경로 계산 시도 ${i + 1}/${places.length - 1}:`, {
-        from: origin.place_name,
-        to: destination.place_name,
-        color: routeColor,
-        coordinates: {
-          origin: { lat: originLat, lng: originLng },
-          destination: { lat: destLat, lng: destLng }
-        }
-      });
-
-      // 각 이동 수단으로 시도
-      let routeFound = false;
+      // 대중교통 경로 계산 시도
       for (const mode of travelModes) {
         try {
           const request = {
@@ -650,16 +641,18 @@ function CourseCreatePage() {
             travelMode: mode
           };
 
-          console.log(`${mode} 모드로 경로 계산 시도...`);
           const result = await getDirections(directionsService.current, request);
-          console.log(`${mode} 모드로 경로 계산 성공!`);
           
-          // 새로운 DirectionsRenderer 생성
+          // 대중교통 경로가 있는 경우에만 색상 정보 저장
+          newRouteColorsByPlace[origin.id] = routeColor;
+          newRouteColorsByPlace[destination.id] = routeColor;
+
+          // 경로 렌더링
           const renderer = new window.google.maps.DirectionsRenderer({
             map: mapInstance.current,
             directions: result,
-            suppressMarkers: true, // 마커는 직접 관리
-            preserveViewport: true, // 지도 자동 포커싱 비활성화
+            suppressMarkers: true,
+            preserveViewport: true,
             polylineOptions: {
               strokeColor: routeColor,
               strokeWeight: 5,
@@ -668,24 +661,15 @@ function CourseCreatePage() {
           });
 
           directionsRenderers.current.push(renderer);
-          routes.push(result);
-          routeFound = true;
-          break; // 성공하면 다음 이동 수단 시도하지 않음
+          break;
         } catch (error) {
           console.warn(`${mode} 모드로 경로 계산 실패:`, error);
-          hasError = true;
         }
       }
-
-      if (!routeFound) {
-        console.warn(`${origin.place_name}에서 ${destination.place_name}까지의 경로를 찾을 수 없습니다.`);
-        hasError = true;
-      }
     }
 
-    if (hasError) {
-      console.warn('일부 경로 계산에 실패했습니다. 성공한 경로만 표시됩니다.');
-    }
+    // 경로 색상 정보 업데이트
+    setRouteColorsByPlace(newRouteColorsByPlace);
 
     // 모든 마커가 보이도록 지도 범위 조정
     if (markers.current.length > 0) {
@@ -769,16 +753,21 @@ function CourseCreatePage() {
       [selectedDay]: updatedPlaces,
     });
 
-    // 경로 재계산
-    if (updatedPlaces.length >= 2) {
-      calculateRoute(updatedPlaces);
+    // 경로 표시가 켜져있을 때는 경로 재계산, 꺼져있을 때는 경로 제거
+    if (showRoutes) {
+      if (updatedPlaces.length >= 2) {
+        calculateRoute(updatedPlaces);
+      } else {
+        clearMarkers();
+        clearDirectionsRenderers();
+      }
     } else {
       clearMarkers();
       clearDirectionsRenderers();
     }
   };
 
-  // 드래그 앤 드롭으로 장소 순서 변경 수정
+  // 장소 순서 변경 핸들러
   const handlePlaceOrderChange = (result) => {
     if (!result.destination) return;
 
@@ -786,15 +775,21 @@ function CourseCreatePage() {
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
-    setPlacesByDay({
-      ...placesByDay,
-      [selectedDay]: items
-    });
-
-    // 경로 재계산
-    if (items.length >= 2) {
-      calculateRoute(items);
+    // 시간 교환
+    const sourceIndex = result.source.index;
+    const destIndex = result.destination.index;
+    
+    // 시간이 있는 경우에만 교환
+    if (items[sourceIndex]?.time && items[destIndex]?.time) {
+      const tempTime = items[sourceIndex].time;
+      items[sourceIndex] = { ...items[sourceIndex], time: items[destIndex].time };
+      items[destIndex] = { ...items[destIndex], time: tempTime };
     }
+
+    setPlacesByDay(prev => ({
+      ...prev,
+      [selectedDay]: items
+    }));
   };
 
   // 새 장소 추가 처리
@@ -965,7 +960,7 @@ function CourseCreatePage() {
   .title-modal {
     background: white;
     border-radius: 8px;
-    padding: 20px;
+    padding:  5px 30px;
     width: 90%;
     max-width: 500px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -974,7 +969,6 @@ function CourseCreatePage() {
   .title-form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
   }
 
   .title-input-group {
@@ -1004,7 +998,7 @@ function CourseCreatePage() {
   }
 
   .modal-buttons button {
-    padding: 8px 16px;
+    padding: 12px 16px;
     border-radius: 4px;
     border: none;
     cursor: pointer;
@@ -1105,12 +1099,16 @@ function CourseCreatePage() {
   // 장소 카드 렌더링 부분 수정
   const renderPlaceCard = (place, index) => (
     <Draggable key={place.id} draggableId={place.id} index={index}>
-      {(provided) => (
+      {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className="course-card"
+          className={`course-card ${snapshot.isDragging ? 'dragging' : ''} ${snapshot.draggingOver ? 'drag-over' : ''}`}
+          style={{
+            ...provided.draggableProps.style,
+            borderLeft: showRoutes && routeColorsByPlace[place.id] ? `4px solid ${routeColorsByPlace[place.id]}` : 'none'
+          }}
         >
           <div className="left">
             <div 
@@ -1121,29 +1119,33 @@ function CourseCreatePage() {
             </div>
             <div className="time" style={{ fontSize: '1.1rem', fontWeight: '500' }}>{place.time || '--:--'}</div>
             <div className="title" style={{ fontSize: '1.2rem', fontWeight: '600' }}>{place.place_name}</div>
-            <div className="place-type" style={{ fontSize: '1.1rem', fontWeight: '500' }}>
+            <div className="place-type" style={{ 
+              fontSize: '1.1rem', 
+              fontWeight: '500',
+              color: placeTypeToColor[place.place_type] || "#2196F3"
+            }}>
               {placeTypeToEmoji[place.place_type] || "📍 기타"}
             </div>
-            <div style={{ display: 'flex', gap: '8px', margin: '12px 0' }}>
+            <div className="button-group">
               <button
                 className="info-btn"
                 onClick={() => setModalInfo({ open: true, type: 'info', place })}
-                style={{ fontSize: '1rem', fontWeight: '500' }}
               >
-                <FaInfoCircle style={{ marginRight: '6px' }} /> 상세정보
+                <FaInfoCircle /> 상세정보
               </button>
               <button
                 className="access-btn"
                 onClick={() => setModalInfo({ open: true, type: 'accessibility', place })}
-                style={{ fontSize: '1rem', fontWeight: '500' }}
               >
-                <FaWheelchair style={{ marginRight: '6px' }} /> 무장애 정보
+                <FaWheelchair /> 무장애 정보
               </button>
             </div>
           </div>
           <div className="right">
             <div className="action-buttons">
-              <button onClick={() => handleDeletePlace(place.id)} style={{ fontSize: '1.2rem' }}>🗑️</button>
+              <button onClick={() => handleDeletePlace(place.id)}>
+                <IoTrashBinOutline size={20} />
+              </button>
             </div>
           </div>
         </div>
@@ -1156,9 +1158,15 @@ function CourseCreatePage() {
       <div className="course-main">
         <div className="course-sidebar">
           <h2>{region}</h2>
-          <div className="date-section" onClick={() => setIsDateModalOpen(true)}>
+          <div className="date-section">
             <p className="date">{getDateDisplay && getDateDisplay()}</p>
-            <span className="edit-icon">✏️</span>
+            <button 
+              className="edit-button" 
+              onClick={() => setIsDateModalOpen(true)}
+              aria-label="날짜 수정"
+            >
+              <LuPencilLine />
+            </button>
           </div>
 
           {/* 경로 표시 토글 버튼 수정 */}
@@ -1167,8 +1175,7 @@ function CourseCreatePage() {
               className={`route-toggle-btn ${showRoutes ? 'active' : ''}`}
               onClick={toggleRoutes}
               style={{
-                padding: '12px 20px', // 크기 키움
-                margin: '10px 0',
+                padding: '5px 5px', // 크기 키움
                 border: 'none',
                 backgroundColor: 'transparent',
                 color: showRoutes ? '#4285F4' : '#666',
@@ -1181,7 +1188,6 @@ function CourseCreatePage() {
                 borderRadius: '8px',
                 minWidth: '120px',
                 minHeight: '48px',
-                gap: '10px'
               }}
             >
               {showRoutes ? (
@@ -1322,18 +1328,48 @@ function CourseCreatePage() {
                         'visual_impairment_info_human_guide': '시각장애인 안내',
                         'visual_impairment_info_braille_promotion': '시각장애인 점자안내',
                         'facilities_room': '장애인 객실',
-                        'facilities_etc': '기타 편의시설'
+                        'facilities_etc': '기타 편의시설',
+                        'room': '객실',
+                        'facilities': '편의시설',
+                        'lactation_room': '수유실',
+                        'etc': '기타'
                       };
+
+                      const valueMapping = {
+                        'available': '있음',
+                        'yes': '있음',
+                        'true': '있음',
+                        'free': '무료',
+                        'paid': '유료',
+                        'inside': '실내',
+                        'outside': '실외',
+                        'both': '실내/실외',
+                        'ground_floor': '1층',
+                        'all_floors': '전 층',
+                        'partial': '일부',
+                        'full': '전체',
+                        'wheelchair_accessible': '휠체어 접근 가능',
+                        'guide_dog_allowed': '안내견 동반 가능',
+                        'braille_available': '점자 안내 있음',
+                        'audio_guide_available': '음성 안내 있음',
+                        'human_guide_available': '안내요원 있음',
+                      };
+
                       let displayValue = value;
                       if (typeof value === 'object' && value !== null) {
                         if (Array.isArray(value)) {
-                          displayValue = value.join(', ');
+                          displayValue = value.map(v => valueMapping[v.toLowerCase()] || v).join(', ');
                         } else {
-                          displayValue = Object.keys(value).join(', ') || JSON.stringify(value);
+                          displayValue = Object.keys(value)
+                            .map(k => `${keyMapping[k] || k}: ${valueMapping[value[k]?.toLowerCase()] || value[k]}`)
+                            .join(', ');
                         }
-                      } else if (typeof value !== 'string' && typeof value !== 'number') {
+                      } else if (typeof value === 'string') {
+                        displayValue = valueMapping[value.toLowerCase()] || value;
+                      } else if (typeof value !== 'number') {
                         displayValue = String(value);
                       }
+
                       const displayKey = keyMapping[key] || key.replace(/_/g, ' ');
                       return (
                         <div key={key} className="accessibility-item">
@@ -1720,7 +1756,6 @@ const TitleModal = ({ isOpen, onClose, onSave, defaultTitle, isSaving }) => {
       <div className="title-modal">
         <div className="modal-header">
           <h3>코스 제목 입력</h3>
-          <button onClick={onClose} disabled={isSaving}>✕</button>
         </div>
         
         <form onSubmit={handleSubmit} className="title-form">
