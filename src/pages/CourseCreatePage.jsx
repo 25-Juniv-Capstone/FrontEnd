@@ -73,18 +73,40 @@ function getNumberedMarkerIcon(number, placeType) {
 */
 
 // 시간 수정 모달 컴포넌트
-const TimeModal = ({ isOpen, onClose, onTimeChange, currentTime, placeName }) => {
+const TimeModal = ({ isOpen, onClose, onTimeChange, currentTime, placeName, isNewPlace = false }) => {
   const [time, setTime] = useState(currentTime);
+  const [displayTime, setDisplayTime] = useState('');
+
+  // 시간을 오전/오후 형식으로 변환하는 함수 (새 장소 추가용)
+  const formatDisplayTime = (timeStr) => {
+    if (!timeStr) return '';
+    const [hours, minutes] = timeStr.split(':');
+    const hour = parseInt(hours);
+    const period = hour < 12 ? '오전' : '오후';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${period} ${displayHour.toString().padStart(2, '0')}:${minutes}`;
+  };
 
   useEffect(() => {
     if (isOpen) {
       setTime(currentTime);
+      // 새 장소 추가일 때만 오전/오후 형식으로 표시
+      setDisplayTime(isNewPlace ? formatDisplayTime(currentTime) : currentTime || '');
     }
-  }, [isOpen, currentTime]);
+  }, [isOpen, currentTime, isNewPlace]);
+
+  const handleTimeChange = (e) => {
+    const newTime = e.target.value;
+    setTime(newTime);
+    // 새 장소 추가일 때만 오전/오후 형식으로 표시
+    setDisplayTime(isNewPlace ? formatDisplayTime(newTime) : newTime);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onTimeChange(time);
+    // 새 장소 추가일 때는 오전/오후 형식으로 저장, 그 외에는 원래 형식 유지
+    const finalTime = isNewPlace ? formatDisplayTime(time) : time;
+    onTimeChange(finalTime);
     onClose();
   };
 
@@ -95,18 +117,23 @@ const TimeModal = ({ isOpen, onClose, onTimeChange, currentTime, placeName }) =>
       <div className="time-modal">
         <div className="modal-header">
           <div className="header-content">
-            <h3>방문 시간 수정</h3>
-            <p className="header-subtitle">{placeName}</p>
+            <h3>{isNewPlace ? '방문 시간 설정' : '방문 시간 수정'}</h3>
+            <div className="header-subtitle">{placeName}</div>
           </div>
           <button onClick={onClose} className="close-button">✕</button>
         </div>
         
         <form onSubmit={handleSubmit} className="time-form">
           <div className="time-input-group">
+            {isNewPlace && (
+              <div className="time-display">
+                {displayTime}
+              </div>
+            )}
             <input
               type="time"
               value={time}
-              onChange={(e) => setTime(e.target.value)}
+              onChange={handleTimeChange}
               className="time-input"
               required
             />
@@ -120,6 +147,112 @@ const TimeModal = ({ isOpen, onClose, onTimeChange, currentTime, placeName }) =>
       </div>
     </div>
   );
+};
+
+// 시간 입력 모달 컴포넌트
+const AddPlaceTimeModal = ({ isOpen, onClose, onConfirm, placeName }) => {
+  const [hours, setHours] = useState("09");
+  const [minutes, setMinutes] = useState("00");
+
+  useEffect(() => {
+    if (isOpen) {
+      setHours("09");
+      setMinutes("00");
+    }
+  }, [isOpen]);
+
+  const handleHoursChange = (e) => {
+    const value = e.target.value;
+    // 0-23 사이의 숫자만 입력 가능
+    if (value === "" || (/^[0-9]{1,2}$/.test(value) && parseInt(value) <= 23)) {
+      setHours(value);
+    }
+  };
+
+  const handleMinutesChange = (e) => {
+    const value = e.target.value;
+    // 0-59 사이의 숫자만 입력 가능
+    if (value === "" || (/^[0-9]{1,2}$/.test(value) && parseInt(value) <= 59)) {
+      setMinutes(value);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // 시간과 분이 비어있지 않은 경우에만 처리
+    if (hours && minutes) {
+      const time = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+      onConfirm(time);
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="time-modal">
+        <div className="modal-header">
+          <div className="header-content">
+            <h3>방문 시간 설정</h3>
+            <div className="header-subtitle">{placeName}</div>
+          </div>
+          <button onClick={onClose} className="close-button">✕</button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="time-form">
+          <div className="time-input-group">
+            <div className="time-input-container">
+              <input
+                type="text"
+                value={hours}
+                onChange={handleHoursChange}
+                className="time-input-field"
+                placeholder="00"
+                maxLength={2}
+                required
+              />
+              <span className="time-separator">:</span>
+              <input
+                type="text"
+                value={minutes}
+                onChange={handleMinutesChange}
+                className="time-input-field"
+                placeholder="00"
+                maxLength={2}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="modal-buttons">
+            <button type="button" onClick={onClose}>취소</button>
+            <button type="submit" disabled={!hours || !minutes}>확인</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// 시간을 비교하기 위한 정렬 함수 추가
+const compareTimes = (timeA, timeB) => {
+  // 오전/오후 형식의 시간을 24시간제로 변환
+  const convertTo24Hour = (time) => {
+    if (!time) return 0;
+    if (time.includes('오전') || time.includes('오후')) {
+      const [period, timeStr] = time.split(' ');
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      const hour = period === '오후' && hours !== 12 ? hours + 12 : 
+                  period === '오전' && hours === 12 ? 0 : hours;
+      return hour * 60 + minutes;
+    }
+    // 일반 24시간제 형식
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  return convertTo24Hour(timeA) - convertTo24Hour(timeB);
 };
 
 function CourseCreatePage() {
@@ -152,6 +285,9 @@ function CourseCreatePage() {
   const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [isAddPlaceTimeModalOpen, setIsAddPlaceTimeModalOpen] = useState(false);
+  const [selectedPlaceToAdd, setSelectedPlaceToAdd] = useState(null);
+  const [timeModalMode, setTimeModalMode] = useState('edit');
   
   // 지도 관련 설정
   const mapInstance = useRef(null);
@@ -268,83 +404,83 @@ function CourseCreatePage() {
           console.log('itinerary 데이터:', dayData.itinerary);
           
           try {
-            processedPlaces[dayData.day] = dayData.itinerary.map((item, index) => {
+          processedPlaces[dayData.day] = dayData.itinerary.map((item, index) => {
               console.log(`\n--- ${dayIndex + 1}일차 ${index + 1}번째 장소 처리 ---`);
               console.log('장소 데이터 원본:', item);
               
-              // accessibility_features 안전하게 처리
-              let accessibilityFeatures = {};
-              
-              if (item.accessibility_info) {
+            // accessibility_features 안전하게 처리
+            let accessibilityFeatures = {};
+            
+            if (item.accessibility_info) {
                 console.log('accessibility_info 처리:', item.accessibility_info);
-                // 문자열인 경우 파싱
-                if (typeof item.accessibility_info === 'string') {
-                  try {
-                    item.accessibility_info.split(', ').forEach(info => {
-                      const [key, value] = info.split(': ');
-                      if (key && value) {
-                        accessibilityFeatures[key.trim()] = value.trim();
-                      }
-                    });
-                  } catch (e) {
-                    console.warn('accessibility_info 파싱 실패:', item.accessibility_info);
-                  }
-                }
-              } else if (item.accessibility_features) {
-                console.log('accessibility_features 처리:', item.accessibility_features);
-                // 객체인 경우 안전하게 복사하고 중첩 객체 평면화
-                if (typeof item.accessibility_features === 'object' && item.accessibility_features !== null) {
-                  // 중첩된 객체들을 평면화하는 함수
-                  const flattenObject = (obj, prefix = '') => {
-                    const flattened = {};
-                    
-                    Object.entries(obj).forEach(([key, value]) => {
-                      // null, undefined, 빈 값들을 미리 필터링
-                      if (value === null || 
-                          value === undefined || 
-                          value === '' || 
-                          value === 'null' ||
-                          value === 'undefined' ||
-                          (typeof value === 'string' && value.trim() === '')) {
-                        return; // 이 항목은 건너뛰기
-                      }
-                      
-                      const newKey = prefix ? `${prefix}_${key}` : key;
-                      
-                      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-                        // 중첩된 객체인 경우 재귀적으로 평면화
-                        Object.assign(flattened, flattenObject(value, newKey));
-                      } else if (Array.isArray(value)) {
-                        // 배열인 경우 빈 배열이 아닐 때만 추가
-                        if (value.length > 0) {
-                          flattened[newKey] = value.join(', ');
-                        }
-                      } else {
-                        // 일반 값인 경우 그대로 저장
-                        flattened[newKey] = value;
-                      }
-                    });
-                    
-                    return flattened;
-                  };
-                  
-                  accessibilityFeatures = flattenObject(item.accessibility_features);
+              // 문자열인 경우 파싱
+              if (typeof item.accessibility_info === 'string') {
+                try {
+                  item.accessibility_info.split(', ').forEach(info => {
+                    const [key, value] = info.split(': ');
+                    if (key && value) {
+                      accessibilityFeatures[key.trim()] = value.trim();
+                    }
+                  });
+                } catch (e) {
+                  console.warn('accessibility_info 파싱 실패:', item.accessibility_info);
                 }
               }
-              
+            } else if (item.accessibility_features) {
+                console.log('accessibility_features 처리:', item.accessibility_features);
+              // 객체인 경우 안전하게 복사하고 중첩 객체 평면화
+              if (typeof item.accessibility_features === 'object' && item.accessibility_features !== null) {
+                // 중첩된 객체들을 평면화하는 함수
+                const flattenObject = (obj, prefix = '') => {
+                  const flattened = {};
+                  
+                  Object.entries(obj).forEach(([key, value]) => {
+                    // null, undefined, 빈 값들을 미리 필터링
+                    if (value === null || 
+                        value === undefined || 
+                        value === '' || 
+                        value === 'null' ||
+                        value === 'undefined' ||
+                        (typeof value === 'string' && value.trim() === '')) {
+                      return; // 이 항목은 건너뛰기
+                    }
+                    
+                    const newKey = prefix ? `${prefix}_${key}` : key;
+                    
+                    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                      // 중첩된 객체인 경우 재귀적으로 평면화
+                      Object.assign(flattened, flattenObject(value, newKey));
+                    } else if (Array.isArray(value)) {
+                      // 배열인 경우 빈 배열이 아닐 때만 추가
+                      if (value.length > 0) {
+                        flattened[newKey] = value.join(', ');
+                      }
+                    } else {
+                      // 일반 값인 경우 그대로 저장
+                      flattened[newKey] = value;
+                    }
+                  });
+                  
+                  return flattened;
+                };
+                
+                accessibilityFeatures = flattenObject(item.accessibility_features);
+              }
+            }
+            
               const processedPlace = {
-                id: `${dayData.day}-${index}`,
-                time: item.time || '오전 09:00',
-                place_name: item.name || item.place_name || '장소명 없음',
-                place_type: item.type || item.place_type || '기타',
-                description: item.address || item.description || '',
-                lat: item.coordinates?.latitude || item.lat || 0,
-                lng: item.coordinates?.longitude || item.lng || 0,
-                accessibility_features: accessibilityFeatures,
-                rating: item.rating || 0,
-                reviews: item.reviews || 0,
-                operating_hours: item.operating_hours || {}
-              };
+              id: `${dayData.day}-${index}`,
+              time: item.time || '오전 09:00',
+              place_name: item.name || item.place_name || '장소명 없음',
+              place_type: item.type || item.place_type || '기타',
+              description: item.address || item.description || '',
+              lat: item.coordinates?.latitude || item.lat || 0,
+              lng: item.coordinates?.longitude || item.lng || 0,
+              accessibility_features: accessibilityFeatures,
+              rating: item.rating || 0,
+              reviews: item.reviews || 0,
+              operating_hours: item.operating_hours || {}
+            };
               
               console.log('처리된 장소 데이터:', processedPlace);
               return processedPlace;
@@ -368,9 +504,9 @@ function CourseCreatePage() {
 
         // 상태 업데이트를 한 번에 처리
         const updateState = () => {
-          setCourseData(processedData);
-          setPlacesByDay(processedPlaces);
-          setSelectedDay(1);
+        setCourseData(processedData);
+        setPlacesByDay(processedPlaces);
+        setSelectedDay(1);
         };
 
         // 상태 업데이트 실행
@@ -477,10 +613,10 @@ function CourseCreatePage() {
   const createMarker = (place, index) => {
     if (!mapInstance.current) return null;
 
-    const marker = new window.google.maps.Marker({
-      position: { lat: place.lat, lng: place.lng },
-      map: mapInstance.current,
-      title: place.place_name,
+      const marker = new window.google.maps.Marker({
+        position: { lat: place.lat, lng: place.lng },
+        map: mapInstance.current,
+        title: place.place_name,
       label: {
         text: `${index + 1}`,
         color: 'white',
@@ -513,7 +649,7 @@ function CourseCreatePage() {
           <h3 style="margin: 0 0 8px 0; font-size: 18px;">${place.place_name}</h3>
           <p style="margin: 0; color: #666;">${place.place_type}</p>
           <p style="margin: 4px 0 0 0; color: #444;">${place.description || ''}</p>
-        </div>
+          </div>
       `);
       infoWindowRef.current.open(mapInstance.current, marker);
       // 커스텀 X버튼 이벤트 연결 및 구글 기본 X버튼 숨기기
@@ -597,7 +733,7 @@ function CourseCreatePage() {
 
       const marker = createMarker({ ...place, lat, lng }, index);
       if (marker) {
-        markers.current.push(marker);
+      markers.current.push(marker);
       }
     });
 
@@ -792,15 +928,32 @@ function CourseCreatePage() {
     }));
   };
 
-  // 새 장소 추가 처리
+  // 장소 추가 처리
   const handleAddPlace = (newPlace) => {
+    setSelectedPlace(newPlace);
+    setTimeModalMode('add');
+    setIsTimeModalOpen(true);
+  };
+
+  // 시간 설정 확인 처리
+  const handleTimeConfirm = (time) => {
+    if (!selectedPlaceToAdd) return;
+
     const currentPlaces = placesByDay[selectedDay] || [];
     const nextId = `${selectedDay}-${currentPlaces.length}`;
     
+    const placeWithTime = {
+      ...selectedPlaceToAdd,
+      id: nextId,
+      time: time
+    };
+    
     setPlacesByDay({
       ...placesByDay,
-      [selectedDay]: [...currentPlaces, { ...newPlace, id: nextId }],
+      [selectedDay]: [...currentPlaces, placeWithTime],
     });
+
+    setSelectedPlaceToAdd(null);
   };
 
   // 날짜 포맷팅 - YYYY.MM.DD 형식으로 변환
@@ -869,55 +1022,55 @@ function CourseCreatePage() {
       // durationDays를 정수로 변환
       const durationDays = parseInt(courseData.metadata.duration) || Object.keys(placesByDay).length;
       
-      const courseToSave = {
+    const courseToSave = {
         title: title,
         courseImageUrl: courseData?.recommended_courses?.[0]?.course_image_url || null,
-        region: region,
+      region: region,
         startDate: courseData.metadata.start_date,
         endDate: courseData.metadata.end_date,
         durationDays: durationDays,  // 정수로 변환된 값 사용
         keywords: courseData?.metadata?.keywords || courseData?.recommended_courses?.[0]?.keywords || '',
-        days: Object.entries(placesByDay).map(([day, places]) => ({
+      days: Object.entries(placesByDay).map(([day, places]) => ({
           dayNumber: parseInt(day),  // dayNumber도 확실히 정수로 변환
-          itinerary: places.map(place => {
-            const latitude = place.coordinates?.lat || place.lat;
-            const longitude = place.coordinates?.lng || place.lng;
+        itinerary: places.map(place => {
+          const latitude = place.coordinates?.lat || place.lat;
+          const longitude = place.coordinates?.lng || place.lng;
 
-            if (!latitude || !longitude) {
-              console.error('장소 좌표가 없습니다:', place);
-              return null;
-            }
+          if (!latitude || !longitude) {
+            console.error('장소 좌표가 없습니다:', place);
+            return null;
+          }
 
-            const time = place.time ? place.time.split(' ')[1] || place.time : '09:00';
-            const travelInfo = place.travel_from_previous || place.travelInfo || {};
+          const time = place.time ? place.time.split(' ')[1] || place.time : '09:00';
+          const travelInfo = place.travel_from_previous || place.travelInfo || {};
 
-            return {
+          return {
               time: time,
               placeName: place.place_name,
               placeType: place.place_type || '기타',
               description: place.description || '',
               details: place.details || '',
-              coordinates: {
+            coordinates: {
                 latitude: parseFloat(latitude),
                 longitude: parseFloat(longitude)
-              },
-              accessibilityFeatures: Object.entries(place.accessibility_features || {})
-                .reduce((acc, [key, value]) => {
-                  if (value && value !== 'null' && value !== 'undefined' && String(value).trim() !== '') {
+            },
+            accessibilityFeatures: Object.entries(place.accessibility_features || {})
+              .reduce((acc, [key, value]) => {
+                if (value && value !== 'null' && value !== 'undefined' && String(value).trim() !== '') {
                     acc[key] = String(value);
-                  }
-                  return acc;
-                }, {}),
-              travelFromPrevious: {
+                }
+                return acc;
+              }, {}),
+            travelFromPrevious: {
                 distance: travelInfo.distance || '',
                 travelTime: travelInfo.travel_time || travelInfo.duration || ''
-              }
-            };
+            }
+          };
           }).filter(Boolean)
-        }))
-      };
+      }))
+    };
 
-      console.log('Saving course with data:', courseToSave);
+    console.log('Saving course with data:', courseToSave);
       // durationDays 값 로깅 추가
       console.log('Duration days:', durationDays, typeof durationDays);
 
@@ -1063,6 +1216,90 @@ function CourseCreatePage() {
     height: 16px;
     border-width: 2px;
   }
+
+  .time-input-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .time-input-field {
+    width: 60px;
+    height: 48px;
+    font-size: 1.5rem;
+    text-align: center;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: white;
+    color: #333;
+    transition: all 0.2s;
+  }
+
+  .time-input-field:focus {
+    outline: none;
+    border-color: #1976d2;
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+  }
+
+  .time-separator {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #666;
+  }
+
+  .time-input-hint {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: #666;
+    text-align: center;
+  }
+
+  .header-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: left;
+    flex: 1;
+  }
+
+  .header-content h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    text-align: left;
+  }
+
+  .header-subtitle {
+    font-size: 1rem;
+    color: #666;
+    margin: 0;
+    text-align: left;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .time-display {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .time-input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
   `;
 
   // 스타일 태그 추가
@@ -1079,44 +1316,69 @@ function CourseCreatePage() {
   const handleTimeChange = (newTime) => {
     if (!selectedPlace) return;
 
-    setPlacesByDay(prev => {
-      const updatedPlaces = { ...prev };
-      const dayPlaces = [...updatedPlaces[selectedDay]];
-      const placeIndex = dayPlaces.findIndex(p => p.id === selectedPlace.id);
+    if (timeModalMode === 'edit') {
+      // 기존 장소 시간 수정 - 원래 형식 유지
+      setPlacesByDay(prev => {
+        const updatedPlaces = { ...prev };
+        const dayPlaces = [...updatedPlaces[selectedDay]];
+        const placeIndex = dayPlaces.findIndex(p => p.id === selectedPlace.id);
+        
+        if (placeIndex !== -1) {
+          dayPlaces[placeIndex] = {
+            ...dayPlaces[placeIndex],
+            time: newTime
+          };
+          // 시간 수정 후 정렬
+          dayPlaces.sort((a, b) => compareTimes(a.time, b.time));
+          updatedPlaces[selectedDay] = dayPlaces;
+        }
+        
+        return updatedPlaces;
+      });
+    } else {
+      // 새 장소 추가 - 오전/오후 형식으로 저장
+      const currentPlaces = placesByDay[selectedDay] || [];
+      const nextId = `${selectedDay}-${currentPlaces.length}`;
       
-      if (placeIndex !== -1) {
-        dayPlaces[placeIndex] = {
-          ...dayPlaces[placeIndex],
-          time: newTime
-        };
-        updatedPlaces[selectedDay] = dayPlaces;
-      }
+      const placeWithTime = {
+        ...selectedPlace,
+        id: nextId,
+        time: newTime // 이미 오전/오후 형식으로 변환된 시간
+      };
       
-      return updatedPlaces;
-    });
+      // 새 장소 추가 후 시간순으로 정렬
+      const updatedPlaces = [...currentPlaces, placeWithTime].sort((a, b) => compareTimes(a.time, b.time));
+      
+      setPlacesByDay({
+        ...placesByDay,
+        [selectedDay]: updatedPlaces,
+      });
+    }
+
+    setSelectedPlace(null);
   };
 
   // 장소 카드 렌더링 부분 수정
   const renderPlaceCard = (place, index) => (
-    <Draggable key={place.id} draggableId={place.id} index={index}>
+                    <Draggable key={place.id} draggableId={place.id} index={index}>
       {(provided, snapshot) => (
-        <div
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
           className={`course-card ${snapshot.isDragging ? 'dragging' : ''} ${snapshot.draggingOver ? 'drag-over' : ''}`}
           style={{
             ...provided.draggableProps.style,
             borderLeft: showRoutes && routeColorsByPlace[place.id] ? `4px solid ${routeColorsByPlace[place.id]}` : 'none'
           }}
-        >
-          <div className="left">
-            <div 
-              className="circle-number" 
-              style={{ backgroundColor: placeTypeToColor[place.place_type] || "#2196F3" }}
-            >
-              {index + 1}
-            </div>
+                        >
+                          <div className="left">
+                            <div 
+                              className="circle-number" 
+                              style={{ backgroundColor: placeTypeToColor[place.place_type] || "#2196F3" }}
+                            >
+                              {index + 1}
+                            </div>
             <div className="time" style={{ fontSize: '1.1rem', fontWeight: '500' }}>{place.time || '--:--'}</div>
             <div className="title" style={{ fontSize: '1.2rem', fontWeight: '600' }}>{place.place_name}</div>
             <div className="place-type" style={{ 
@@ -1124,33 +1386,33 @@ function CourseCreatePage() {
               fontWeight: '500',
               color: placeTypeToColor[place.place_type] || "#2196F3"
             }}>
-              {placeTypeToEmoji[place.place_type] || "📍 기타"}
-            </div>
+                              {placeTypeToEmoji[place.place_type] || "📍 기타"}
+                            </div>
             <div className="button-group">
-              <button
-                className="info-btn"
-                onClick={() => setModalInfo({ open: true, type: 'info', place })}
+                              <button
+                                className="info-btn"
+                                onClick={() => setModalInfo({ open: true, type: 'info', place })}
               >
                 <FaInfoCircle /> 상세정보
               </button>
-              <button
-                className="access-btn"
-                onClick={() => setModalInfo({ open: true, type: 'accessibility', place })}
+                              <button
+                                className="access-btn"
+                                onClick={() => setModalInfo({ open: true, type: 'accessibility', place })}
               >
                 <FaWheelchair /> 무장애 정보
               </button>
-            </div>
-          </div>
-          <div className="right">
-            <div className="action-buttons">
+                            </div>
+                          </div>
+                          <div className="right">
+                            <div className="action-buttons">
               <button onClick={() => handleDeletePlace(place.id)}>
                 <IoTrashBinOutline size={20} />
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </Draggable>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </Draggable>
   );
 
   return (
@@ -1401,8 +1663,20 @@ function CourseCreatePage() {
           setSelectedPlace(null);
         }}
         onTimeChange={handleTimeChange}
-        currentTime={selectedPlace?.time || "09:00"}
-        placeName={selectedPlace?.place_name || ""}
+        currentTime={selectedPlace?.time}
+        placeName={selectedPlace?.place_name}
+        isNewPlace={timeModalMode === 'add'}
+      />
+      
+      {/* 시간 입력 모달 추가 */}
+      <AddPlaceTimeModal
+        isOpen={isAddPlaceTimeModalOpen}
+        onClose={() => {
+          setIsAddPlaceTimeModalOpen(false);
+          setSelectedPlaceToAdd(null);
+        }}
+        onConfirm={handleTimeConfirm}
+        placeName={selectedPlaceToAdd?.place_name}
       />
     </div>
   );
@@ -1538,19 +1812,14 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
     try {
       setIsDetailLoading(true);
       const detailedPlace = await getPlaceDetails(place.id);
-      const finalPlace = {
+      onPlaceSelect({
         ...place,
-        ...detailedPlace,
-        time: "09:00"
-      };
-      onPlaceSelect(finalPlace);
+        ...detailedPlace
+      });
       onClose();
     } catch (error) {
       console.error("장소 상세 정보를 가져오는데 실패했습니다:", error);
-      onPlaceSelect({
-        ...place,
-        time: "09:00"
-      });
+      onPlaceSelect(place);
       onClose();
     } finally {
       setIsDetailLoading(false);
@@ -1587,15 +1856,15 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
         </div>
         
         <div className="search-container">
-          <div className="search-box">
+        <div className="search-box">
             <div className="search-input-wrapper">
               <span className="search-icon">🔍</span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={`${region}의 무장애 여행지를 검색해보세요`}
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder={`${region}의 무장애 여행지를 검색해보세요`}
                 className="search-input"
               />
               {searchQuery && (
@@ -1604,7 +1873,7 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
                   onClick={() => setSearchQuery("")}
                 >
                   ✕
-                </button>
+          </button>
               )}
             </div>
             <button 
@@ -1654,7 +1923,7 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
                     <span className="tag-icon">🅿️</span>
                     주차 가능
                   </span>
-                </div>
+              </div>
               </div>
               <button 
                 className="add-place-button"
