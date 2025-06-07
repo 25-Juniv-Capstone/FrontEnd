@@ -1,15 +1,20 @@
- @font-face {
-  font-family: 'Ownglyph_corncorn-Rg';
-  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2412-1@1.0/Ownglyph_corncorn-Rg.woff2') format('woff2');
+@font-face {
+  font-family: 'Cafe24Ohsquare';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/Cafe24Ohsquare.woff') format('woff');
   font-weight: normal;
   font-style: normal;
-} 
-
+}
+@font-face {
+  font-family: 'Gyeonggi_Title_Medium';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2410-3@1.0/Title_Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+}
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Ownglyph_corncorn-Rg', 'Pretendard', sans-serif;
+  font-family:  'Gyeonggi_Title_Medium', 'Pretendard', sans-serif;
 }
 
 body {
