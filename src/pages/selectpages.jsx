@@ -70,9 +70,6 @@ const SelectPages = () => {
       if (!region || region === "사용자 선택") {
         throw new Error('지역을 선택해주세요.');
       }
-      if (addedPlaces.length === 0) {
-        throw new Error('최소 한 개 이상의 장소를 선택해주세요.');
-      }
 
       // 날짜 정보 로깅
       // console.log('Date check before validation:', {
@@ -142,12 +139,6 @@ const SelectPages = () => {
       // 데이터 유효성 검증
       if (!requestData.region || requestData.region === "사용자 선택") {
         throw new Error('유효하지 않은 지역 정보입니다.');
-      }
-      if (!requestData.must_visit_places || requestData.must_visit_places.length === 0) {
-        throw new Error('유효하지 않은 장소 정보입니다.');
-      }
-      if (requestData.duration < 1) {
-        throw new Error('유효하지 않은 여행 기간입니다.');
       }
 
       // backend-ai API 호출

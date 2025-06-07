@@ -6,6 +6,7 @@ import WritePageModal from "../WritePage/WritePageModal";
 import axiosInstance from "../../utils/axiosConfig";
 
 const DISABILITY_TYPES = [
+  { key: "all", label: "전체" },
   { key: "wheelchair", label: "휠체어 이용자" },
   { key: "visual", label: "시각 장애인" },
   { key: "hearing", label: "청각 장애인" },
@@ -14,7 +15,7 @@ const DISABILITY_TYPES = [
 function CommunityPage() {
   const navigate = useNavigate();
   // 새로운 디자인의 상태들
-  const [selectedType, setSelectedType] = useState("wheelchair");
+  const [selectedType, setSelectedType] = useState("all");
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   
@@ -23,6 +24,7 @@ function CommunityPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("");
   const [totalPages, setTotalPages] = useState(1);
 
@@ -32,7 +34,7 @@ function CommunityPage() {
       try {
         setLoading(true);
         const params = new URLSearchParams();
-        if (selectedType) params.append('disabilityType', selectedType);
+        if (selectedType && selectedType !== 'all') params.append('disabilityType', selectedType);
         if (searchTerm) params.append('searchTerm', searchTerm);
         if (selectedRegion) params.append('region', selectedRegion);
         
@@ -57,17 +59,14 @@ function CommunityPage() {
     setIsModalOpen(true);
   };
 
-  // 검색어 변경 핸들러 (디바운싱 효과를 위해 실시간 검색 대신 약간의 지연)
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setSearch(searchTerm);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm]);
-
   const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
+    setSearchInput(e.target.value);
+  };
+
+  // form submit으로만 검색 실행
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    setSearchTerm(searchInput);
   };
 
   const handleCardClick = (courseId, postTitle, postId) => {
@@ -79,6 +78,15 @@ function CommunityPage() {
       }
     });
   };
+
+  // 카드 리스트에서 제목/내용에만 검색어가 포함된 게시글만 보여주기
+  const filteredPosts = posts.filter(post => {
+    const keyword = searchTerm.toLowerCase();
+    return (
+      post.title?.toLowerCase().includes(keyword) ||
+      post.content?.toLowerCase().includes(keyword)
+    );
+  });
 
   if (loading) {
     return <div className={styles.loadingContainer}>게시글 목록을 불러오는 중입니다...</div>;
@@ -114,13 +122,16 @@ function CommunityPage() {
               </button>
             ))}
           </div>
-          <input
-            className={styles.searchInput}
-            type="text"
-            placeholder="지역, 장소, 작성자 검색"
-            value={searchTerm}
-            onChange={handleSearchChange}
-          />
+          <form onSubmit={handleSearchSubmit} style={{ display: 'flex', alignItems: 'center' }}>
+            <input
+              className={styles.searchInput}
+              type="text"
+              placeholder="제목, 내용 검색"
+              value={searchInput}
+              onChange={handleSearchChange}
+            />
+            <button type="submit" style={{ display: 'none' }}>검색</button>
+          </form>
         </div>
         <button
           className={styles.writeButton}
@@ -133,10 +144,10 @@ function CommunityPage() {
       {/* 카드 리스트 (API 데이터 사용) */}
       <div className={styles.cardSection}>
         <div className={styles.cardGrid}>
-          {posts.length === 0 ? (
+          {filteredPosts.length === 0 ? (
             <div className={styles.noResult}>검색 결과가 없습니다.</div>
           ) : (
-            posts.map((post) => (
+            filteredPosts.map((post) => (
               <div 
                 key={post.postId} 
                 className={styles.card}

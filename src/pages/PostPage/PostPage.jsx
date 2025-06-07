@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import styles from './PostPage.module.css';
 import { placeTypeToEmoji } from '../../constants/placeTypes';
+import axiosInstance from '../../utils/axiosConfig';
 // import { FaHeart, FaRegHeart, FaShareSquare, FaCommentDots } from 'react-icons/fa'; // 아이콘 예시 (react-icons 설치 필요)
 
 // mockPostData는 이제 사용하지 않거나, API 호출 실패 시 fallback으로 사용할 수 있습니다.
@@ -17,6 +18,7 @@ const PostPage = () => {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isCourseSaved, setIsCourseSaved] = useState(false);
 
   useEffect(() => {
     const fetchPostData = async () => {
@@ -122,6 +124,39 @@ const PostPage = () => {
     }
   };
 
+  // 코스 저장 핸들러
+  const handleSaveCourse = async () => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      alert('로그인이 필요합니다.');
+      window.location.href = '/kakao/login';
+      return;
+    }
+    if (!postData || !postData.courseId) {
+      alert('코스 정보가 없습니다.');
+      return;
+    }
+    try {
+      const saveData = {
+        userId,
+        courseId: postData.courseId,
+        title: postData.title,
+        imageUrl: postData.courseImageUrl, // postData에 courseImageUrl이 있다면
+        region: postData.region,
+      };
+      await axiosInstance.post(`/user/${userId}/saved-courses`, saveData);
+      setIsCourseSaved(true);
+      alert('마이페이지에 저장되었습니다.');
+    } catch (err) {
+      if (err.response?.status === 409) {
+        alert('이미 저장된 코스입니다.');
+        setIsCourseSaved(true);
+      } else {
+        alert('코스 저장에 실패했습니다.');
+      }
+    }
+  };
+
   if (loading) {
     return <div className={styles.loadingContainer}>게시글을 불러오는 중입니다...</div>;
   }
@@ -136,6 +171,10 @@ const PostPage = () => {
 
   // postData가 로드된 후 currentDayItinerary 계산
   const currentDayItinerary = postData.days && postData.days.find(d => d.day === selectedDay)?.itinerary || [];
+
+  // 렌더링 부분에 버튼 추가 (내가 작성한 글이 아니고, 로그인 상태일 때만 노출)
+  const authorId = postData?.userId;
+  const currentUserId = localStorage.getItem('userId');
 
   return (
     <div className={styles.postPageContainer}>
@@ -226,6 +265,15 @@ const PostPage = () => {
             {/* <FaShareSquare /> */}
             🔗 공유하기
           </button>
+          {currentUserId && authorId && currentUserId !== String(authorId) && (
+            <button
+              className={styles.saveCourseButton}
+              onClick={handleSaveCourse}
+              disabled={isCourseSaved}
+            >
+              {isCourseSaved ? '이미 저장됨' : '코스 저장'}
+            </button>
+          )}
         </div>
 
         <div className={styles.commentsSection}>
