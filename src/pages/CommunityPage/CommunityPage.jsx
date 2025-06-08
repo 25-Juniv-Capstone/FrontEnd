@@ -1,15 +1,23 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../../css/communitypages/CommunityPage.module.css";
 import WritePageModal from "../WritePage/WritePageModal";
 import axiosInstance from "../../utils/axiosConfig";
+import debounce from "lodash/debounce";
 
 const DISABILITY_TYPES = [
   { key: "all", label: "전체" },
   { key: "wheelchair", label: "휠체어 이용자" },
   { key: "visual", label: "시각 장애인" },
   { key: "hearing", label: "청각 장애인" },
+];
+
+const SEARCH_TYPES = [
+  { key: "title", label: "제목" },
+  { key: "content", label: "내용" },
+  { key: "region", label: "지역" },
+  { key: "nickname", label: "작성자" },
 ];
 
 function CommunityPage() {
@@ -27,6 +35,15 @@ function CommunityPage() {
   const [searchInput, setSearchInput] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("");
   const [totalPages, setTotalPages] = useState(1);
+  const [searchType, setSearchType] = useState("title");
+
+  // 디바운스된 검색 함수
+  const debouncedSearch = useCallback(
+    debounce((value) => {
+      setSearchTerm(value);
+    }, 500),
+    []
+  );
 
   // API 호출 로직 (axiosInstance 사용)
   useEffect(() => {
@@ -35,11 +52,13 @@ function CommunityPage() {
         setLoading(true);
         const params = new URLSearchParams();
         if (selectedType && selectedType !== 'all') params.append('disabilityType', selectedType);
-        if (searchTerm) params.append('searchTerm', searchTerm);
+        if (searchTerm) {
+          params.append('searchTerm', searchTerm);
+          params.append('searchType', searchType);
+        }
         if (selectedRegion) params.append('region', selectedRegion);
         
         const response = await axiosInstance.get(`/posts?${params.toString()}`);
-        console.log('포스트 목록 응답:', response.data);
         setPosts(response.data.content);
         setTotalPages(response.data.totalPages);
       } catch (error) {
@@ -51,7 +70,7 @@ function CommunityPage() {
     };
 
     fetchPosts();
-  }, [selectedType, searchTerm, selectedRegion]);
+  }, [selectedType, searchTerm, selectedRegion, searchType]);
 
   // 글 작성 버튼 클릭 핸들러
   const handleWriteClick = () => {
@@ -60,13 +79,13 @@ function CommunityPage() {
   };
 
   const handleSearchChange = (e) => {
-    setSearchInput(e.target.value);
+    const value = e.target.value;
+    setSearchInput(value);
+    debouncedSearch(value);
   };
 
-  // form submit으로만 검색 실행
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    setSearchTerm(searchInput);
+  const handleSearchTypeChange = (e) => {
+    setSearchType(e.target.value);
   };
 
   const handleCardClick = (courseId, postTitle, postId) => {
@@ -79,13 +98,23 @@ function CommunityPage() {
     });
   };
 
-  // 카드 리스트에서 제목/내용에만 검색어가 포함된 게시글만 보여주기
+  // 카드 리스트에서 검색어가 포함된 게시글만 보여주기
   const filteredPosts = posts.filter(post => {
     const keyword = searchTerm.toLowerCase();
-    return (
-      post.title?.toLowerCase().includes(keyword) ||
-      post.content?.toLowerCase().includes(keyword)
-    );
+    if (!keyword) return true;
+
+    switch (searchType) {
+      case "title":
+        return post.title?.toLowerCase().includes(keyword);
+      case "content":
+        return post.content?.toLowerCase().includes(keyword);
+      case "region":
+        return post.region?.toLowerCase().includes(keyword);
+      case "nickname":
+        return post.userName?.toLowerCase().includes(keyword);
+      default:
+        return true;
+    }
   });
 
   if (loading) {
@@ -122,15 +151,25 @@ function CommunityPage() {
               </button>
             ))}
           </div>
-          <form onSubmit={handleSearchSubmit} style={{ display: 'flex', alignItems: 'center' }}>
+          <form onSubmit={(e) => e.preventDefault()} className={styles.searchForm}>
+            <select 
+              value={searchType}
+              onChange={handleSearchTypeChange}
+              className={styles.searchTypeSelect}
+            >
+              {SEARCH_TYPES.map(type => (
+                <option key={type.key} value={type.key}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
             <input
               className={styles.searchInput}
               type="text"
-              placeholder="제목, 내용 검색"
+              placeholder={`${SEARCH_TYPES.find(type => type.key === searchType)?.label} 검색`}
               value={searchInput}
               onChange={handleSearchChange}
             />
-            <button type="submit" style={{ display: 'none' }}>검색</button>
           </form>
         </div>
         <button
