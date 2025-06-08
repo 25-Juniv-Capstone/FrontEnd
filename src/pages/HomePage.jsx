@@ -4,6 +4,7 @@ import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import '../css/HomePage.css';
+import LoginRequiredModal from './LoginRequiredModal';
 
 // 지역 선택 모달 컴포넌트
 const RegionModal = ({ isOpen, onClose, onConfirm, destination }) => {
@@ -223,6 +224,9 @@ function HomePage() {
   const searchRef = useRef(null);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  // 로그인 상태 확인 (예시: 토큰 존재 여부)
+  const isLoggedIn = !!localStorage.getItem('token');
 
   // 한국의 주요 도시 및 관광지 목록
   const destinations = [
@@ -328,6 +332,10 @@ function HomePage() {
 
   // 여행하기 버튼 클릭 시
   const handleTravelClick = () => {
+    if (!isLoggedIn) {
+      setLoginModalOpen(true);
+      return;
+    }
     if (!selectedRegion) {
       setAlertMessage('여행 지역을 먼저 선택해주세요');
       setShowAlert(true);
@@ -451,6 +459,8 @@ function HomePage() {
           </div>
         </div>
       )}
+
+      <LoginRequiredModal open={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
 
       <style jsx>{`
         .alert-modal {

@@ -1,0 +1,59 @@
+.login-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-modal-content {
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px 32px 32px 32px;
+  min-width: 340px;
+  text-align: center;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.15);
+}
+
+.login-modal-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 32px;
+  word-break: keep-all;
+}
+
+.login-modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.cancel-btn, .login-btn {
+  border: none;
+  border-radius: 24px;
+  padding: 12px 32px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cancel-btn {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.login-btn {
+  background: #1976d2;
+  color: #fff;
+}
+
+.cancel-btn:hover {
+  background: #e0e0e0;
+}
+
+.login-btn:hover {
+  background: #1565c0;
+} 
