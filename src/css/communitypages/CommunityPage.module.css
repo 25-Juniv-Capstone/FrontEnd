@@ -3,7 +3,7 @@
 .mainContainer {
   min-height: 100vh;
   background: #f5f6fa;
-  font-family: 'SF Pro Display', 'Pretendard', 'Noto Sans KR', sans-serif;
+  font-family: 'Gyeonggi_Title_Medium', 'Pretendard', sans-serif;
   padding-bottom: 60px;
 }
 
@@ -117,7 +117,12 @@
 }
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
+  min-width: 900px;
+  min-height: 340px;
+  justify-items: stretch;
+  align-items: stretch;
+  grid-auto-rows: 1fr;
   gap: 2rem;
   padding: 1rem;
 }

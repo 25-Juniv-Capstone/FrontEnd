@@ -12,6 +12,7 @@ function MyPage() {
   const [activeTab, setActiveTab] = useState('my');
   const [showEditModal, setShowEditModal] = useState(false);
   const [myCourses, setMyCourses] = useState([]);
+  const [likeCourses, setLikeCourses] = useState([]);
   const navigate = useNavigate();
 
   const fetchUserData = async () => {
@@ -54,6 +55,22 @@ function MyPage() {
         console.error('코스 목록 가져오기 실패:', courseError);
         console.error('에러 상세:', courseError.response?.data);
         setMyCourses([]);
+      }
+
+      try {
+        const likeResponse = await axiosInstance.get(`/courses/like/${userId}`);
+        console.log('좋아요한 코스 목록 응답:', likeResponse);
+        if (likeResponse.data) {
+          console.log('가져온 좋아요한 코스 데이터:', likeResponse.data);
+          setLikeCourses(likeResponse.data);
+        } else {
+          console.log('좋아요한 코스 데이터가 없습니다.');
+          setLikeCourses([]);
+        }
+      } catch (likeError) {
+        console.error('좋아요한 코스 목록 가져오기 실패:', likeError);
+        console.error('에러 상세:', likeError.response?.data);
+        setLikeCourses([]);
       }
     } catch (err) {
       console.error('전체 데이터 가져오기 실패:', err);
@@ -100,7 +117,7 @@ function MyPage() {
     }
 
     return (
-      <div className={communityStyles.cardGrid}>
+      <div className={communityStyles.cardGrid} style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
         {courses.map((course) => (
           <div 
             key={course.courseId} 
@@ -180,18 +197,84 @@ function MyPage() {
 
       {activeTab === 'my' && (
         <div className={communityStyles.cardSection}>
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '20px' }}>로딩 중...</div>
-          ) : error ? (
-            <div style={{ textAlign: 'center', padding: '20px', color: 'red' }}>{error}</div>
-          ) : (
-            renderCourseCards(myCourses)
-          )}
+          <div className={communityStyles.cardGrid} style={{ gridTemplateColumns: 'repeat(3, 1fr)', minHeight: 340 }}>
+            {myCourses.length === 0 ? (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', alignSelf: 'center', color: '#888', fontSize: '1.1rem' }}>
+                여행 코스가 없습니다.
+              </div>
+            ) : (
+              myCourses.map((course, idx) => (
+                <div 
+                  key={course.courseId} 
+                  className={communityStyles.card}
+                  onClick={() => handleCourseClick(course.courseId)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div 
+                    className={communityStyles.cardImage} 
+                    style={{
+                      backgroundImage: course.imageUrl 
+                        ? `url(${course.imageUrl})` 
+                        : "url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80')",
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }} 
+                  />
+                  <div className={communityStyles.cardBody}>
+                    <div className={communityStyles.cardTitle}>{course.title}</div>
+                    <div className={communityStyles.cardLocal}>{course.region}</div>
+                    <div className={communityStyles.cardAuthor}>
+                      {activeTab === 'my' ? '나의 여행' : '좋아요한 여행'}
+                    </div>
+                    <div className={communityStyles.cardDate}>
+                      {new Date(course.startDate).toLocaleDateString()} ~ {new Date(course.endDate).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
       {activeTab === 'like' && (
         <div className={communityStyles.cardSection}>
-          {renderCourseCards([])}
+          <div className={communityStyles.cardGrid} style={{ gridTemplateColumns: 'repeat(3, 1fr)', minHeight: 340 }}>
+            {likeCourses.length === 0 ? (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', alignSelf: 'center', color: '#888', fontSize: '1.1rem' }}>
+                좋아요한 여행 코스가 없습니다.
+              </div>
+            ) : (
+              likeCourses.map((course, idx) => (
+                <div 
+                  key={course.courseId} 
+                  className={communityStyles.card}
+                  onClick={() => handleCourseClick(course.courseId)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div 
+                    className={communityStyles.cardImage} 
+                    style={{
+                      backgroundImage: course.imageUrl 
+                        ? `url(${course.imageUrl})` 
+                        : "url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80')",
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }} 
+                  />
+                  <div className={communityStyles.cardBody}>
+                    <div className={communityStyles.cardTitle}>{course.title}</div>
+                    <div className={communityStyles.cardLocal}>{course.region}</div>
+                    <div className={communityStyles.cardAuthor}>
+                      {activeTab === 'my' ? '나의 여행' : '좋아요한 여행'}
+                    </div>
+                    <div className={communityStyles.cardDate}>
+                      {new Date(course.startDate).toLocaleDateString()} ~ {new Date(course.endDate).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
 
