@@ -71,7 +71,7 @@ const LoadingSpinner = ({ message = "코스를 생성하고 있습니다...", re
             fontSize: '1.2rem',
             fontWeight: '500',
             margin: '0 0 20px 0',
-            fontFamily: "'Ownglyph_corncorn-Rg', 'Pretendard', sans-serif"
+            fontFamily: "'Gyeonggi_Title_Medium', 'Pretendard', sans-serif"
           }}
         >
           {message}{dots}
@@ -104,7 +104,7 @@ const LoadingSpinner = ({ message = "코스를 생성하고 있습니다...", re
                 color: '#2c3e50',
                 fontSize: '1.1rem',
                 fontWeight: '600',
-                fontFamily: "'Ownglyph_corncorn-Rg', 'Pretendard', sans-serif"
+                fontFamily: "'Gyeonggi_Title_Medium', 'Pretendard', sans-serif"
               }}
             >
               {region} 여행 정보
@@ -129,7 +129,7 @@ const LoadingSpinner = ({ message = "코스를 생성하고 있습니다...", re
                 padding: '0 10px',
                 animation: 'fadeIn 0.8s ease-in-out',
                 textAlign: 'center',
-                fontFamily: "'Ownglyph_corncorn-Rg', 'Pretendard', sans-serif"
+                fontFamily: "'Gyeonggi_Title_Medium', 'Pretendard', sans-serif"
               }}
             >
               {currentTip}

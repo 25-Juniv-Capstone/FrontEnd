@@ -302,7 +302,7 @@ body {
   font-weight: 700;
   color: #333;
   line-height: 1.4;
-  font-family: 'Ownglyph_corncorn-Rg', 'Pretendard', sans-serif;
+  font-family: 'Gyeonggi_Title_Medium', 'Pretendard', sans-serif;
 }
 
 .date-input-modal form {
@@ -384,14 +384,14 @@ body {
   font-weight: 700;
   color: #333;
   line-height: 1.4;
-  font-family: 'Ownglyph_corncorn-Rg', 'Pretendard', sans-serif;
+  font-family: 'Gyeonggi_Title_Medium', 'Pretendard', sans-serif;
 }
 
 .confirm-modal .modal-content p {
   font-size: 1.2rem;
   color: #333;
   font-weight: 500;
-  font-family: 'Ownglyph_corncorn-Rg', 'Pretendard', sans-serif;
+  font-family: 'Gyeonggi_Title_Medium', 'Pretendard', sans-serif;
 }
 
 .confirm-modal .modal-content p span {
@@ -816,6 +816,6 @@ body {
 }
 
 .home-page {
-  font-family: 'Ownglyph_corncorn-Rg', 'Pretendard', sans-serif;
+  font-family: 'Gyeonggi_Title_Medium', 'Pretendard', sans-serif;
 }
 
