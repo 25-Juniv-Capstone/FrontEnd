@@ -28,7 +28,7 @@
     flex-shrink: 1;
     width: auto;
     padding: 31px 50px;
-    font-family: Pretendard, -apple-system, Roboto, Helvetica, sans-serif;
+    font-family: 'Gyeonggi_Title_Medium', 'Pretendard', sans-serif;
     font-size: 30px;
     font-weight: 700;
     line-height: 2;
@@ -122,7 +122,7 @@
     max-width: 287px;
     margin-top: 5px;
     padding: 22px 0px;
-    font-family: Pretendard, -apple-system, Roboto, Helvetica, sans-serif;
+    font-family: 'Gyeonggi_Title_Medium', 'Pretendard', sans-serif;
     font-size: 16px;
     font-weight: 400;
     display: flex;
@@ -174,7 +174,7 @@
     max-width: 287px;
     margin-top: 15px;
     padding: 22px 0px;
-    font-family: Pretendard, -apple-system, Roboto, Helvetica, sans-serif;
+    font-family: 'Gyeonggi_Title_Medium', 'Pretendard', sans-serif;
     font-size: 16px;
     font-weight: 400;
     line-height: 1.4;
