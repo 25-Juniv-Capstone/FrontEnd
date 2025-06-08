@@ -1,7 +1,7 @@
 .course-page {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100vh - 80px); /* 헤더 높이(80px) 제외 */
   overflow: hidden; /* 전체 페이지 스크롤 방지 */
 }
 
@@ -13,7 +13,7 @@
 
 .course-sidebar {
   width: 340px;
-  height: 100vh;
+  height: 100%; /* 100vh 대신 100%로 변경 */
   display: flex;
   flex-direction: column;
   background-color: #fff;
