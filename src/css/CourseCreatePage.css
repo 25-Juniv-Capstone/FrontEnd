@@ -1,7 +1,7 @@
 .course-page {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100vh - 80px); /* 헤더 높이(80px) 제외 */
   overflow: hidden; /* 전체 페이지 스크롤 방지 */
 }
 
@@ -13,7 +13,7 @@
 
 .course-sidebar {
   width: 340px;
-  height: 100vh;
+  height: 100%; /* 100vh 대신 100%로 변경 */
   display: flex;
   flex-direction: column;
   background-color: #fff;
@@ -78,7 +78,7 @@
 }
 
 .course-sidebar h2 {
-  font-size: 20px;
+  font-size: 25px;
   margin-bottom: 4px;
 }
 
@@ -91,11 +91,10 @@
 .day-buttons {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
 }
 
 .day-buttons button {
-  padding: 6px 12px;
+  padding: 8px 12px;
   border: 1px solid #ccc;
   background-color: #fff;
   border-radius: 20px;
@@ -119,16 +118,38 @@
   margin-bottom: 16px;
   box-shadow: 0px 2px 4px rgba(0,0,0,0.05);
   transition: all 0.2s ease;
+  position: relative;
+  cursor: grab;
+}
+
+.course-card:active {
+  cursor: grabbing;
 }
 
 .course-card:hover {
   box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+  transform: translateY(-1px);
+}
+
+/* 드래그 중인 카드 스타일 */
+.course-card.dragging {
+  background: #f8f9fa;
+  box-shadow: 0px 8px 16px rgba(0,0,0,0.1);
+  transform: scale(1.02);
+  z-index: 1000;
+}
+
+/* 드래그 오버 시 스타일 */
+.course-card.drag-over {
+  border-top: 2px solid #2196F3;
 }
 
 .course-card .left {
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 8px;
+  padding-right: 40px; /* 휴지통 아이콘을 위한 여백 */
 }
 
 .course-card .circle {
@@ -146,14 +167,14 @@
 }
 
 /* 시간 표시 스타일 */
-.time {
-  font-size: 14px;
+.course-card .time {
+  font-size: 1.1rem;
   color: #666;
-  margin: 4px 0;
-  padding: 4px 8px;
-  background: #f5f5f5;
-  border-radius: 4px;
-  display: inline-block;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
 }
 
 .course-card .type {
@@ -176,17 +197,28 @@
 }
 
 .course-card .right {
+  position: absolute;
+  top: 15px;
+  right: 15px;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  margin-right: 16px;
+  align-items: center;
 }
 
 .course-card .right button {
-  font-size: 18px;
   background: none;
   border: none;
   cursor: pointer;
+  padding: 4px;
+  color: #666;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.course-card .right button:hover {
+  color: #dc3545;
+  transform: scale(1.1);
 }
 
 .button-row {
@@ -234,7 +266,6 @@
   min-width: 320px;
   max-width: 90vw;
   padding: 32px 28px 28px 28px;
-  font-family: 'Gyeonggi_Title_Medium', 'Pretendard', sans-serif;
   color: #222;
 }
 
@@ -249,7 +280,6 @@
   font-weight: 700;
   margin: 0;
   color: #1976d2;
-  font-family: 'Gyeonggi_Title_Medium', 'Pretendard', sans-serif;
 }
 .modal-header button {
   background: none;
@@ -271,10 +301,13 @@
 }
 
 .modal-content {
-  font-size: 1.05rem;
-  color: #222;
-  line-height: 1.7;
-  font-family: 'Gyeonggi_Title_Medium', 'Pretendard', sans-serif;
+  text-align: left;
+  padding: 0;
+  margin-top: 16px;
+}
+
+.modal-content div {
+  text-align: left;
 }
 
 .accessibility-info {
@@ -284,7 +317,9 @@
   font-size: 1rem;
   color: #444;
   margin-bottom: 7px;
-  font-family: 'Gyeonggi_Title_Medium', 'Pretendard', sans-serif;
+  padding-left: 1.5rem;
+  text-indent: -1.5rem;
+  line-height: 1.5;
 }
 
 @media (max-width: 600px) {
@@ -368,21 +403,41 @@
 .date-section {
   display: flex;
   align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  margin-bottom: 16px;
+}
+
+.date {
+  color: #495057;
+  font-size: 1rem;
+  font-weight: 1000;
+  display: inline-flex;
+  align-items: center;
+  margin-right: 4px;
+}
+
+.edit-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
   padding: 4px;
+  margin-bottom: 15px;
+  cursor: pointer;
+  color: #6c757d;
   border-radius: 4px;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  margin-left: 2px;
+  border-radius: 10px;
 }
 
-.date-section:hover {
-  background-color: #f5f5f5;
+.edit-button:hover {
+  background-color: #e9ecef;
+  color: #495057;
 }
 
-.edit-icon {
-  font-size: 14px;
-  color: #666;
+.edit-button svg {
+  width: 18px;
+  height: 18px;
 }
 
 .date-modal {
@@ -458,40 +513,46 @@
   transform: scale(0.98);
 }
 
-.info-btn, .access-btn, .info-button, .access-button, .delete-btn {
-  background: #f5f5f5;
-  color: #4285F4;
-  border: 1.5px solid #cfe2ff;
+.course-card .info-btn,
+.course-card .access-btn {
+  background: #f8f9fa;
+  color: #495057;
+  border: 1px solid #e9ecef;
   border-radius: 6px;
-  padding: 2px 6px;
-  font-size: 12px;
-  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 0.9rem;
   font-weight: 500;
-  min-width: 30px;
-  box-sizing: border-box;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: flex;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-.info-btn:last-child, .access-btn:last-child, .info-button:last-child, .access-button:last-child, .delete-btn:last-child {
-  margin-right: 0;
-}
-.info-btn:hover, .access-btn:hover, .info-button:hover, .access-button:hover, .delete-btn:hover {
-  background: #e0ecff;
-  color: #1976d2;
-  border-color: #90c2ff;
+  gap: 6px;
+  width: fit-content;
 }
 
-.info-btn svg, .access-btn svg, .info-button svg, .access-button svg, .delete-btn svg {
-  font-size: 1rem !important;
-  vertical-align: -0.125em !important;
-  line-height: 1 !important;
-  position: static !important;
-  margin-bottom: 0 !important;
+.course-card .info-btn:hover,
+.course-card .access-btn:hover {
+  background: #e9ecef;
+  color: #212529;
+  border-color: #dee2e6;
+  transform: translateY(-1px);
+}
+
+.course-card .info-btn svg,
+.course-card .access-btn svg {
+  font-size: 1rem;
+  color: #6c757d;
+}
+
+.course-card .info-btn:hover svg,
+.course-card .access-btn:hover svg {
+  color: #495057;
+}
+
+.course-card .button-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .place-actions {
@@ -814,14 +875,14 @@
   background: white;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-  padding: 24px;
+  padding: 10px;
 }
 
 .time-form {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  margin-top: 20px;
+  margin-top: 40px;
 }
 
 .time-input-group {
@@ -838,7 +899,6 @@
   width: 200px;
   text-align: center;
   color: #333;
-  font-family: inherit;
   transition: all 0.2s;
 }
 

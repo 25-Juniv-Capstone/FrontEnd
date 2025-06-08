@@ -80,7 +80,6 @@ const FinalConfirmModal = ({ isOpen, onClose, onConfirm }) => {
       <div className="confirm-modal">
         <div className="modal-header">
           <h3>여행 계획 확인</h3>
-          <button onClick={onClose}>✕</button>
         </div>
         <div className="modal-content">
           <p>여행 계획을 세우시겠습니까?</p>
