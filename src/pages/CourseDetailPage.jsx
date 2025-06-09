@@ -707,13 +707,6 @@ function CourseDetailPage() {
                 {isLiked ? <FaHeart /> : <FaRegHeart />}
                 <span>{likeCount || 0}</span>
               </button>
-              <button 
-                className="comment-button"
-                onClick={() => setIsCommentOpen(true)}
-              >
-                <FaComment />
-                <span>댓글</span>
-              </button>
               {/* 내 userId와 post.userId가 같으면 수정, 다르면 게시글 저장 */}
               {String(currentUserId) === String(authorId) ? (
                 <>
