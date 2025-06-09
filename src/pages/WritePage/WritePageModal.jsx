@@ -3,7 +3,7 @@ import React from "react";
 import WritePageContent from "./WritePage";
 import styles from "../../css/writepages/ModalWritePage.module.css";
 
-function WritePageModal({ isOpen, onClose }) {
+function WritePageModal({ isOpen, onClose, onPostCreated }) {
   if (!isOpen) return null;
 
   return (
@@ -15,7 +15,11 @@ function WritePageModal({ isOpen, onClose }) {
             ×
           </button>
         </header>
-        <WritePageContent isOpen={isOpen} onClose={onClose} />
+        <WritePageContent 
+          isOpen={isOpen} 
+          onClose={onClose} 
+          onPostCreated={onPostCreated}
+        />
       </div>
     </div>
   );

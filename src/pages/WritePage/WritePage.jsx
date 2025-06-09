@@ -8,7 +8,7 @@ import FormContent from "./FormContent";
 import ActionButtons from "./ActionButtons";
 import axiosInstance from "../../utils/axiosConfig";
 
-function WritePageContent({ isOpen, onClose }) {
+function WritePageContent({ isOpen, onClose, onPostCreated }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [selectedType, setSelectedType] = useState("wheelchair");
@@ -96,6 +96,12 @@ function WritePageContent({ isOpen, onClose }) {
       const response = await axiosInstance.post('/posts', postData);
       console.log('Post created successfully:', response.data);
       alert('게시글이 성공적으로 작성되었습니다.');
+      
+      // 게시글 작성 완료 콜백 호출
+      if (onPostCreated) {
+        onPostCreated();
+      }
+      
       onClose();
     } catch (error) {
       console.error('Error creating post:', error);
