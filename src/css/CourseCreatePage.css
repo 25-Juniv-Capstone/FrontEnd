@@ -242,6 +242,74 @@
   font-size: 14px;
   font-weight: bold;
   margin-right: 8px;
+  flex-shrink: 0; /* 크기 고정 */
+}
+
+/* 시간 버튼 스타일 */
+.time-button {
+  font-size: 1.1rem !important;
+  font-weight: 500 !important;
+  background: none !important;
+  border: none !important;
+  cursor: pointer !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  transition: background-color 0.2s !important;
+  color: #333 !important;
+  width: auto !important; /* 자동 너비 */
+  min-width: 60px !important; /* 최소 너비 설정 */
+  max-width: 120px !important; /* 최대 너비 제한 */
+  text-align: center !important;
+  white-space: nowrap !important; /* 텍스트 줄바꿈 방지 */
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.time-button:hover {
+  background-color: #f0f0f0 !important;
+}
+
+/* 시간 수정 버튼 스타일 */
+.time-edit-button {
+  background: none !important;
+  border: none !important;
+  cursor: pointer !important;
+  padding: 4px !important;
+  color: #666 !important;
+  border-radius: 4px !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 14px !important;
+  width: 24px !important;
+  height: 24px !important;
+  flex-shrink: 0 !important;
+}
+
+.time-edit-button:hover {
+  background-color: #e9ecef !important;
+  color: #495057 !important;
+}
+
+.time-edit-button svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* circle-number와 time-button을 나란히 배치하기 위한 컨테이너 */
+.circle-time-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* time-button과 edit-button을 나란히 배치하기 위한 컨테이너 */
+.time-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* 모달 스타일 */
