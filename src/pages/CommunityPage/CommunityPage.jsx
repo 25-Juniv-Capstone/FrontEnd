@@ -215,13 +215,6 @@ function CommunityPage() {
                     <div className={styles.cardLocal}>
                       {post.region || '전체지역'}
                     </div>
-                    {post.keywords && (
-                      <div className={styles.cardKeywords} style={{ marginTop: '4px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                        {post.keywords.split(',').map((kw, idx) => (
-                          <span key={idx} style={{ color: '#1976d2', fontWeight: 500, fontSize: '0.95em' }}>#{kw.trim()}</span>
-                        ))}
-                      </div>
-                    )}
                     <div className={styles.cardStats}>
                       <span>👁️ {post.viewCount || 0}</span>
                       <span className={post.isLiked ? styles.likedHeart : ''}>❤️ {post.likeCount || 0}</span>

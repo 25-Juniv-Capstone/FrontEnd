@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import Header from './layout/Header';
 import CourseCreatePage from './pages/CourseCreatePage';
 import CourseDetailPage from './pages/CourseDetailPage';
+import CourseEditPage from './pages/CourseEditPage';
 import HomePage from './pages/HomePage.jsx';
 import MyPage from './pages/MyPage.jsx';
 import CommunityPage from './pages/CommunityPage/CommunityPage.jsx';
@@ -17,6 +18,7 @@ function App() {
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/course" element={<CourseCreatePage />} />
         <Route path="/courses/:courseId" element={<CourseDetailPage />} />
+        <Route path="/courses/:courseId/edit" element={<CourseEditPage />} />
         <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
         <Route path="/community" element={<CommunityPage />} />
         <Route path="/select" element={<SelectPage />} />

@@ -228,6 +228,15 @@ function HomePage() {
   // 로그인 상태 확인 (예시: 토큰 존재 여부)
   const isLoggedIn = !!localStorage.getItem('token');
 
+  // 로그아웃 후 리다이렉트 처리
+  useEffect(() => {
+    const redirectAfterLogout = localStorage.getItem('redirectAfterLogout');
+    if (redirectAfterLogout && redirectAfterLogout !== '/') {
+      localStorage.removeItem('redirectAfterLogout');
+      navigate(redirectAfterLogout);
+    }
+  }, [navigate]);
+
   // 한국의 주요 도시 및 관광지 목록
   const destinations = [
     '서울', '부산', '인천', '대구', '대전', '광주', '울산', '세종',

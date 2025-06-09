@@ -55,4 +55,15 @@ export const deleteComment = async (courseId, commentId) => {
     console.error('댓글 삭제 실패:', error);
     throw error;
   }
+};
+
+// 코스 삭제
+export const deleteCourse = async (courseId) => {
+  try {
+    const response = await axiosInstance.delete(`/courses/${courseId}`);
+    return response.data;
+  } catch (error) {
+    console.error('코스 삭제 실패:', error);
+    throw error;
+  }
 }; 

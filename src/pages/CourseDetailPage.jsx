@@ -16,8 +16,7 @@ import { MdDeleteOutline, MdContentCopy } from 'react-icons/md';
 import { TbPencilMinus } from 'react-icons/tb';
 import { getCourseDetail, toggleLike, getComments, createComment, deleteComment } from '../api/courseApi';
 import axiosInstance from '../utils/axiosConfig';
-
-
+import LoginRequiredModal from './LoginRequiredModal';
 
 function CourseDetailPage() {
   const { courseId } = useParams();
@@ -31,6 +30,7 @@ function CourseDetailPage() {
   const [likeCount, setLikeCount] = useState(0);
   const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [modalInfo, setModalInfo] = useState({ open: false, type: '', place: null });
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const markersRef = useRef([]);
@@ -61,6 +61,46 @@ function CourseDetailPage() {
   const authorId = post?.userId;
 
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
+
+  // 로그인 후에도 게시글 정보 유지를 위한 localStorage 처리
+  useEffect(() => {
+    // location.state에서 게시글 정보가 있으면 localStorage에 저장
+    if (location.state?.postTitle && location.state?.postId) {
+      localStorage.setItem('courseDetailPostTitle', location.state.postTitle);
+      localStorage.setItem('courseDetailPostId', location.state.postId);
+    }
+  }, [location.state]);
+
+  // localStorage에서 게시글 정보 복원
+  const [restoredPostTitle, setRestoredPostTitle] = useState(null);
+  const [restoredPostId, setRestoredPostId] = useState(null);
+
+  useEffect(() => {
+    // location.state가 없으면 localStorage에서 복원 시도
+    if (!location.state?.postTitle && !location.state?.postId) {
+      const savedPostTitle = localStorage.getItem('courseDetailPostTitle');
+      const savedPostId = localStorage.getItem('courseDetailPostId');
+      
+      if (savedPostTitle && savedPostId) {
+        setRestoredPostTitle(savedPostTitle);
+        setRestoredPostId(savedPostId);
+        console.log('localStorage에서 게시글 정보 복원:', savedPostTitle, savedPostId);
+      }
+    }
+  }, [location.state]);
+
+  // 실제 사용할 게시글 정보 (location.state 우선, 없으면 localStorage에서 복원한 값)
+  const actualPostTitle = postTitle || restoredPostTitle;
+  const actualPostId = postId || restoredPostId;
+
+  // 페이지를 떠날 때 localStorage 정리
+  useEffect(() => {
+    return () => {
+      // 컴포넌트 언마운트 시 localStorage에서 게시글 정보 삭제
+      localStorage.removeItem('courseDetailPostTitle');
+      localStorage.removeItem('courseDetailPostId');
+    };
+  }, []);
 
   useEffect(() => {
     // 구글 지도 API 로드 확인
@@ -114,32 +154,59 @@ function CourseDetailPage() {
   // 게시글 정보 받아오기
   useEffect(() => {
     const fetchPost = async () => {
-      if (!postId) return;
+      if (!actualPostId) return;
       try {
-        const response = await axiosInstance.get(`/posts/${postId}`);
+        console.log('게시글 정보 요청 - postId:', actualPostId, 'currentUserId:', currentUserId);
+        const response = await axiosInstance.get(`/posts/${actualPostId}`);
+        console.log('게시글 정보 응답 전체:', response.data);
+        console.log('응답 데이터 키들:', Object.keys(response.data));
+        console.log('isLiked 상태:', response.data.isLiked);
+        console.log('likeCount:', response.data.likeCount);
+        
+        // isLiked가 없을 경우 기본값 설정
+        const isLikedValue = response.data.isLiked !== undefined ? response.data.isLiked : false;
+        const likeCountValue = response.data.likeCount || 0;
+        
+        console.log('설정할 isLiked 값:', isLikedValue);
+        console.log('설정할 likeCount 값:', likeCountValue);
+        
         setPost(response.data);
-        setIsLiked(response.data.isLiked);
-        setLikeCount(response.data.likeCount);
+        setIsLiked(isLikedValue);
+        setLikeCount(likeCountValue);
+        
+        // isLiked가 undefined이고 로그인된 사용자가 있다면, 좋아요 상태를 별도로 확인
+        if (response.data.isLiked === undefined && currentUserId) {
+          console.log('좋아요 상태를 별도로 확인합니다.');
+          try {
+            const likeResponse = await axiosInstance.get(`/posts/liked/${currentUserId}`);
+            console.log('사용자 좋아요 목록:', likeResponse.data);
+            const isUserLiked = likeResponse.data.some(likedPost => likedPost.postId === parseInt(actualPostId));
+            console.log('현재 게시글 좋아요 여부:', isUserLiked);
+            setIsLiked(isUserLiked);
+          } catch (likeError) {
+            console.error('좋아요 상태 확인 실패:', likeError);
+          }
+        }
       } catch (e) {
         console.error('게시글 정보 불러오기 실패:', e);
       }
     };
     fetchPost();
-  }, [postId]);
+  }, [actualPostId, currentUserId]);
 
   // 댓글 목록 받아오기
   useEffect(() => {
     const fetchComments = async () => {
-      if (!postId) return;
+      if (!actualPostId) return;
       try {
-        const response = await axiosInstance.get(`/comments/post/${postId}`);
+        const response = await axiosInstance.get(`/comments/post/${actualPostId}`);
         setComments(response.data);
       } catch (e) {
         console.error('댓글 목록 불러오기 실패:', e);
       }
     };
     fetchComments();
-  }, [postId]);
+  }, [actualPostId]);
 
   // 구글 지도 초기화
   useEffect(() => {
@@ -345,54 +412,81 @@ function CourseDetailPage() {
     "기타": "#2196F3"    // 파란색 - 기타
   };
 
-  // 전역 함수 등록 (마커 인포윈도우의 버튼 클릭 이벤트용)
-  useEffect(() => {
-    window.showPlaceDetails = (placeName) => {
-      const place = courseDetail?.days
-        ?.find(day => day.dayNumber === selectedDay)
-        ?.itineraryItems
-        ?.find(item => item.placeName === placeName);
-      
-      if (place) {
-        setModalInfo({ open: true, type: 'info', place });
-        if (infoWindowRef.current) {
-          infoWindowRef.current.close();
-        }
-      }
-    };
-
-    window.showAccessibilityInfo = (placeName) => {
-      const place = courseDetail?.days
-        ?.find(day => day.dayNumber === selectedDay)
-        ?.itineraryItems
-        ?.find(item => item.placeName === placeName);
-      
-      if (place) {
-        setModalInfo({ open: true, type: 'accessibility', place });
-        if (infoWindowRef.current) {
-          infoWindowRef.current.close();
-        }
-      }
-    };
-
-    return () => {
-      delete window.showPlaceDetails;
-      delete window.showAccessibilityInfo;
-    };
-  }, [courseDetail, selectedDay]);
-
   // 좋아요 처리
   const handleLike = async () => {
-    if (!postId) return;
+    if (!actualPostId) return;
+    
+    // 로그인 체크
+    if (!currentUserId) {
+      setShowLoginModal(true);
+      return;
+    }
+    
     try {
-      await axiosInstance.post(`/posts/${postId}/like`, {
+      console.log('좋아요 요청 시작 - postId:', actualPostId, 'userId:', currentUserId);
+      const response = await axiosInstance.post(`/posts/${actualPostId}/like`, {
         userId: currentUserId,
       });
-      // 좋아요 상태 갱신은 별도 API 응답에 따라 처리
-      setIsLiked(prev => !prev);
-      setLikeCount(prev => prev + (isLiked ? -1 : 1));
+      
+      console.log('좋아요 응답:', response.data);
+      
+      // API 응답에 따라 상태 업데이트
+      if (response.data) {
+        // 응답이 객체인 경우 (isLiked, likeCount 포함)
+        if (typeof response.data === 'object' && response.data.isLiked !== undefined) {
+          console.log('좋아요 상태 업데이트 (객체):', response.data.isLiked, response.data.likeCount);
+          setIsLiked(response.data.isLiked);
+          setLikeCount(response.data.likeCount);
+        } 
+        // 응답이 문자열인 경우 ("liked" 또는 "unliked")
+        else if (typeof response.data === 'string') {
+          const isLikedNow = response.data === 'liked';
+          console.log('좋아요 상태 업데이트 (문자열):', isLikedNow, response.data);
+          setIsLiked(isLikedNow);
+          setLikeCount(prev => prev + (isLikedNow ? 1 : -1));
+        }
+        // 응답이 boolean인 경우
+        else if (typeof response.data === 'boolean') {
+          console.log('좋아요 상태 업데이트 (boolean):', response.data);
+          setIsLiked(response.data);
+          setLikeCount(prev => prev + (response.data ? 1 : -1));
+        }
+        // 기타 응답 형태
+        else {
+          console.log('알 수 없는 응답 형태, 상태를 토글합니다:', response.data);
+          setIsLiked(prev => !prev);
+          setLikeCount(prev => prev + (isLiked ? -1 : 1));
+        }
+      } else {
+        // 응답이 없을 경우 현재 상태를 토글
+        console.log('API 응답이 없어서 상태를 토글합니다.');
+        setIsLiked(prev => !prev);
+        setLikeCount(prev => prev + (isLiked ? -1 : 1));
+      }
+      
+      // 좋아요 처리 후 게시글 정보를 다시 가져와서 최신 상태 반영
+      setTimeout(async () => {
+        try {
+          const refreshResponse = await axiosInstance.get(`/posts/${actualPostId}`);
+          console.log('좋아요 후 게시글 정보 새로고침:', refreshResponse.data);
+          if (refreshResponse.data.isLiked !== undefined) {
+            setIsLiked(refreshResponse.data.isLiked);
+            setLikeCount(refreshResponse.data.likeCount || 0);
+          }
+        } catch (refreshError) {
+          console.error('게시글 정보 새로고침 실패:', refreshError);
+        }
+      }, 100);
+      
     } catch (error) {
       console.error('좋아요 처리 실패:', error);
+      console.error('에러 상세:', error.response?.data);
+      
+      // 에러가 발생해도 사용자 경험을 위해 상태를 토글
+      console.log('에러 발생으로 인한 상태 토글');
+      setIsLiked(prev => !prev);
+      setLikeCount(prev => prev + (isLiked ? -1 : 1));
+      
       alert('좋아요 처리에 실패했습니다.');
     }
   };
@@ -401,10 +495,17 @@ function CourseDetailPage() {
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
+    
+    // 로그인 체크
+    if (!currentUserId) {
+      setShowLoginModal(true);
+      return;
+    }
+    
     setIsCommentLoading(true);
     try {
       const result = await axiosInstance.post('/comments', {
-        postId: post.postId,
+        postId: actualPostId,
         userId: currentUserId,
         content: newComment.trim(),
       });
@@ -512,10 +613,10 @@ function CourseDetailPage() {
 
   // 게시글 삭제 핸들러
   const handleDeletePost = async () => {
-    if (!postId) return;
+    if (!actualPostId) return;
     if (!window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) return;
     try {
-      await axiosInstance.delete(`/posts/${postId}`);
+      await axiosInstance.delete(`/posts/${actualPostId}`);
       alert('게시글이 삭제되었습니다.');
       navigate('/community');
     } catch (error) {
@@ -544,7 +645,7 @@ function CourseDetailPage() {
           <div className="course-title-section">
             <div className="course-title">
               <h1 style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                {isCommunity ? postTitle : courseDetail?.course_name}
+                {isCommunity ? actualPostTitle : courseDetail?.course_name}
                 {isCommunity && post?.content && (
                   <button
                     onClick={() => setIsContentModalOpen(true)}
@@ -582,8 +683,16 @@ function CourseDetailPage() {
                 onClick={handleLike}
                 disabled={!isCommunity}
               >
+                {console.log('좋아요 버튼 렌더링 - isLiked:', isLiked, 'likeCount:', likeCount)}
                 {isLiked ? <FaHeart /> : <FaRegHeart />}
-                <span>{likeCount}</span>
+                <span>{likeCount || 0}</span>
+              </button>
+              <button 
+                className="comment-button"
+                onClick={() => setIsCommentOpen(true)}
+              >
+                <FaComment />
+                <span>댓글</span>
               </button>
               {/* 내 userId와 post.userId가 같으면 수정, 다르면 게시글 저장 */}
               {String(currentUserId) === String(authorId) ? (
@@ -597,7 +706,7 @@ function CourseDetailPage() {
                   </button>
                 </>
               ) : null}
-                <button
+              <button
                 className="copy-link-button"
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
@@ -610,7 +719,6 @@ function CourseDetailPage() {
             </div>
           )}
         </div>
-
       </div>
 
       {/* 메인 콘텐츠 영역 */}
@@ -637,11 +745,6 @@ function CourseDetailPage() {
                 <div className="place-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                     <h3>{`${index + 1}. ${place.place_name}`}</h3>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDeletePlace(place.id)}
-                      style={{ marginLeft: '8px' }}
-                    >🗑️</button>
                   </div>
                   <p className="place-type">{place.place_type}</p>
                   <p className="place-description">{place.description}</p>
@@ -832,6 +935,12 @@ function CourseDetailPage() {
           </div>
         </div>
       )}
+
+      {/* 로그인 필요 모달 */}
+      <LoginRequiredModal 
+        open={showLoginModal} 
+        onClose={() => setShowLoginModal(false)} 
+      />
     </div>
   );
 }

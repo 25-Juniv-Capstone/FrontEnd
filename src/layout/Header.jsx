@@ -28,17 +28,25 @@ function Header() {
 
   const handleLogin = async () => {
     try {
+      // 현재 페이지 URL을 state 파라미터로 전달
+      const currentUrl = window.location.pathname + window.location.search;
+      const loginUrl = `http://localhost:8080/api/auth/kakao/login?state=${encodeURIComponent(currentUrl)}`;
       // 직접 카카오 로그인 URL로 이동
-      window.location.href = 'http://localhost:8080/api/auth/kakao/login';
+      window.location.href = loginUrl;
     } catch (error) {
       alert('서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
     }
   };
 
   const handleLogout = () => {
+    // 현재 페이지 URL을 localStorage에 저장
+    const currentUrl = window.location.pathname + window.location.search;
+    localStorage.setItem('redirectAfterLogout', currentUrl);
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
     setToken(null);
+    
+    // 홈페이지로 이동
     navigate('/');
     window.location.reload();
   };

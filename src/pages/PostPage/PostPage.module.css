@@ -1,0 +1,342 @@
+/* PostPage.module.css */
+.postPageContainer {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 20px;
+  font-family: 'Gyeonggi_Title_Medium', 'Pretendard', sans-serif;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.postHeader {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+}
+
+.postHeader h1 {
+  font-size: 2.5em;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.postMeta {
+  font-size: 0.9em;
+  color: #777;
+}
+
+.postMeta span {
+  margin-right: 15px;
+}
+
+.dayButtonsContainer {
+  margin-bottom: 30px;
+  display: flex;
+  gap: 10px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 20px;
+}
+
+.dayButton {
+  padding: 10px 20px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  background-color: #fff;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1em;
+  font-weight: 500;
+}
+
+.dayButton:hover {
+  background-color: #f0f0f0;
+  border-color: #ccc;
+}
+
+.dayButton.activeDay {
+  background-color: #007bff; /* CourseCreatePage와 유사한 활성 색상 */
+  color: white;
+  border-color: #007bff;
+  font-weight: 700;
+}
+
+.mainContent {
+  display: flex;
+  gap: 30px;
+}
+
+.courseDetailsSection {
+  flex: 2;
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+}
+
+.courseDetailsSection h2 {
+  font-size: 1.8em;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 10px;
+}
+
+.itineraryList {
+  list-style: none;
+  padding: 0;
+}
+
+.itineraryItem {
+  background-color: #fdfdfd;
+  border: 1px solid #e7e7e7;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: box-shadow 0.3s ease;
+}
+
+.itineraryItem:hover {
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.timeAndType {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.time {
+  font-weight: 700;
+  color: #007bff;
+  font-size: 1.1em;
+}
+
+.placeType {
+  font-size: 0.9em;
+  color: #555;
+  background-color: #f0f0f0;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+.placeName {
+  font-size: 1.4em;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.description {
+  font-size: 1em;
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.accessibilityInfo {
+  margin-top: 12px;
+  font-size: 0.9em;
+  color: #666;
+  background-color: #f9f9f9;
+  padding: 10px;
+  border-radius: 4px;
+  border-left: 3px solid #007bff;
+}
+
+.accessibilityInfo strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.accessibilityInfo ul {
+  list-style: disc;
+  margin-left: 20px;
+  padding-left: 0;
+}
+
+.centerDivider {
+  width: 2px;
+  background-color: #ddd;
+  min-height: 100%; /* extends full height of parent */
+}
+
+.sidebar {
+  flex: 1;
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+}
+
+.memoSection, .keywordsSection {
+  margin-bottom: 25px;
+}
+
+.sidebar h3 {
+  font-size: 1.5em;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+}
+
+.memoSection p {
+  font-size: 1em;
+  line-height: 1.7;
+  color: #555;
+  white-space: pre-wrap; /* Preserve line breaks in memo */
+}
+
+.keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.keyword {
+  background-color: #e9ecef;
+  color: #495057;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 0.9em;
+}
+
+.postFooter {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.actionsContainer {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  align-items: center;
+}
+
+.actionButton {
+  padding: 10px 18px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1em;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* 아이콘과 텍스트 간격 */
+}
+
+.actionButton:hover {
+  background-color: #f5f5f5;
+  border-color: #bbb;
+}
+
+.actionButton.liked {
+  background-color: #ffeff2; /* 좋아요 눌렸을 때 배경 */
+  color: #e53e3e; /* 좋아요 눌렸을 때 아이콘/텍스트 색상 */
+  border-color: #ffc2c2;
+}
+
+.commentsSection {
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+}
+
+.commentsSection h3 {
+  font-size: 1.6em;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.commentForm textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  font-size: 1em;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.commentForm button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease;
+}
+
+.commentForm button:hover {
+  background-color: #0056b3;
+}
+
+.commentList {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+.commentItem {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.commentItem strong {
+  color: #007bff;
+}
+
+.commentItem p {
+  margin: 5px 0;
+  color: #444;
+  line-height: 1.5;
+}
+
+.commentDate {
+  font-size: 0.8em;
+  color: #888;
+  margin-left: 10px;
+}
+
+.loadingContainer, .errorContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  font-size: 1.2em;
+  color: #555;
+  text-align: center;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+}
+
+.errorContainer {
+  color: #d9534f; /* 오류 메시지는 붉은색 계열 */
+}
+
+.noComments {
+  text-align: center;
+  color: #777;
+  margin-top: 20px;
+  font-style: italic;
+} 
