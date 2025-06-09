@@ -18,6 +18,7 @@ import { LiaToggleOnSolid, LiaToggleOffSolid } from "react-icons/lia";
 import { FaInfoCircle, FaWheelchair, FaPlus, FaSave, FaArrowLeft } from "react-icons/fa";
 import { LuPencilLine } from "react-icons/lu";
 import { IoTrashBinOutline } from "react-icons/io5";
+import { formatTimeForInput, formatDisplayTime } from "../utils/timeFormatters";
 
 // 장소 타입별 색상 매핑
 const placeTypeToColor = {
@@ -57,17 +58,23 @@ const placeTypeToEmoji = {
 
 // 시간 수정 모달 컴포넌트
 const TimeModal = ({ isOpen, onClose, onTimeChange, currentTime, placeName, isNewPlace }) => {
-  const [time, setTime] = useState(currentTime);
+  const [time, setTime] = useState('');
 
   useEffect(() => {
     if (isOpen) {
-      setTime(currentTime);
+      // HTML input type="time" 형식으로 변환
+      const formattedTime = formatTimeForInput(currentTime);
+      setTime(formattedTime);
     }
   }, [isOpen, currentTime]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onTimeChange(time);
+    if (time) {
+      // 사용자가 선택한 새로운 시간을 오전/오후 형식으로 변환
+      const finalTime = formatDisplayTime(time);
+      onTimeChange(finalTime);
+    }
     onClose();
   };
 
@@ -88,7 +95,7 @@ const TimeModal = ({ isOpen, onClose, onTimeChange, currentTime, placeName, isNe
           <div className="time-input-group">
             <input
               type="time"
-              value={time}
+              value={time || ''}
               onChange={(e) => setTime(e.target.value)}
               className="time-input"
               required
@@ -97,7 +104,7 @@ const TimeModal = ({ isOpen, onClose, onTimeChange, currentTime, placeName, isNe
 
           <div className="modal-buttons">
             <button type="button" onClick={onClose}>취소</button>
-            <button type="submit">저장</button>
+            <button type="submit" disabled={!time}>저장</button>
           </div>
         </form>
       </div>
@@ -534,7 +541,6 @@ function CourseEditPage() {
   // 모달 상태
   const [showTimeModal, setShowTimeModal] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
-  const [selectedPlaceForTime, setSelectedPlaceForTime] = useState(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [modalInfo, setModalInfo] = useState({ open: false, type: '', place: null });
   const [showRoutes, setShowRoutes] = useState(false);
@@ -575,14 +581,7 @@ function CourseEditPage() {
   useEffect(() => {
     const fetchCourseDetail = async () => {
       try {
-        console.log('코스 상세 정보 요청 시작 - 코스 ID:', courseId);
         const response = await axiosInstance.get(`/courses/${courseId}`);
-        console.log('=== 코스 상세 정보 응답 ===');
-        console.log('코스명:', response.data.course_name);
-        console.log('지역:', response.data.region);
-        console.log('시작일:', response.data.start_date);
-        console.log('종료일:', response.data.end_date);
-        console.log('일차 수:', response.data.days.length);
         
         const courseData = response.data;
         
@@ -591,10 +590,16 @@ function CourseEditPage() {
           ...courseData,
           days: courseData.days.map(day => ({
             ...day,
-            itinerary: day.itinerary.map((place, index) => ({
-              ...place,
-              id: place.id || `${day.day}-${index}` // id가 없으면 생성
-            }))
+            itinerary: day.itinerary.map((place, index) => {
+              // 백엔드에서 받아온 24시간제 시간을 오전/오후 형식으로 변환
+              const convertedTime = place.time ? formatDisplayTime(place.time) : place.time;
+              
+              return {
+                ...place,
+                id: place.id || `${day.day}-${index}`, // id가 없으면 생성
+                time: convertedTime
+              };
+            })
           }))
         };
         
@@ -603,8 +608,6 @@ function CourseEditPage() {
         setRegion(processedCourseData.region || '');
         setStartDate(processedCourseData.start_date || '');
         setEndDate(processedCourseData.end_date || '');
-        
-        console.log('=== 응답 데이터 끝 ===');
       } catch (err) {
         console.error('코스 정보 가져오기 실패:', err);
         setError(err.message);
@@ -830,14 +833,37 @@ function CourseEditPage() {
 
   // 시간 수정
   const handleTimeChange = (newTime) => {
-    if (!selectedPlaceForTime) return;
+    console.log('=== handleTimeChange 호출됨 ===');
+    console.log('newTime:', newTime);
+    console.log('selectedPlace:', selectedPlace);
+    console.log('selectedDay:', selectedDay);
+    
+    if (!selectedPlace) {
+      console.log('selectedPlace가 없음 - 함수 종료');
+      return;
+    }
 
     const currentDay = courseDetail?.days?.find(day => day.day === selectedDay);
-    if (!currentDay) return;
+    console.log('currentDay:', currentDay);
+    
+    if (!currentDay) {
+      console.log('currentDay가 없음 - 함수 종료');
+      return;
+    }
 
-    const updatedItinerary = currentDay.itinerary.map(place => 
-      place.id === selectedPlaceForTime.id ? { ...place, time: newTime } : place
-    );
+    // newTime을 오전/오후 형식으로 변환
+    const formattedTime = formatDisplayTime(newTime);
+
+    const updatedItinerary = currentDay.itinerary.map(place => {
+      const isTargetPlace = place.id === selectedPlace.id;
+      console.log(`장소 ${place.place_name}: id=${place.id}, selectedPlace.id=${selectedPlace.id}, 매칭=${isTargetPlace}`);
+      
+      if (isTargetPlace) {
+        console.log(`시간 수정: ${place.time} -> ${formattedTime}`);
+        return { ...place, time: formattedTime };
+      }
+      return place;
+    });
 
     const updatedCourseDetail = {
       ...courseDetail,
@@ -847,7 +873,8 @@ function CourseEditPage() {
     };
 
     setCourseDetail(updatedCourseDetail);
-    setSelectedPlaceForTime(null);
+    setSelectedPlace(null);
+    console.log('=== handleTimeChange 완료 ===');
   };
 
   // 날짜 수정
@@ -877,7 +904,7 @@ function CourseEditPage() {
         days: courseDetail.days.map(day => ({
           dayNumber: day.day,                 // day -> dayNumber
           itinerary: day.itinerary.map(place => ({
-            time: place.time || "",
+            time: formatTimeForInput(place.time || ""),
             placeName: place.place_name || "", // place_name -> placeName
             placeType: place.place_type || "", // place_type -> placeType
             description: place.description || "",
@@ -941,7 +968,29 @@ function CourseEditPage() {
             >
               {index + 1}
             </div>
-            <div className="time" style={{ fontSize: '1.1rem', fontWeight: '500' }}>{place.time || '--:--'}</div>
+            <button
+              className="time-button"
+              onClick={() => {
+                setSelectedPlace(place);
+                setTimeModalMode('edit');
+                setIsTimeModalOpen(true);
+              }}
+              style={{ 
+                fontSize: '1.1rem', 
+                fontWeight: '500',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                transition: 'background-color 0.2s',
+                color: '#333'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            >
+              {formatDisplayTime(place.time)}
+            </button>
             <div className="title" style={{ fontSize: '1.2rem', fontWeight: '600' }}>{place.place_name}</div>
             <div className="place-type" style={{ 
               fontSize: '1.1rem', 

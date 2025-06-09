@@ -471,7 +471,7 @@ function HomePage() {
 
       <LoginRequiredModal open={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
 
-      <style jsx>{`
+      <style>{`
         .alert-modal {
           background: white;
           padding: 24px;

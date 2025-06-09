@@ -18,6 +18,7 @@ import { LiaToggleOnSolid, LiaToggleOffSolid } from "react-icons/lia";
 import { FaInfoCircle, FaWheelchair } from "react-icons/fa";
 import { LuPencilLine } from "react-icons/lu";
 import { IoTrashBinOutline } from "react-icons/io5";
+import { formatTimeForInput, formatDisplayTime } from "../utils/timeFormatters";
 
 // 장소 타입별 색상 매핑
 const placeTypeToColor = {
@@ -72,24 +73,17 @@ function getNumberedMarkerIcon(number, placeType) {
 }
 */
 
+
 // 시간 수정 모달 컴포넌트
 const TimeModal = ({ isOpen, onClose, onTimeChange, currentTime, placeName, isNewPlace = false }) => {
-  const [time, setTime] = useState(currentTime);
+  const [time, setTime] = useState('');
   const [displayTime, setDisplayTime] = useState('');
-
-  // 시간을 오전/오후 형식으로 변환하는 함수 (새 장소 추가용)
-  const formatDisplayTime = (timeStr) => {
-    if (!timeStr) return '';
-    const [hours, minutes] = timeStr.split(':');
-    const hour = parseInt(hours);
-    const period = hour < 12 ? '오전' : '오후';
-    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    return `${period} ${displayHour.toString().padStart(2, '0')}:${minutes}`;
-  };
 
   useEffect(() => {
     if (isOpen) {
-      setTime(currentTime);
+      // HTML input type="time" 형식으로 변환
+      const formattedTime = formatTimeForInput(currentTime);
+      setTime(formattedTime);
       // 새 장소 추가일 때만 오전/오후 형식으로 표시
       setDisplayTime(isNewPlace ? formatDisplayTime(currentTime) : currentTime || '');
     }
@@ -104,9 +98,11 @@ const TimeModal = ({ isOpen, onClose, onTimeChange, currentTime, placeName, isNe
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // 새 장소 추가일 때는 오전/오후 형식으로 저장, 그 외에는 원래 형식 유지
-    const finalTime = isNewPlace ? formatDisplayTime(time) : time;
-    onTimeChange(finalTime);
+    if (time) {
+      // 새 장소 추가일 때는 오전/오후 형식으로 저장, 그 외에는 원래 형식 유지
+      const finalTime = isNewPlace ? formatDisplayTime(time) : formatDisplayTime(time);
+      onTimeChange(finalTime);
+    }
     onClose();
   };
 
@@ -132,7 +128,7 @@ const TimeModal = ({ isOpen, onClose, onTimeChange, currentTime, placeName, isNe
             )}
             <input
               type="time"
-              value={time}
+              value={time || ''}
               onChange={handleTimeChange}
               className="time-input"
               required
@@ -141,7 +137,7 @@ const TimeModal = ({ isOpen, onClose, onTimeChange, currentTime, placeName, isNe
 
           <div className="modal-buttons">
             <button type="button" onClick={onClose}>취소</button>
-            <button type="submit">저장</button>
+            <button type="submit" disabled={!time}>저장</button>
           </div>
         </form>
       </div>
@@ -1041,7 +1037,7 @@ function CourseCreatePage() {
             return null;
           }
 
-          const time = place.time ? place.time.split(' ')[1] || place.time : '09:00';
+          const time = place.time ? formatTimeForInput(place.time) : '09:00';
           const travelInfo = place.travel_from_previous || place.travelInfo || {};
 
           return {
@@ -1317,7 +1313,8 @@ function CourseCreatePage() {
     if (!selectedPlace) return;
 
     if (timeModalMode === 'edit') {
-      // 기존 장소 시간 수정 - 원래 형식 유지
+      // 기존 장소 시간 수정 - 오전/오후 형식으로 저장
+      const formattedTime = formatDisplayTime(newTime);
       setPlacesByDay(prev => {
         const updatedPlaces = { ...prev };
         const dayPlaces = [...updatedPlaces[selectedDay]];
@@ -1326,7 +1323,7 @@ function CourseCreatePage() {
         if (placeIndex !== -1) {
           dayPlaces[placeIndex] = {
             ...dayPlaces[placeIndex],
-            time: newTime
+            time: formattedTime
           };
           // 시간 수정 후 정렬
           dayPlaces.sort((a, b) => compareTimes(a.time, b.time));
@@ -1337,13 +1334,14 @@ function CourseCreatePage() {
       });
     } else {
       // 새 장소 추가 - 오전/오후 형식으로 저장
+      const formattedTime = formatDisplayTime(newTime);
       const currentPlaces = placesByDay[selectedDay] || [];
       const nextId = `${selectedDay}-${currentPlaces.length}`;
       
       const placeWithTime = {
         ...selectedPlace,
         id: nextId,
-        time: newTime // 이미 오전/오후 형식으로 변환된 시간
+        time: formattedTime
       };
       
       // 새 장소 추가 후 시간순으로 정렬
@@ -1379,7 +1377,29 @@ function CourseCreatePage() {
                             >
                               {index + 1}
                             </div>
-            <div className="time" style={{ fontSize: '1.1rem', fontWeight: '500' }}>{place.time || '--:--'}</div>
+                            <button
+                              className="time-button"
+                              onClick={() => {
+                                setSelectedPlace(place);
+                                setTimeModalMode('edit');
+                                setIsTimeModalOpen(true);
+                              }}
+                              style={{ 
+                                fontSize: '1.1rem', 
+                                fontWeight: '500',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                transition: 'background-color 0.2s',
+                                color: '#333'
+                              }}
+                              onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
+                              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                            >
+                              {formatDisplayTime(place.time)}
+                            </button>
             <div className="title" style={{ fontSize: '1.2rem', fontWeight: '600' }}>{place.place_name}</div>
             <div className="place-type" style={{ 
               fontSize: '1.1rem', 
