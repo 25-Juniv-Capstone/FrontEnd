@@ -50,7 +50,7 @@ function CourseDetailPage() {
   const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
 
   // 진입 경로 구분: 커뮤니티에서 오면 댓글/좋아요 보이게, 마이페이지면 숨김
-  const isCommunity = location.state?.from === 'community';
+  const isCommunity = true; // 항상 커뮤니티 모드로 설정
   const postTitle = location.state?.postTitle;
   const postId = location.state?.postId; // 게시글 ID 추가
 
