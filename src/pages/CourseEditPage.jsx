@@ -539,12 +539,10 @@ function CourseEditPage() {
   const [endDate, setEndDate] = useState('');
   
   // 모달 상태
-  const [showTimeModal, setShowTimeModal] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [modalInfo, setModalInfo] = useState({ open: false, type: '', place: null });
   const [showRoutes, setShowRoutes] = useState(false);
-  const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [isAddPlaceTimeModalOpen, setIsAddPlaceTimeModalOpen] = useState(false);
@@ -558,23 +556,61 @@ function CourseEditPage() {
   const directionsRenderer = useRef(null);
   const markersRef = useRef([]);
   const directionsRenderersRef = useRef([]);
-  const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
 
   // 경로 색상 정보를 저장할 상태 추가
   const [routeColorsByPlace, setRouteColorsByPlace] = useState({});
 
-  const currentUserId = localStorage.getItem('userId');
-
   // 구글 지도 API 로드 확인
   useEffect(() => {
     const checkGoogleMapsLoaded = () => {
-      if (window.google && window.maps) {
-        setIsGoogleMapsLoaded(true);
+      if (window.google && window.google.maps) {
+        // 지도가 로드되면 초기화 진행
+        const initializeMap = () => {
+          const mapDiv = document.getElementById("map");
+          if (!mapDiv) {
+            setTimeout(initializeMap, 100);
+            return;
+          }
+          if (!mapInstance.current) {
+            const mapOptions = {
+              center: { lat: 36.5, lng: 127.8 },
+              zoom: 14,
+              mapTypeControl: false,
+              streetViewControl: false,
+              fullscreenControl: false,
+            };
+            try {
+              mapInstance.current = new window.google.maps.Map(mapDiv, mapOptions);
+              // Directions 서비스와 렌더러 초기화
+              directionsService.current = new window.google.maps.DirectionsService();
+              directionsRenderer.current = new window.google.maps.DirectionsRenderer({
+                suppressMarkers: true,
+                preserveViewport: true,
+                polylineOptions: {
+                  strokeColor: '#FF0000',
+                  strokeWeight: 5,
+                  strokeOpacity: 0.8
+                }
+              });
+              if (directionsRenderer.current) {
+                directionsRenderer.current.setMap(mapInstance.current);
+              }
+            } catch (error) {
+              console.error('지도 생성 중 오류 발생:', error);
+            }
+          }
+        };
+        initializeMap();
       } else {
         setTimeout(checkGoogleMapsLoaded, 100);
       }
     };
     checkGoogleMapsLoaded();
+    return () => {
+      if (mapInstance.current) mapInstance.current = null;
+      if (directionsService.current) directionsService.current = null;
+      if (directionsRenderer.current) directionsRenderer.current = null;
+    };
   }, []);
 
   // 코스 정보 불러오기 (DB에서)
@@ -618,51 +654,6 @@ function CourseEditPage() {
 
     fetchCourseDetail();
   }, [courseId]);
-
-  // 지도 관련 설정
-  useEffect(() => {
-    const initializeMap = () => {
-      const mapDiv = document.getElementById("map");
-      if (!mapDiv) {
-        setTimeout(initializeMap, 100);
-        return;
-      }
-      if (!mapInstance.current) {
-        const mapOptions = {
-          center: { lat: 36.5, lng: 127.8 },
-          zoom: 14,
-          mapTypeControl: false,
-          streetViewControl: false,
-          fullscreenControl: false,
-        };
-        try {
-          mapInstance.current = new window.google.maps.Map(mapDiv, mapOptions);
-          // Directions 서비스와 렌더러 초기화
-          directionsService.current = new window.google.maps.DirectionsService();
-          directionsRenderer.current = new window.google.maps.DirectionsRenderer({
-            suppressMarkers: true,
-            preserveViewport: true,
-            polylineOptions: {
-              strokeColor: '#FF0000',
-              strokeWeight: 5,
-              strokeOpacity: 0.8
-            }
-          });
-          if (directionsRenderer.current) {
-            directionsRenderer.current.setMap(mapInstance.current);
-          }
-        } catch (error) {
-          console.error('지도 생성 중 오류 발생:', error);
-        }
-      }
-    };
-    initializeMap();
-    return () => {
-      if (mapInstance.current) mapInstance.current = null;
-      if (directionsService.current) directionsService.current = null;
-      if (directionsRenderer.current) directionsRenderer.current = null;
-    };
-  }, []);
 
   // 마커와 경로 업데이트
   const updateMapMarkersAndRoute = (dayNumber) => {
@@ -1041,26 +1032,6 @@ function CourseEditPage() {
         }
       });
     });
-  };
-
-  // 시간을 비교하기 위한 정렬 함수 추가
-  const compareTimes = (timeA, timeB) => {
-    // 오전/오후 형식의 시간을 24시간제로 변환
-    const convertTo24Hour = (time) => {
-      if (!time) return 0;
-      if (time.includes('오전') || time.includes('오후')) {
-        const [period, timeStr] = time.split(' ');
-        const [hours, minutes] = timeStr.split(':').map(Number);
-        const hour = period === '오후' && hours !== 12 ? hours + 12 : 
-                    period === '오전' && hours === 12 ? 0 : hours;
-        return hour * 60 + minutes;
-      }
-      // 일반 24시간제 형식
-      const [hours, minutes] = time.split(':').map(Number);
-      return hours * 60 + minutes;
-    };
-
-    return convertTo24Hour(timeA) - convertTo24Hour(timeB);
   };
 
   // 장소 추가 처리
