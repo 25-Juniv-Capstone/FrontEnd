@@ -752,12 +752,15 @@ function CourseCreatePage() {
     
     // 장소별 경로 색상 정보 초기화
     const newRouteColorsByPlace = {};
+    
+    // 대중교통 노선별 색상 매핑을 위한 객체 (같은 노선은 같은 색상 사용)
+    const transitLineColorMap = {};
+    let colorIndex = 0;
 
     // 연속된 장소들 사이의 경로 계산
     for (let i = 0; i < places.length - 1; i++) {
       const origin = places[i];
       const destination = places[i + 1];
-      const routeColor = routeColors[i % routeColors.length];
       
       const originLat = origin.coordinates?.latitude || origin.lat;
       const originLng = origin.coordinates?.longitude || origin.lng;
@@ -774,6 +777,39 @@ function CourseCreatePage() {
           };
 
           const result = await getDirections(directionsService.current, request);
+          
+          // 대중교통 경로에서 노선 정보 추출
+          let transitLineKey = null;
+          if (result.routes && result.routes.length > 0) {
+            const route = result.routes[0];
+            if (route.legs && route.legs.length > 0) {
+              const leg = route.legs[0];
+              if (leg.steps) {
+                // 대중교통 단계에서 노선 정보 수집
+                const transitSteps = leg.steps.filter(step => step.transit);
+                if (transitSteps.length > 0) {
+                  // 첫 번째 대중교통 단계의 노선 정보를 키로 사용
+                  const firstTransit = transitSteps[0].transit;
+                  if (firstTransit.line) {
+                    transitLineKey = `${firstTransit.line.name || 'Unknown'}-${firstTransit.line.short_name || ''}`;
+                  }
+                }
+              }
+            }
+          }
+          
+          // 노선 키가 없으면 출발지-도착지 기반으로 생성
+          if (!transitLineKey) {
+            transitLineKey = `${originLat.toFixed(6)},${originLng.toFixed(6)}-${destLat.toFixed(6)},${destLng.toFixed(6)}`;
+          }
+          
+          // 같은 노선이 이미 존재하는지 확인
+          if (!transitLineColorMap[transitLineKey]) {
+            transitLineColorMap[transitLineKey] = routeColors[colorIndex % routeColors.length];
+            colorIndex++;
+          }
+          
+          const routeColor = transitLineColorMap[transitLineKey];
           
           // 대중교통 경로가 있는 경우에만 색상 정보 저장
           newRouteColorsByPlace[origin.id] = routeColor;
@@ -1371,35 +1407,39 @@ function CourseCreatePage() {
           }}
                         >
                           <div className="left">
-                            <div 
-                              className="circle-number" 
-                              style={{ backgroundColor: placeTypeToColor[place.place_type] || "#2196F3" }}
-                            >
-                              {index + 1}
+                            <div className="circle-time-container">
+                              <div 
+                                className="circle-number" 
+                                style={{ backgroundColor: placeTypeToColor[place.place_type] || "#2196F3" }}
+                              >
+                                {index + 1}
+                              </div>
+                              <div className="time-container">
+                                <button
+                                  className="time-button"
+                                  onClick={() => {
+                                    setSelectedPlace(place);
+                                    setTimeModalMode('edit');
+                                    setIsTimeModalOpen(true);
+                                  }}
+                                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
+                                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                                >
+                                  {formatDisplayTime(place.time)}
+                                </button>
+                                <button
+                                  className="time-edit-button"
+                                  onClick={() => {
+                                    setSelectedPlace(place);
+                                    setTimeModalMode('edit');
+                                    setIsTimeModalOpen(true);
+                                  }}
+                                  title="시간 수정"
+                                >
+                                  <LuPencilLine />
+                                </button>
+                              </div>
                             </div>
-                            <button
-                              className="time-button"
-                              onClick={() => {
-                                setSelectedPlace(place);
-                                setTimeModalMode('edit');
-                                setIsTimeModalOpen(true);
-                              }}
-                              style={{ 
-                                fontSize: '1.1rem', 
-                                fontWeight: '500',
-                                background: 'none',
-                                border: 'none',
-                                cursor: 'pointer',
-                                padding: '4px 8px',
-                                borderRadius: '4px',
-                                transition: 'background-color 0.2s',
-                                color: '#333'
-                              }}
-                              onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
-                              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                            >
-                              {formatDisplayTime(place.time)}
-                            </button>
             <div className="title" style={{ fontSize: '1.2rem', fontWeight: '600' }}>{place.place_name}</div>
             <div className="place-type" style={{ 
               fontSize: '1.1rem', 
