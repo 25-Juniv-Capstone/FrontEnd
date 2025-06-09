@@ -3,7 +3,6 @@ import styles from '../css/writepages/ModalWritePage.module.css';
 
 function UserEditModal({ isOpen, onClose, userInfo, setUserInfo }) {
   const [nickname, setNickname] = useState(userInfo?.nickname || '');
-  const [picUrl, setPicUrl] = useState(userInfo?.picUrl || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
@@ -22,7 +21,7 @@ function UserEditModal({ isOpen, onClose, userInfo, setUserInfo }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ nickname, picUrl })
+        body: JSON.stringify({ nickname })
       });
       if (!response.ok) throw new Error('회원정보 수정 실패');
       const updated = await response.json();
@@ -62,16 +61,6 @@ function UserEditModal({ isOpen, onClose, userInfo, setUserInfo }) {
               value={userInfo?.email || ''}
               readOnly
               disabled
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label className={styles.formLabel}>프로필 이미지 URL</label>
-            <input
-              className={styles.formInput}
-              type="text"
-              value={picUrl}
-              onChange={e => setPicUrl(e.target.value)}
-              placeholder="이미지 주소를 입력하세요"
             />
           </div>
           {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
