@@ -62,6 +62,9 @@ function CourseDetailPage() {
 
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
 
+  // 조회수 증가 중복 방지를 위한 state
+  const [viewCountIncreased, setViewCountIncreased] = useState(false);
+
   // 로그인 후에도 게시글 정보 유지를 위한 localStorage 처리
   useEffect(() => {
     // location.state에서 게시글 정보가 있으면 localStorage에 저장
@@ -155,6 +158,7 @@ function CourseDetailPage() {
   useEffect(() => {
     const fetchPost = async () => {
       if (!actualPostId) return;
+      
       try {
         console.log('게시글 정보 요청 - postId:', actualPostId, 'currentUserId:', currentUserId);
         const response = await axiosInstance.get(`/posts/${actualPostId}`);
@@ -193,6 +197,22 @@ function CourseDetailPage() {
     };
     fetchPost();
   }, [actualPostId, currentUserId]);
+
+  // 조회수 증가 (별도 useEffect로 분리)
+  useEffect(() => {
+    const increaseViewCount = async () => {
+      if (!actualPostId || viewCountIncreased) return;
+      
+      try {
+        await axiosInstance.post(`/posts/${actualPostId}/view`);
+        setViewCountIncreased(true);
+      } catch (viewError) {
+        console.error('조회수 증가 실패:', viewError);
+      }
+    };
+    
+    increaseViewCount();
+  }, [actualPostId, viewCountIncreased]);
 
   // 댓글 목록 받아오기
   useEffect(() => {
