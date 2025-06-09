@@ -11,7 +11,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import "../css/CourseDetailPage.css";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { FaHeart, FaRegHeart, FaComment, FaMapMarkerAlt, FaClock, FaWheelchair, FaInfoCircle, FaUser, FaTrash } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaComment, FaMapMarkerAlt, FaClock, FaWheelchair, FaInfoCircle, FaUser, FaTrash, FaHashtag, FaRegStickyNote } from 'react-icons/fa';
 import { MdDeleteOutline, MdContentCopy } from 'react-icons/md';
 import { TbPencilMinus } from 'react-icons/tb';
 import { getCourseDetail, toggleLike, getComments, createComment, deleteComment } from '../api/courseApi';
@@ -59,6 +59,8 @@ function CourseDetailPage() {
 
   const currentUserId = localStorage.getItem('userId');
   const authorId = post?.userId;
+
+  const [isContentModalOpen, setIsContentModalOpen] = useState(false);
 
   useEffect(() => {
     // 구글 지도 API 로드 확인
@@ -541,7 +543,18 @@ function CourseDetailPage() {
         <div className="header-content">
           <div className="course-title-section">
             <div className="course-title">
-              <h1>{isCommunity ? postTitle : courseDetail?.course_name}</h1>
+              <h1 style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                {isCommunity ? postTitle : courseDetail?.course_name}
+                {isCommunity && post?.content && (
+                  <button
+                    onClick={() => setIsContentModalOpen(true)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginLeft: 6, display: 'inline-flex', alignItems: 'center' }}
+                    title="게시글 내용 보기"
+                  >
+                    <FaRegStickyNote style={{ fontSize: '1.2em', color: '#1976d2' }} />
+                  </button>
+                )}
+              </h1>
             </div>
             <div className="course-meta">
               <div className="meta-row">
@@ -551,10 +564,17 @@ function CourseDetailPage() {
                 <span className="date">
                   <FaClock /> {getDateDisplay()}
                 </span>
+                {courseDetail?.keywords && (
+                  <span className="disability-type" style={{ marginLeft: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '1rem', color: '#666' }}>
+                    {courseDetail.keywords.split(',').map((kw, idx) => (
+                      <span key={idx} style={{ marginRight: 4 }}>#{kw.trim()}</span>
+                    ))}
+                  </span>
+                )}
               </div>
             </div>
           </div>
-          {/* 오른쪽: 좋아요/댓글/저장/수정 버튼 */}
+          {/* 오른쪽: 좋아요/저장/수정 버튼 */}
           {isCommunity && (
             <div className="course-actions">
               <button 
@@ -564,13 +584,6 @@ function CourseDetailPage() {
               >
                 {isLiked ? <FaHeart /> : <FaRegHeart />}
                 <span>{likeCount}</span>
-              </button>
-              <button 
-                className="comment-button"
-                onClick={() => setIsCommentOpen(true)}
-              >
-                <FaComment />
-                <span>댓글</span>
               </button>
               {/* 내 userId와 post.userId가 같으면 수정, 다르면 게시글 저장 */}
               {String(currentUserId) === String(authorId) ? (
@@ -583,16 +596,7 @@ function CourseDetailPage() {
                     <MdDeleteOutline size={18} />
                   </button>
                 </>
-              ) : (
-                <button
-                  className="save-course-button"
-                  onClick={handleSaveCourse}
-                  disabled={isCourseSaved}
-                  style={{ marginLeft: 8 }}
-                >
-                  {isCourseSaved ? '저장된 코스스' : '코스 저장'}
-                </button>
-              )}
+              ) : null}
                 <button
                 className="copy-link-button"
                 onClick={() => {
@@ -632,14 +636,14 @@ function CourseDetailPage() {
               <div key={index} className="itinerary-card">
                 <div className="place-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                    <h3>{place.placeName}</h3>
+                    <h3>{`${index + 1}. ${place.place_name}`}</h3>
                     <button
                       className="delete-btn"
                       onClick={() => handleDeletePlace(place.id)}
                       style={{ marginLeft: '8px' }}
                     >🗑️</button>
                   </div>
-                  <p className="place-type">{place.placeType}</p>
+                  <p className="place-type">{place.place_type}</p>
                   <p className="place-description">{place.description}</p>
                 </div>
                 <div className="place-actions">
@@ -668,7 +672,7 @@ function CourseDetailPage() {
       </div>
 
       {/* 댓글 섹션 */}
-      {isCommunity && isCommentOpen && (
+      {isCommunity && (
         <div className="comments-section">
           <div className="comments-header">
             <h3>댓글 {comments.length}개</h3>
@@ -809,6 +813,21 @@ function CourseDetailPage() {
                   })()}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 게시글 내용 모달 */}
+      {isContentModalOpen && (
+        <div className="modal-overlay">
+          <div className="info-modal">
+            <div className="modal-header">
+              <h3>작성자의 한줄</h3>
+              <button onClick={() => setIsContentModalOpen(false)}>✕</button>
+            </div>
+            <div className="modal-content">
+              <div style={{ whiteSpace: 'pre-line', color: '#333', fontSize: '1rem' }}>{post?.content}</div>
             </div>
           </div>
         </div>
