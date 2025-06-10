@@ -78,6 +78,35 @@ function CommunityPage() {
     setIsModalOpen(true);
   };
 
+  // 게시글 작성 완료 후 목록 새로고침
+  const handlePostCreated = () => {
+    console.log('게시글 작성 완료, 목록 새로고침');
+    // 현재 검색 조건으로 다시 API 호출
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams();
+        if (selectedType && selectedType !== 'all') params.append('disabilityType', selectedType);
+        if (searchTerm) {
+          params.append('searchTerm', searchTerm);
+          params.append('searchType', searchType);
+        }
+        if (selectedRegion) params.append('region', selectedRegion);
+        
+        const response = await axiosInstance.get(`/posts?${params.toString()}`);
+        setPosts(response.data.content);
+        setTotalPages(response.data.totalPages);
+      } catch (error) {
+        console.error('포스트 목록 가져오기 실패:', error);
+        setError('포스트를 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  };
+
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchInput(value);
@@ -233,7 +262,11 @@ function CommunityPage() {
         </div>
       </div>
       
-      <WritePageModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <WritePageModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onPostCreated={handlePostCreated}
+      />
     </div>
   );
 }

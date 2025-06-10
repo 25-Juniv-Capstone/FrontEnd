@@ -198,10 +198,10 @@ function CourseDetailPage() {
     fetchPost();
   }, [actualPostId, currentUserId]);
 
-  // 조회수 증가 (별도 useEffect로 분리)
+  // 조회수 증가 (별도 useEffect로 분리) - 로그인한 상태일 때만
   useEffect(() => {
     const increaseViewCount = async () => {
-      if (!actualPostId || viewCountIncreased) return;
+      if (!actualPostId || viewCountIncreased || !currentUserId) return;
       
       try {
         await axiosInstance.post(`/posts/${actualPostId}/view`);
@@ -212,7 +212,7 @@ function CourseDetailPage() {
     };
     
     increaseViewCount();
-  }, [actualPostId, viewCountIncreased]);
+  }, [actualPostId, viewCountIncreased, currentUserId]);
 
   // 댓글 목록 받아오기
   useEffect(() => {
