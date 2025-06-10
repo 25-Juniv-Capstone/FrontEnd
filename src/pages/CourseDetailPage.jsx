@@ -388,16 +388,16 @@ function CourseDetailPage() {
     });
 
     // 선(Polyline)으로 연결
-    if (pathCoordinates.length >= 2) {
-      pathLine.current = new window.google.maps.Polyline({
-        path: pathCoordinates,
-        geodesic: true,
-        strokeColor: "#4285F4",
-        strokeOpacity: 1.0,
-        strokeWeight: 3,
-      });
-      pathLine.current.setMap(mapInstance.current);
-    }
+    // if (pathCoordinates.length >= 2) {
+    //   pathLine.current = new window.google.maps.Polyline({
+    //     path: pathCoordinates,
+    //     geodesic: true,
+    //     strokeColor: "#4285F4",
+    //     strokeOpacity: 1.0,
+    //     strokeWeight: 3,
+    //   });
+    //   pathLine.current.setMap(mapInstance.current);
+    // }
 
     // 지도 범위 조정
     try {
