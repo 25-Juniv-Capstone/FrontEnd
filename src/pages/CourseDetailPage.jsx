@@ -18,6 +18,26 @@ import { getCourseDetail, toggleLike, getComments, createComment, deleteComment 
 import axiosInstance from '../utils/axiosConfig';
 import LoginRequiredModal from './LoginRequiredModal';
 
+// 장소 타입별 색상 매핑 함수 (문자열 포함 검사)
+const getPlaceTypeColor = (placeType) => {
+  if (!placeType) return "#2196F3";
+  
+  const type = placeType.toLowerCase();
+  
+  if (type.includes('식당') || type.includes('뷔페') || type.includes('음식점') || type.includes('요리') || type.includes('한식') || type.includes('중국') || type.includes('일식') || type.includes('카페') || type.includes('식당')) {
+    return "#FFC107";
+  }
+  if (type.includes('공원') || type.includes('박물관') || type.includes('백화점') || type.includes('공연') || type.includes('극장') || type.includes('행사장') || type.includes('관광지') || type.includes('역사적') || type.includes('명소') || type.includes('미술관') || type.includes('전망대')) {
+    return "#2196F3";
+  }
+  if (type.includes('호텔') || type.includes('숙박') || type.includes('숙소')) {
+    return "#4CAF50";
+  }
+  
+  return "#2196F3";
+};
+
+
 function CourseDetailPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -87,7 +107,7 @@ function CourseDetailPage() {
       if (savedPostTitle && savedPostId) {
         setRestoredPostTitle(savedPostTitle);
         setRestoredPostId(savedPostId);
-        console.log('localStorage에서 게시글 정보 복원:', savedPostTitle, savedPostId);
+        console.log('localStorage에서 게시글 정복원:', savedPostTitle, savedPostId);
       }
     }
   }, [location.state]);
@@ -344,7 +364,7 @@ function CourseDetailPage() {
       
       try {
         // 장소 타입에 따른 색상 결정
-        const color = placeTypeToColor[place.place_type] || "#2196F3";
+        const color = getPlaceTypeColor(place.place_type) || "#2196F3";
         
         // SVG 마커 아이콘 생성
         const icon = {
@@ -412,24 +432,6 @@ function CourseDetailPage() {
     } catch (error) {
       console.error('지도 범위 조정 실패:', error);
     }
-  };
-
-  // 장소 타입별 색상 매핑
-  const placeTypeToColor = {
-    "한식당": "#FFC107", // 노란색 - 식당/카페
-    "식당": "#FFC107",   // 노란색 - 식당/카페
-    "카페": "#FFC107",   // 노란색 - 식당/카페
-    "공원": "#2196F3",   // 파란색 - 기타
-    "박물관": "#2196F3", // 파란색 - 기타
-    "호텔": "#4CAF50",   // 초록색 - 숙소
-    "숙박": "#4CAF50",   // 초록색 - 숙소
-    "백화점": "#2196F3", // 파란색 - 기타
-    "공연예술 극장": "#2196F3", // 파란색 - 기타
-    "관광지": "#2196F3", // 파란색 - 기타
-    "문화재/박물관": "#2196F3", // 파란색 - 기타
-    "공연장/행사장": "#2196F3", // 파란색 - 기타
-    "관광지/상점": "#2196F3", // 파란색 - 기타
-    "기타": "#2196F3"    // 파란색 - 기타
   };
 
   // 좋아요 처리
@@ -757,7 +759,27 @@ function CourseDetailPage() {
               <div key={index} className="itinerary-card">
                 <div className="place-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                    <h3>{`${index + 1}. ${place.place_name}`}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div 
+                        className="circle-number" 
+                        style={{ 
+                          backgroundColor: getPlaceTypeColor(place.place_type) || "#2196F3",
+                          width: '28px',
+                          height: '28px',
+                          borderRadius: '50%',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          flexShrink: 0
+                        }}
+                      >
+                        {index + 1}
+                      </div>
+                      <h3 style={{ margin: 0 }}>{place.place_name}</h3>
+                    </div>
                   </div>
                   <p className="place-type">{place.place_type}</p>
                   <p className="place-description">{place.description}</p>

@@ -20,40 +20,60 @@ import { LuPencilLine } from "react-icons/lu";
 import { IoTrashBinOutline } from "react-icons/io5";
 import { formatTimeForInput, formatDisplayTime } from "../utils/timeFormatters";
 
-// 장소 타입별 색상 매핑
-const placeTypeToColor = {
-  "한식당": "#FFC107", // 노란색 - 식당/카페
-  "식당": "#FFC107",   // 노란색 - 식당/카페
-  "카페": "#FFC107",   // 노란색 - 식당/카페
-  "공원": "#2196F3",   // 파란색 - 기타
-  "박물관": "#2196F3", // 파란색 - 기타
-  "호텔": "#4CAF50",   // 초록색 - 숙소
-  "숙박": "#4CAF50",   // 초록색 - 숙소
-  "백화점": "#2196F3", // 파란색 - 기타
-  "공연예술 극장": "#2196F3", // 파란색 - 기타
-  "관광지": "#2196F3", // 파란색 - 기타
-  "문화재/박물관": "#2196F3", // 파란색 - 기타
-  "공연장/행사장": "#2196F3", // 파란색 - 기타
-  "관광지/상점": "#2196F3", // 파란색 - 기타
-  "기타": "#2196F3"    // 파란색 - 기타
+// 장소 타입별 색상 매핑 함수 (문자열 포함 검사)
+const getPlaceTypeColor = (placeType) => {
+  if (!placeType) return "#2196F3";
+  
+  const type = placeType.toLowerCase();
+  
+  if (type.includes('식당') || type.includes('뷔페') || type.includes('음식점') || type.includes('요리') || type.includes('한식') || type.includes('중국') || type.includes('일식') || type.includes('카페') || type.includes('식당')) {
+    return "#FFC107";
+  }
+  if (type.includes('공원') || type.includes('박물관') || type.includes('백화점') || type.includes('공연') || type.includes('극장') || type.includes('행사장') || type.includes('관광지') || type.includes('역사적') || type.includes('명소') || type.includes('미술관') || type.includes('전망대')) {
+    return "#2196F3";
+  }
+  if (type.includes('호텔') || type.includes('숙박') || type.includes('숙소')) {
+    return "#4CAF50";
+  }
+  
+  return "#2196F3";
 };
 
-// 장소 타입별 이모지 매핑 - UI에 표시될 아이콘 정의
-const placeTypeToEmoji = {
-  "한식당": "🍴 식당",
-  "식당": "🍴 식당",
-  "카페": "☕ 카페",
-  "공원": "🏞️ 공원",
-  "박물관": "🏛️ 박물관",
-  "호텔": "🏨 숙소",
-  "숙박": "🏨 숙소",
-  "백화점": "🏬 쇼핑",
-  "공연예술 극장": "🎭 공연장",
-  "관광지": "🗺️ 관광지",
-  "문화재/박물관": "🏛️ 박물관",
-  "공연장/행사장": "🎭 공연장",
-  "관광지/상점": "🗺️ 관광지",
-  "기타": "📍 기타"
+// 장소 타입별 이모지 매핑 함수 (문자열 포함 검사)
+const getPlaceTypeEmoji = (placeType) => {
+  if (!placeType) return "📍 기타";
+  
+  const type = placeType.toLowerCase();
+  
+  if (type.includes('식당') || type.includes('음식점')  || type.includes('요리')|| type.includes('한식') || type.includes('중국') || type.includes('일식') || type.includes('뷔페')) {
+    return "🍴 식당";
+  }
+  if (type.includes('카페')) {
+    return "☕ 카페";
+  }
+  if (type.includes('공원')) {
+    return "🏞️ 공원";
+  }
+  if (type.includes('박물관')) {
+    return "🏛️ 박물관";
+  }
+  if (type.includes('미술관') || type.includes('마술관')) {
+    return "🎨 미술관";
+  }
+  if (type.includes('호텔') || type.includes('숙박') || type.includes('숙소')) {
+    return "🏨 숙소";
+  }
+  if (type.includes('백화점') || type.includes('쇼핑')) {
+    return "🏬 쇼핑";
+  }
+  if (type.includes('공연') || type.includes('극장') || type.includes('행사장')) {
+    return "🎭 공연장";
+  }
+  if (type.includes('관광지') || type.includes('역사적') || type.includes('명소') || type.includes('전망대')) {
+    return "🗺️ 관광지";
+  }
+  
+  return "📍 기타";
 };
 
 // 번호가 크게 보이는 SVG 마커 아이콘 생성 함수 - 나중에 사용될 수 있으므로 주석 처리
@@ -621,7 +641,7 @@ function CourseCreatePage() {
       },
       icon: {
         path: window.google.maps.SymbolPath.CIRCLE,
-        fillColor: placeTypeToColor[place.place_type] || "#2196F3",
+        fillColor: getPlaceTypeColor(place.place_type) || "#2196F3",
         fillOpacity: 1,
         strokeColor: 'white',
         strokeWeight: 2,
@@ -1410,7 +1430,7 @@ function CourseCreatePage() {
                             <div className="circle-time-container">
                               <div 
                                 className="circle-number" 
-                                style={{ backgroundColor: placeTypeToColor[place.place_type] || "#2196F3" }}
+                                style={{ backgroundColor: getPlaceTypeColor(place.place_type) || "#2196F3" }}
                               >
                                 {index + 1}
                               </div>
@@ -1444,9 +1464,9 @@ function CourseCreatePage() {
             <div className="place-type" style={{ 
               fontSize: '1.1rem', 
               fontWeight: '500',
-              color: placeTypeToColor[place.place_type] || "#2196F3"
+              color: getPlaceTypeColor(place.place_type) || "#2196F3"
             }}>
-                              {placeTypeToEmoji[place.place_type] || "📍 기타"}
+                              {getPlaceTypeEmoji(place.place_type) || "📍 기타"}
                             </div>
             <div className="button-group">
                               <button
@@ -1969,7 +1989,7 @@ const SearchModal = ({ isOpen, onClose, onPlaceSelect, region, mapInstance }) =>
               <div className="place-info">
                 <div className="place-header">
                   <span className="place-type-badge">
-                    {placeTypeToEmoji[place.place_type] || "📍"}
+                    {getPlaceTypeEmoji(place.place_type) || "📍"}
                   </span>
                   <h4 className="place-name">{place.place_name}</h4>
                 </div>

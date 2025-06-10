@@ -282,6 +282,11 @@ function MyPage() {
                   />
                   <div className={communityStyles.cardBody}>
                     <div className={communityStyles.cardTitle}>{course.title}</div>
+                    <div className={communityStyles.cardTags}>
+                      {course.keywords && (
+                        <span className={communityStyles.cardTag}>#{course.keywords}</span>
+                      )}
+                    </div>
                     <div className={communityStyles.cardLocal}>{course.region}</div>
                     <div className={communityStyles.cardAuthor}>
                       {activeTab === 'my' ? '나의 여행' : '좋아요한 여행'}
@@ -328,6 +333,17 @@ function MyPage() {
                     />
                     <div className={communityStyles.cardBody}>
                       <div className={communityStyles.cardTitle}>{post.title}</div>
+                      <div className={communityStyles.cardTags}>
+                        {post.region && (
+                          <span className={communityStyles.cardTag}>#{post.region}</span>
+                        )}
+                        {post.disabilityType && (
+                          <span className={communityStyles.cardTag}>#{post.disabilityType === 'wheelchair' ? '휠체어' : post.disabilityType === 'visual' ? '시각장애' : post.disabilityType === 'hearing' ? '청각장애' : post.disabilityType}</span>
+                        )}
+                        {post.courseTitle && (
+                          <span className={communityStyles.cardTag}>#{post.courseTitle}</span>
+                        )}
+                      </div>
                       <div className={communityStyles.cardLocal}>{post.region}</div>
                       <div className={communityStyles.cardAuthor}>
                         by {post.userName}
